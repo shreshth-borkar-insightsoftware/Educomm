@@ -60,22 +60,6 @@ namespace Educomm.Controllers
 
             _context.Entry(kit).State = EntityState.Modified;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Kits.Any(e => e.KitId == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
             return NoContent();
         }
     }

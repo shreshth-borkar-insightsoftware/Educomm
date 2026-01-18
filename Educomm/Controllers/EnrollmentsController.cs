@@ -26,7 +26,7 @@ namespace Educomm.Controllers
                 .ToListAsync();
         }
 
-        // POST api
+        //POST api
         [HttpPost]
         public async Task<ActionResult<Enrollments>> EnrollUser(Enrollments enrollment)
         {
