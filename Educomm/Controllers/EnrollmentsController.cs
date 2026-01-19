@@ -45,19 +45,5 @@ namespace Educomm.Controllers
 
             return Ok(enrollment);
         }
-
-        //PUT api
-        [HttpPut("UpdateProgress/{id}")]
-        public async Task<IActionResult> UpdateProgress(int id, [FromBody] int progress)
-        {
-            var enrollment = await _context.Enrollments.FindAsync(id);
-            if (enrollment == null) return NotFound();
-
-            enrollment.ProgressPercentage = progress;
-            if (progress >= 100) enrollment.IsCompleted = true;
-
-            await _context.SaveChangesAsync();
-            return Ok(enrollment);
-        }
     }
 }
