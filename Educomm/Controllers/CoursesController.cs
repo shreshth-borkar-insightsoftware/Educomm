@@ -33,7 +33,7 @@ namespace Educomm.Controllers
             if (!isEnrolled)
             {
                 //SAD Rejection
-                return StatusCode(403, "Access Denied. You must purchase the Kit to view this course.");
+                return StatusCode(403, "Access Denied because you poop. dont be sneaky buy course.");
             }
 
             //coursecontents table and grab everything of this course
