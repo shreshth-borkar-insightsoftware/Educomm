@@ -40,6 +40,7 @@ namespace Educomm.Controllers
             var courseExists = await _context.Courses.AnyAsync(c => c.CourseId == enrollment.CourseId);
             if (!courseExists) return BadRequest("Invalid CourseId.");
 
+            //if everything is fine to add a course
             _context.Enrollments.Add(enrollment);
             await _context.SaveChangesAsync();
 

@@ -41,7 +41,7 @@ namespace Educomm.Controllers
 
                 if (item.Kit.StockQuantity < item.Quantity)
                 {
-                    return BadRequest($"Not enough stock...");
+                    return BadRequest($"Not enough stock.");
                 }
             }
 
@@ -56,13 +56,15 @@ namespace Educomm.Controllers
             };
 
             //minus from Stock
+            // 4. Move items to Order & SUBTRACT STOCK & ENROLL USER
             for (int i = 0; i < cartItemsList.Count; i++)
             {
                 var cartItem = cartItemsList[i];
 
+                // A. Subtract Stock (You already had this)
                 cartItem.Kit.StockQuantity -= cartItem.Quantity;
 
-                //Receipt Line orderitem thing
+                // B. Create Order Item (You already had this)
                 var orderItem = new OrderItem
                 {
                     KitId = cartItem.KitId,
@@ -70,6 +72,24 @@ namespace Educomm.Controllers
                     PriceAtPurchase = cartItem.Kit.Price
                 };
                 order.OrderItems.Add(orderItem);
+
+                // --- C. THE NEW PART: AUTO-ENROLLMENT ---
+                // We check: "Does this Kit belong to a Course?"
+                if (cartItem.Kit.CourseId != null)
+                {
+                    // Create the "Ticket" for the class
+                    var newEnrollment = new Enrollments
+                    {
+                        UserId = userId,
+                        CourseId = (int)cartItem.Kit.CourseId,
+                        EnrolledAt = DateTime.UtcNow,
+                        ProgressPercentage = 0,
+                        IsCompleted = false
+                    };
+
+                    // Add to the database pile
+                    _context.Enrollments.Add(newEnrollment);
+                }
             }
 
             _context.Orders.Add(order);

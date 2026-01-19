@@ -9,7 +9,6 @@ namespace Educomm.Models
         [Key]
         public int CartItemId { get; set; }
 
-        // --- Link to Cart ---
         [Required]
         public int CartId { get; set; }
 
@@ -17,14 +16,12 @@ namespace Educomm.Models
         [JsonIgnore]
         public Cart? Cart { get; set; }
 
-        // --- Link to Product (Kit) ---
         [Required]
         public int KitId { get; set; }
 
         [ForeignKey("KitId")]
         public Kit? Kit { get; set; }
 
-        // --- Details ---
         public int Quantity { get; set; } = 1;
 
         public DateTime AddedAt { get; set; } = DateTime.UtcNow;
