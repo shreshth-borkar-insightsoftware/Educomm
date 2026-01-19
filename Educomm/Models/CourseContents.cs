@@ -24,7 +24,7 @@ namespace Educomm.Models
         [MaxLength(200)]
         public string Title { get; set; }
 
-        public string ContentUrl { get; set; } 
+        public string ContentUrl { get; set; }
 
         public int SequenceOrder { get; set; }
 

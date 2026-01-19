@@ -56,7 +56,6 @@ namespace Educomm.Controllers
             };
 
             //minus from Stock
-            // 4. Move items to Order & SUBTRACT STOCK & ENROLL USER
             for (int i = 0; i < cartItemsList.Count; i++)
             {
                 var cartItem = cartItemsList[i];
@@ -73,8 +72,6 @@ namespace Educomm.Controllers
                 };
                 order.OrderItems.Add(orderItem);
 
-                // --- C. THE NEW PART: AUTO-ENROLLMENT ---
-                // We check: "Does this Kit belong to a Course?"
                 if (cartItem.Kit.CourseId != null)
                 {
                     // Create the "Ticket" for the class
@@ -87,7 +84,7 @@ namespace Educomm.Controllers
                         IsCompleted = false
                     };
 
-                    // Add to the database pile
+
                     _context.Enrollments.Add(newEnrollment);
                 }
             }

@@ -22,11 +22,17 @@ namespace Educomm.Models
         public string Name { get; set; }
 
         public string Description { get; set; }
+
         public string Difficulty { get; set; }
+
         public int DurationMinutes { get; set; }
+
         public string ThumbnailUrl { get; set; }
+
         public bool IsActive { get; set; } = true;
+
         public ICollection<Kit> Kits { get; set; } = new List<Kit>();
+
         public ICollection<CourseContent> CourseContents { get; set; } = new List<CourseContent>();
     }
 }

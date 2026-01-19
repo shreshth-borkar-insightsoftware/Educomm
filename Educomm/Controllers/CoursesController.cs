@@ -17,39 +17,46 @@ namespace Educomm.Controllers
         }
 
         //GET api
-        // GET api/Courses/10/Content?userId=5
-        // This is the "Protected" endpoint that checks for enrollment
         [HttpGet("{courseId}/Content")]
-        public async Task<ActionResult<string>> GetCourseContent(int courseId, [FromQuery] int userId)
+        public async Task<ActionResult> GetCourseContent(int courseId, [FromQuery] int userId)
         {
-            // 1. Check if the course exists
             var course = await _context.Courses.FindAsync(courseId);
             if (course == null)
             {
                 return NotFound("Course not found.");
             }
 
-            // 2. THE GATEKEEPER: Check if the user is enrolled
+            //the protector
             var isEnrolled = await _context.Enrollments
                 .AnyAsync(e => e.CourseId == courseId && e.UserId == userId);
 
             if (!isEnrolled)
             {
-                // 3. Rejection: Stop them right here if they haven't bought the kit
+                //SAD Rejection
                 return StatusCode(403, "Access Denied. You must purchase the Kit to view this course.");
             }
 
-            // 4. Success: If they passed the check, give them the content
-            // (In a real app, this would be a video URL or file)
+            //coursecontents table and grab everything of this course
+            var contentList = await _context.CourseContents
+                .Where(c => c.CourseId == courseId)
+                .OrderBy(c => c.SequenceOrder) // chapter 1 comes before 2
+                .Select(c => new
+                {
+                    c.Title,
+                    c.ContentType,
+                    c.ContentUrl,
+                })
+                .ToListAsync();
+
             return Ok(new
             {
                 CourseName = course.Name,
-                SecretContent = "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // The "Video"
-                Message = "Welcome to the class! Here is your study material."
+                Message = "Welcome! Here is your study material.",
+                Materials = contentList //actual db material fix
             });
         }
 
-        //POSt api
+        //POST api
         [HttpPost]
         public async Task<ActionResult<Course>> PostCourse(Course course)
         {
