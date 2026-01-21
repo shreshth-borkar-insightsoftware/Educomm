@@ -2,11 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Educomm.Data;
 using Educomm.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Educomm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] 
     public class CartsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -16,10 +19,19 @@ namespace Educomm.Controllers
             _context = context;
         }
 
-        //GET api
-        [HttpGet("User/{userId}")]
-        public async Task<ActionResult<Cart>> GetCartByUserId(int userId)
+        private int GetUserId()
         {
+            var idClaim = this.User.FindFirst("UserId");
+            if (idClaim == null) return 0;
+            return int.Parse(idClaim.Value);
+        }
+
+        // GET: api/Carts/MyCart
+        [HttpGet("MyCart")]
+        public async Task<ActionResult<Cart>> GetMyCart()
+        {
+            int userId = GetUserId(); // Securely get ID from token
+
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                 .ThenInclude(ci => ci.Kit)
@@ -33,12 +45,17 @@ namespace Educomm.Controllers
             return cart;
         }
 
-        //POST api
+        // POST: api/Carts/Add
+        // REPLACES: AddToCart (Removed userId param)
         [HttpPost("Add")]
-        public async Task<ActionResult<Cart>> AddToCart(int userId, int kitId, int quantity)
+        public async Task<ActionResult<Cart>> AddToCart(int kitId, int quantity)
         {
+            int userId = GetUserId(); // Securely get ID from token
+
+            // Find user's cart
             var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
 
+            // If no cart exists, create one
             if (cart == null)
             {
                 cart = new Cart { UserId = userId };
@@ -46,6 +63,7 @@ namespace Educomm.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            // Check if item already exists in cart
             var existingItem = await _context.CartItems
                 .FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.KitId == kitId);
 
@@ -65,19 +83,32 @@ namespace Educomm.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return Ok(await GetCartByUserId(userId));
+
+            // Return updated cart
+            return await GetMyCart();
         }
 
-        
-
-        //DELETE api each item
+        // DELETE: api/Carts/RemoveItem/5
+        // SECURE: Checks if the item belongs to the user before deleting
         [HttpDelete("RemoveItem/{cartItemId}")]
         public async Task<IActionResult> RemoveCartItem(int cartItemId)
         {
-            var cartItem = await _context.CartItems.FindAsync(cartItemId);
+            int userId = GetUserId();
+
+            // Find the item AND include the Cart to check ownership
+            var cartItem = await _context.CartItems
+                .Include(ci => ci.Cart)
+                .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
+
             if (cartItem == null)
             {
                 return NotFound("Item not found.");
+            }
+
+            // SECURITY CHECK: Is this YOUR cart?
+            if (cartItem.Cart.UserId != userId)
+            {
+                return Unauthorized("You cannot delete items from someone else's cart.");
             }
 
             _context.CartItems.Remove(cartItem);
@@ -86,24 +117,27 @@ namespace Educomm.Controllers
             return Ok("Item removed.");
         }
 
-        //DELETE api full cart together
-        [HttpDelete("Clear/{cartId}")]
-        public async Task<IActionResult> ClearCart(int cartId)
+        // DELETE: api/Carts/Clear
+        // REPLACES: ClearCart (Removed cartId param - secure clear)
+        [HttpDelete("Clear")]
+        public async Task<IActionResult> ClearCart()
         {
-            var cartItems = await _context.CartItems
-                .Where(ci => ci.CartId == cartId)
-                .ToListAsync();
+            int userId = GetUserId();
 
-            if (!cartItems.Any())
+            // Find the logged-in user's cart
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null || !cart.CartItems.Any())
             {
                 return NotFound("Cart is already empty.");
             }
 
-            _context.CartItems.RemoveRange(cartItems);
+            _context.CartItems.RemoveRange(cart.CartItems);
             await _context.SaveChangesAsync();
 
             return Ok("Cart emptied.");
         }
-
-    } 
+    }
 }

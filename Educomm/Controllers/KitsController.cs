@@ -2,11 +2,13 @@
 using Microsoft.EntityFrameworkCore;
 using Educomm.Data;
 using Educomm.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Educomm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class KitsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -16,18 +18,39 @@ namespace Educomm.Controllers
             _context = context;
         }
 
-        //GET api
+        // GET: api/Kits
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Kit>>> GetKits()
         {
             return await _context.Kits
                 .Include(k => k.Category)
                 .Include(k => k.Course)
-              .ToListAsync();
+                .ToListAsync();
         }
+
+        // GET: api/Kits/5
+        // Accessible to: Everyone
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Kit>> GetKit(int id)
+        {
+            var kit = await _context.Kits
+                .Include(k => k.Category)
+                .Include(k => k.Course)
+                .FirstOrDefaultAsync(k => k.KitId == id);
+
+            if (kit == null)
+            {
+                return NotFound("Kit not found.");
+            }
+
+            return kit;
+        }
+
         [HttpPost]
+        [Authorize(Roles = "Admin")] // <--- The Guard
         public async Task<ActionResult<Kit>> PostKit(Kit kit)
         {
+            // Simple validation logic
             var categoryExists = await _context.Categories.AnyAsync(c => c.CategoryId == kit.CategoryId);
             if (!categoryExists)
             {
@@ -46,11 +69,11 @@ namespace Educomm.Controllers
             _context.Kits.Add(kit);
             await _context.SaveChangesAsync();
 
-            return Ok(kit);
+            return CreatedAtAction("GetKit", new { id = kit.KitId }, kit);
         }
 
-        //PUT api
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateKit(int id, Kit kit)
         {
             if (id != kit.KitId)
@@ -60,7 +83,39 @@ namespace Educomm.Controllers
 
             _context.Entry(kit).State = EntityState.Modified;
 
-            return NoContent();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Kits.Any(k => k.KitId == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return Ok("Kit updated successfully.");
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteKit(int id)
+        {
+            var kit = await _context.Kits.FindAsync(id);
+            if (kit == null)
+            {
+                return NotFound("Kit not found.");
+            }
+
+            _context.Kits.Remove(kit);
+            await _context.SaveChangesAsync();
+
+            return Ok("Kit deleted.");
         }
     }
 }

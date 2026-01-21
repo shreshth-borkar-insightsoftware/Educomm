@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Educomm.Data;
 using Educomm.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Educomm.Controllers
 {
@@ -18,6 +19,7 @@ namespace Educomm.Controllers
 
         //GET api
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             return await _context.Users.ToListAsync();
