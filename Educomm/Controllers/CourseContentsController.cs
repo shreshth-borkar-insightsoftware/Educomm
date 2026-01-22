@@ -8,7 +8,7 @@ namespace Educomm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")] 
+    [Authorize] 
     public class CourseContentsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -32,6 +32,7 @@ namespace Educomm.Controllers
 
         // POST api
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<CourseContent>> PostCourseContent(CourseContent content)
         {
             // Validate that the Course actually exists
