@@ -28,8 +28,7 @@ namespace Educomm.Controllers
                 .ToListAsync();
         }
 
-        // GET: api/Kits/5
-        // Accessible to: Everyone
+        // GET: api/Kits
         [HttpGet("{id}")]
         public async Task<ActionResult<Kit>> GetKit(int id)
         {
@@ -47,7 +46,7 @@ namespace Educomm.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")] // <--- The Guard
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Kit>> PostKit(Kit kit)
         {
             // Simple validation logic

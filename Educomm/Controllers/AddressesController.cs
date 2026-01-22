@@ -2,11 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Educomm.Data;
 using Educomm.Models;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace Educomm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AddressesController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -14,11 +17,21 @@ namespace Educomm.Controllers
         {
             _context = context;
         }
-        
-        //GET: api
-        [HttpGet("User/{userId}")]
-        public async Task<ActionResult<IEnumerable<Address>>> GetUserAddresses(int userId)
+
+        // Helper to get ID from Token
+        private int GetUserId()
         {
+            var idClaim = User.FindFirst("UserId");
+            if (idClaim == null) return 0;
+            return int.Parse(idClaim.Value);
+        }
+
+        //GET: api
+        [HttpGet("MyAddresses")]
+        public async Task<ActionResult<IEnumerable<Address>>> GetMyAddresses()
+        {
+            int userId = GetUserId();
+
             return await _context.Addresses
                 .Where(a => a.UserId == userId)
                 .ToListAsync();
@@ -28,29 +41,15 @@ namespace Educomm.Controllers
         [HttpPost]
         public async Task<ActionResult<Address>> PostAddress(Address address)
         {
-            var userExists = await _context.Users.AnyAsync(u => u.UserId == address.UserId);
-            if (!userExists)
-            {
-                return BadRequest("Invalid UserId.");
-            }
+            int userId = GetUserId();
+
+            // Securely link this address to the user who sent the request
+            address.UserId = userId;
 
             _context.Addresses.Add(address);
             await _context.SaveChangesAsync();
 
             return Ok(address);
-        }
-
-        //DELETE api
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAddress(int id)
-        {
-            var address = await _context.Addresses.FindAsync(id);
-            if (address == null) return NotFound();
-
-            _context.Addresses.Remove(address);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
     }
 }

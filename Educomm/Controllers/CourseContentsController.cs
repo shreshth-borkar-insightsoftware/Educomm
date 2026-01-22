@@ -2,11 +2,13 @@
 using Microsoft.EntityFrameworkCore;
 using Educomm.Data;
 using Educomm.Models;
+using Microsoft.AspNetCore.Authorization; // Security
 
 namespace Educomm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")] // <--- LOCK THE WHOLE FILE. Only Admins manage content.
     public class CourseContentsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -16,7 +18,8 @@ namespace Educomm.Controllers
             _context = context;
         }
 
-        //GET api
+        // GET api
+        // Admin sees all content to manage it
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CourseContent>>> GetCourseContents()
         {
@@ -27,11 +30,12 @@ namespace Educomm.Controllers
                 .ToListAsync();
         }
 
-        //POST api
+        // POST api
+        // Admin uploads new videos
         [HttpPost]
         public async Task<ActionResult<CourseContent>> PostCourseContent(CourseContent content)
         {
-            //Validate that the Course actually exists
+            // Validate that the Course actually exists
             var courseExists = await _context.Courses.AnyAsync(c => c.CourseId == content.CourseId);
             if (!courseExists)
             {
