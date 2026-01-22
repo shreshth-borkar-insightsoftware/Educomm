@@ -2,14 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Educomm.Data;
 using Educomm.Models;
-using Microsoft.AspNetCore.Authorization; // Security
-using System.Security.Claims; // To read Token
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Educomm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Locked
+    [Authorize]
     public class EnrollmentsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -28,7 +28,6 @@ namespace Educomm.Controllers
         }
 
         // GET api
-        // CHANGED: No parameter. Shows "My Enrollments" only.
         [HttpGet("MyEnrollments")]
         public async Task<ActionResult<IEnumerable<Enrollments>>> GetMyEnrollments()
         {
@@ -41,8 +40,6 @@ namespace Educomm.Controllers
         }
 
         // POST api
-        // RESTRICTED: Admin Only. 
-        // (Normal users enroll automatically when they pay in OrdersController)
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Enrollments>> EnrollUser(Enrollments enrollment)

@@ -30,7 +30,7 @@ namespace Educomm.Controllers
         [HttpGet("MyCart")]
         public async Task<ActionResult<Cart>> GetMyCart()
         {
-            int userId = GetUserId(); // Securely get ID from token
+            int userId = GetUserId(); //Securely get ID from token
 
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
@@ -46,16 +46,15 @@ namespace Educomm.Controllers
         }
 
         // POST: api/Carts/Add
-        // REPLACES: AddToCart (Removed userId param)
         [HttpPost("Add")]
         public async Task<ActionResult<Cart>> AddToCart(int kitId, int quantity)
         {
-            int userId = GetUserId(); // Securely get ID from token
+            int userId = GetUserId();
 
-            // Find user's cart
+            //Find user cart
             var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
 
-            // If no cart exists, create one
+            //If no cart exists, create one
             if (cart == null)
             {
                 cart = new Cart { UserId = userId };
@@ -63,7 +62,7 @@ namespace Educomm.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // Check if item already exists in cart
+            //Check if item already exists in cart
             var existingItem = await _context.CartItems
                 .FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.KitId == kitId);
 
@@ -89,7 +88,6 @@ namespace Educomm.Controllers
         }
 
         // DELETE: api/Carts/RemoveItem/5
-        // SECURE: Checks if the item belongs to the user before deleting
         [HttpDelete("RemoveItem/{cartItemId}")]
         public async Task<IActionResult> RemoveCartItem(int cartItemId)
         {
@@ -105,7 +103,6 @@ namespace Educomm.Controllers
                 return NotFound("Item not found.");
             }
 
-            // SECURITY CHECK: Is this YOUR cart?
             if (cartItem.Cart.UserId != userId)
             {
                 return Unauthorized("You cannot delete items from someone else's cart.");
@@ -118,7 +115,6 @@ namespace Educomm.Controllers
         }
 
         // DELETE: api/Carts/Clear
-        // REPLACES: ClearCart (Removed cartId param - secure clear)
         [HttpDelete("Clear")]
         public async Task<IActionResult> ClearCart()
         {

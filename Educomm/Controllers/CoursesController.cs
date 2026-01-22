@@ -18,8 +18,6 @@ namespace Educomm.Controllers
         {
             _context = context;
         }
-
-        // Helper to get ID from Token (Keeps code clean)
         private int GetUserId()
         {
             var idClaim = User.FindFirst("UserId");
@@ -28,7 +26,6 @@ namespace Educomm.Controllers
         }
 
         // GET: List all courses
-        // Public to all logged in users so they can see what to buy
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Course>>> GetCourses()
         {
@@ -41,7 +38,6 @@ namespace Educomm.Controllers
         [HttpGet("{courseId}/Content")]
         public async Task<ActionResult> GetCourseContent(int courseId)
         {
-            // SECURE: Get ID from the token, not the URL
             int userId = GetUserId();
 
             var course = await _context.Courses.FindAsync(courseId);
@@ -51,12 +47,9 @@ namespace Educomm.Controllers
             }
 
             // the protector
-            // check if this specific user bought this specific course
             var isEnrolled = await _context.Enrollments
                 .AnyAsync(e => e.CourseId == courseId && e.UserId == userId);
 
-            // Admin Override: If you want Admin to watch without buying, uncomment this:
-            // if (User.IsInRole("Admin")) isEnrolled = true;
 
             if (!isEnrolled)
             {
@@ -102,7 +95,7 @@ namespace Educomm.Controllers
             return Ok(course);
         }
 
-        // DELETE: Remove Course
+        // DELETE
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCourse(int id)

@@ -2,13 +2,13 @@
 using Microsoft.EntityFrameworkCore;
 using Educomm.Data;
 using Educomm.Models;
-using Microsoft.AspNetCore.Authorization; // Security
+using Microsoft.AspNetCore.Authorization;
 
 namespace Educomm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")] // <--- LOCK THE WHOLE FILE. Only Admins manage content.
+    [Authorize(Roles = "Admin")] 
     public class CourseContentsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -31,7 +31,6 @@ namespace Educomm.Controllers
         }
 
         // POST api
-        // Admin uploads new videos
         [HttpPost]
         public async Task<ActionResult<CourseContent>> PostCourseContent(CourseContent content)
         {
