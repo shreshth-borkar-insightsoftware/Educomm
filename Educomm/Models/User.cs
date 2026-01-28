@@ -34,11 +34,6 @@ namespace Educomm.Models
         [Column("role")]
         public string Role { get; set; } = "Customer";
 
-        [Column("is_email_verified")]
-        public bool IsEmailVerified { get; set; } = false;
-
-        [Column("is_active")]
-        public bool IsActive { get; set; } = true;
         [JsonIgnore]
         public Cart? Cart { get; set; }
     }

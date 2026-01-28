@@ -45,28 +45,30 @@ namespace Educomm.Controllers
 
         //LOGIN
         [HttpPost("Login")]
-        public async Task<ActionResult<string>> Login(LoginDto request)
+        public async Task<ActionResult<object>> Login(LoginDto request)
         {
-            //find User
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            if (user == null)
-            {
-                return BadRequest("User not found.");
-            }
+            if (user == null) return BadRequest("User not found.");
 
-            //verify Password
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             {
                 return BadRequest("Wrong password.");
             }
-
-            //token formation
             string token = CreateToken(user);
-
-            return Ok(token);
+            return Ok(new
+            {
+                Token = token,
+                User = new
+                {
+                    userId = user.UserId,
+                    email = user.Email,
+                    role = user.Role,
+                    firstName = user.FirstName,
+                    lastName = user.LastName
+                }
+            });
         }
-
         //token creation method
         private string CreateToken(User user)
         {

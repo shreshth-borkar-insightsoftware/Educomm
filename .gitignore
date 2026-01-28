@@ -480,3 +480,10 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+# Modern Frontend Additions
+dist/
+build/
+.cache/
+.eslintcache
+*.log
+package-lock.json.log

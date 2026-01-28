@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+/* Basic reset to ensure full height and no weird margins */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Optional: Smooth transitions for dark mode */
+body {
+  transition: background-color 0.3s ease;
+}
+@import "tailwindcss";
+
+@theme {
+  --color-background: white;
+  --color-foreground: black;
+}
+
+/* Ensure the dark mode flips the colors */
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-background: black;
+    --color-foreground: white;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  /* This line is the magic fix for your text */
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+}
