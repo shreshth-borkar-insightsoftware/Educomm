@@ -64,11 +64,6 @@ export default function CoursesPage() {
               className="bg-neutral-950 border-neutral-800 rounded-3xl overflow-hidden flex flex-col border-t-4 border-t-neutral-700 shadow-2xl"
             >
               <CardHeader className="pb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="px-2 py-1 bg-neutral-900 rounded text-[10px] font-mono text-neutral-400">
-                    CID_{course.id}
-                  </span>
-                </div>
                 <CardTitle className="text-2xl font-bold text-white uppercase tracking-tight leading-tight">
                   {course.name}
                 </CardTitle>

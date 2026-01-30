@@ -24,20 +24,16 @@ const handleLogin = async (e: React.FormEvent) => {
 
       console.log("Full Login Response:", data);
 
-      // 1. Extract Token safely
       const token = typeof data === 'string' ? data : (data.token || data.jwtToken);
       
       if (!token) {
         throw new Error("Token not found in server response.");
       }
 
-      // 2. Extract User Data from response (Handle both flat and nested objects)
-      // Most .NET APIs return an object like { user: { ... }, token: "..." }
       const userData = data.user || data; 
 
       setAuth({ 
         email: email, 
-        // Use the ID from the server, fallback to 0 if not found
         userId: userData.userId || userData.id || userData.Id || 0,
         role: userData.role || userData.Role || "User",
         firstName: userData.firstName || userData.FirstName || "",

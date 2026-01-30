@@ -1,54 +1,39 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
-import { useAuthStore } from "@/store/useAuthStore"
-import LoginPage from "./pages/LoginPages"
-import RegisterPage from "./pages/RegisterPage"
-import DashboardPage from "./pages/DashboardPage"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import MainLayout from "./layout/MainLayout";
+import DashboardPage from "./pages/DashboardPage";
 import KitsPage from "./pages/KitsPage";
-import CoursesPage from "./pages/CoursesPage";
+import CartPage from "./pages/CartPage";
+import MyOrdersPage from "./pages/MyOrdersPage";
+import LoginPage from "./pages/LoginPages"; 
 import MyCoursesPage from "./pages/MyCoursesPage"; 
-import CourseContentPage from "./pages/CourseContentPage"; 
+import CoursesPage from "./pages/CoursesPage";
+import AddressPage from "./pages/AddressPage";
 import KitDetailsPage from "./pages/KitDetailsPage";
 
 function App() {
-  const { isAuthenticated } = useAuthStore()
-
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
 
-        {/* Protected Routes */}
-        <Route 
-          path="/dashboard" 
-          element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/my-courses" 
-          element={isAuthenticated ? <MyCoursesPage /> : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/courses/:id/content" 
-          element={isAuthenticated ? <CourseContentPage /> : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/courses" 
-          element={isAuthenticated ? <CoursesPage /> : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/kits" 
-          element={isAuthenticated ? <KitsPage /> : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/kits/:id" 
-          element={isAuthenticated ? <KitDetailsPage /> : <Navigate to="/login" />} 
-        />
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+        <Route path="/login" element={<LoginPage />} />
+
+        <Route element={<MainLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/kits" element={<KitsPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/my-orders" element={<MyOrdersPage />} />
+          <Route path="/my-courses" element={<MyCoursesPage />} />
+          <Route path="/courses" element={<CoursesPage/>} />
+          <Route path="/address" element={<AddressPage/>} />
+          <Route path="/courses" element={<KitDetailsPage />} />
+          <Route path="/kits/:id" element={<KitDetailsPage />} />
+        </Route>
+        <Route path="*" element={<div className="text-white bg-black h-screen flex items-center justify-center">404 - Not Found</div>} />
       </Routes>
-    </Router>
-  )
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

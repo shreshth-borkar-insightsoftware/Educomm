@@ -1,0 +1,197 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCartStore } from "@/store/useCartStore";
+import api from "@/api/axiosInstance";
+import { Button } from "@/components/ui/button";
+import { 
+  Trash2, Plus, Minus, ArrowLeft, ShoppingBag, 
+  Loader2, MapPin, CheckCircle2, AlertCircle 
+} from "lucide-react";
+
+export default function CartPage() {
+  const { items, updateQuantity, removeFromCart, getTotal, clearCart, fetchCart } = useCartStore();
+  const navigate = useNavigate();
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [selectedAddressStr, setSelectedAddressStr] = useState<string>("");
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
+  const [showManualInput, setShowManualInput] = useState(false);
+
+  useEffect(() => {
+    fetchCart();
+    const fetchAddresses = async () => {
+      try {
+
+        const { data } = await api.get("/Addresses/MyAddresses"); 
+        
+        const list = Array.isArray(data) ? data : (data?.items || []);
+        
+        setAddresses(list);
+        
+        if (list.length > 0) {
+
+          const first = list[0];
+          setSelectedAddressStr(`${first.street}, ${first.city}, ${first.zip}`);
+        } else {
+
+          setShowManualInput(true);
+        }
+      } catch (err) {
+        console.error("Failed to fetch addresses:", err);
+
+        setShowManualInput(true);
+      } finally {
+        setIsLoadingAddresses(false);
+      }
+    };
+    fetchAddresses();
+
+  }, []);
+
+  const handleCheckout = async () => {
+    if (!items.length || !selectedAddressStr) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      const response = await api.post("/Orders/Checkout", JSON.stringify(selectedAddressStr), {
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        clearCart();
+        navigate("/my-orders");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data || "Checkout failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="h-screen bg-black text-white flex flex-col items-center justify-center space-y-4">
+        <ShoppingBag size={64} className="text-neutral-800" />
+        <h1 className="text-2xl font-black italic uppercase text-center leading-tight">
+          Your Cart <br /> is Empty
+        </h1>
+        <Button onClick={() => navigate("/kits")} variant="outline" className="border-white text-white rounded-full px-8">
+          BROWSE KITS
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white p-6 md:p-12">
+      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
+        
+        <div className="lg:col-span-2">
+          <header className="flex items-center gap-4 mb-12">
+            <Button variant="ghost" onClick={() => navigate(-1)} className="text-white hover:bg-neutral-900 rounded-full">
+              <ArrowLeft size={24} />
+            </Button>
+            <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white">CHECKOUT</h1>
+          </header>
+
+          <div className="space-y-4">
+            {items.map((item) => (
+              <div key={item.id} className="flex items-center gap-6 bg-neutral-950 p-5 rounded-3xl border border-neutral-800">
+                <div className="w-20 h-20 bg-neutral-900 rounded-2xl overflow-hidden shrink-0">
+                  {item.imageUrl && <img src={item.imageUrl} className="w-full h-full object-cover" alt={item.name} />}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-md font-black uppercase italic leading-tight">{item.name}</h3>
+                  <p className="font-mono text-neutral-500 text-sm">₹{item.price}</p>
+                </div>
+                <div className="flex items-center gap-4 bg-black border border-neutral-800 rounded-xl p-1.5">
+                  <button onClick={() => updateQuantity(item.id, -1)} disabled={isSubmitting}><Minus size={14} /></button>
+                  <span className="font-mono font-bold w-5 text-center text-sm">{item.quantity}</span>
+                  <button onClick={() => updateQuantity(item.id, 1)} disabled={isSubmitting}><Plus size={14} /></button>
+                </div>
+                <button onClick={() => removeFromCart(item.id)} className="text-neutral-700 hover:text-red-500 transition-colors p-2">
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-8">
+          <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xs font-black uppercase tracking-widest text-neutral-500">Shipping To</h3>
+              
+              <button 
+                onClick={() => setShowManualInput(!showManualInput)}
+                className="text-[10px] uppercase text-neutral-400 hover:text-white font-black tracking-widest"
+              >
+                {showManualInput ? "Select Saved" : "Enter Manual"}
+              </button>
+            </div>
+
+            {isLoadingAddresses ? (
+              <Loader2 className="animate-spin text-neutral-700 mx-auto" />
+            ) : showManualInput ? (
+              <div className="space-y-3 animate-in fade-in">
+                <p className="text-xs text-neutral-400">Enter full delivery address:</p>
+                <textarea 
+                  className="w-full bg-black border border-neutral-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-white min-h-[80px]"
+                  placeholder="Street, City, Zip Code..."
+                  value={selectedAddressStr}
+                  onChange={(e) => setSelectedAddressStr(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {addresses.length === 0 && (
+                  <div className="text-center py-4">
+                    <AlertCircle className="mx-auto text-neutral-700 mb-2" size={24} />
+                    <p className="text-xs text-neutral-500">No saved addresses found.</p>
+                  </div>
+                )}
+                {addresses.map((addr) => {
+                  const fullAddr = `${addr.street}, ${addr.city}, ${addr.zip}`;
+                  const isSelected = selectedAddressStr === fullAddr;
+                  return (
+                    <div key={addr.id || Math.random()} onClick={() => setSelectedAddressStr(fullAddr)}
+                      className={`p-4 rounded-2xl border cursor-pointer transition-all relative overflow-hidden ${
+                        isSelected ? "border-white bg-white/5" : "border-neutral-900 hover:border-neutral-700"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <MapPin size={16} className={isSelected ? "text-white" : "text-neutral-700"} />
+                        <div>
+                          <p className="text-xs font-bold uppercase">{addr.street}</p>
+                          <p className="text-[10px] text-neutral-500 uppercase">{addr.city}, {addr.zip}</p>
+                        </div>
+                      </div>
+                      {isSelected && <CheckCircle2 size={14} className="absolute top-4 right-4 text-white" />}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white text-black rounded-3xl p-8 shadow-2xl">
+            <p className="text-[10px] font-black uppercase opacity-50 tracking-widest">Total Amount</p>
+            <p className="text-4xl font-black italic tracking-tighter">
+               ₹{isNaN(getTotal()) ? 0 : getTotal()}
+            </p>
+            
+            <Button size="lg" onClick={handleCheckout} 
+              disabled={isSubmitting || !selectedAddressStr || selectedAddressStr.trim().length === 0}
+              className="w-full bg-black text-white hover:bg-neutral-800 rounded-2xl font-black italic uppercase py-8 text-xl disabled:opacity-50"
+            >
+              {isSubmitting ? <Loader2 className="animate-spin" /> : "CONFIRM ORDER"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

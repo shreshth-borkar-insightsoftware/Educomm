@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/api/axiosInstance";
+import { useCartStore } from "@/store/useCartStore";
 import { Button } from "@/components/ui/button";
 import { MoveLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +17,7 @@ interface Kit {
 export default function KitDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCartStore();
   const [kit, setKit] = useState<Kit | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +25,6 @@ export default function KitDetailsPage() {
     const fetchKitDetails = async () => {
       try {
         const { data } = await api.get(`/Kits/${id}`);
-        
         setKit({
           id: data.id || data.kitId || data.Id,
           name: data.name || data.Name,
@@ -60,9 +61,7 @@ export default function KitDetailsPage() {
               <CardTitle className="text-3xl font-bold uppercase tracking-tight text-white">{kit.name}</CardTitle>
             </div>
             {kit.price && (
-              <div className="text-2xl font-bold text-white bg-neutral-900 px-4 py-2 rounded-xl">
-                ₹{kit.price}
-              </div>
+              <div className="text-2xl font-bold text-white bg-neutral-900 px-4 py-2 rounded-xl">₹{kit.price}</div>
             )}
           </div>
         </CardHeader>
@@ -71,7 +70,6 @@ export default function KitDetailsPage() {
             <h3 className="text-sm font-semibold text-neutral-500 uppercase tracking-widest">Description</h3>
             <p className="text-neutral-300 leading-relaxed text-lg">{kit.description}</p>
           </div>
-
           <div className="grid grid-cols-2 gap-4 pt-4">
              <div className="bg-neutral-900 p-4 rounded-xl">
                <p className="text-xs text-neutral-500 uppercase mb-1">Stock Availability</p>
@@ -79,8 +77,11 @@ export default function KitDetailsPage() {
              </div>
           </div>
 
-          <Button className="w-full bg-white text-black hover:bg-neutral-200 h-12 text-md font-bold rounded-xl mt-4">
-            ADD TO INVENTORY
+          <Button 
+            onClick={() => addToCart(kit as any)} 
+            className="w-full bg-white text-black hover:bg-neutral-200 h-12 text-md font-bold rounded-xl mt-4"
+          >
+            ADD TO CART
           </Button>
         </CardContent>
       </Card>
