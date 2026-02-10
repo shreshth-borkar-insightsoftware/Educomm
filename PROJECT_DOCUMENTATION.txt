@@ -1,0 +1,774 @@
+# EDUCOMM - E-Learning Platform Project Documentation
+================================================================================
+
+## PROJECT OVERVIEW
+================================================================================
+Educomm is a full-stack e-learning platform that allows users to browse, purchase, 
+and access educational courses and kits. The platform includes user authentication, 
+course management, shopping cart functionality, order processing, and enrollment 
+tracking.
+
+Project Type: E-Learning E-Commerce Platform
+Architecture: Full-Stack Web Application (Backend API + Frontend SPA)
+Created: January 2026
+Last Updated: February 2026
+
+
+## TECHNOLOGY STACK
+================================================================================
+
+### BACKEND
+- Framework: ASP.NET Core 10.0 (C#)
+- Database: PostgreSQL (hosted on Supabase)
+- ORM: Entity Framework Core 8.0
+- Authentication: JWT Bearer Token Authentication
+- Password Hashing: BCrypt.Net
+- API Documentation: Swagger/OpenAPI
+- Key Libraries:
+  * Npgsql.EntityFrameworkCore.PostgreSQL (8.0.0)
+  * Microsoft.AspNetCore.Authentication.JwtBearer (10.0.2)
+  * BCrypt.Net-Next (4.0.3)
+  * Swashbuckle.AspNetCore (6.4.0)
+
+### FRONTEND
+- Framework: React 19.2.0
+- Language: TypeScript
+- Build Tool: Vite 7.2.4
+- Routing: React Router DOM 7.13.0
+- State Management: Zustand 5.0.10
+- HTTP Client: Axios 1.13.3
+- Styling: Tailwind CSS 4.1.18
+- UI Components: Radix UI, Lucide React (icons)
+- Dev Server Port: 5173
+
+
+## PROJECT STRUCTURE
+================================================================================
+
+### BACKEND STRUCTURE (Educomm/)
+```
+Educomm/
+├── Program.cs                  # Application entry point & configuration
+├── appsettings.json            # Configuration (DB connection, JWT key)
+├── Educomm.csproj             # Project dependencies
+│
+├── Controllers/               # API Endpoints
+│   ├── AuthController.cs      # Login, Register, User authentication
+│   ├── UsersController.cs     # User management
+│   ├── CoursesController.cs   # Course CRUD operations
+│   ├── CourseContentsController.cs  # Course content management
+│   ├── CategoriesController.cs     # Category management
+│   ├── KitsController.cs      # Kit/Product management
+│   ├── CartsController.cs     # Shopping cart operations
+│   ├── CheckoutController.cs  # Order checkout process
+│   ├── OrdersController.cs    # Order management
+│   ├── EnrollmentsController.cs   # Course enrollment tracking
+│   └── AddressesController.cs # User address management
+│
+├── Models/                    # Data Models
+│   ├── User.cs               # User entity
+│   ├── Courses.cs            # Course entity
+│   ├── Categories.cs         # Category entity
+│   ├── Kits.cs               # Kit/Product entity
+│   ├── CourseContents.cs     # Course content entity
+│   ├── Cart.cs               # Shopping cart entity
+│   ├── CartItems.cs          # Cart items entity
+│   ├── Orders.cs             # Order entity
+│   ├── OrderItems.cs         # Order items entity
+│   ├── Enrollments.cs        # Course enrollment entity
+│   ├── Addresses.cs          # User address entity
+│   └── DTOs/
+│       └── LoginDtos.cs      # Data transfer objects
+│
+├── Data/
+│   └── AppDbContext.cs       # Database context & configuration
+│
+└── Migrations/               # Entity Framework migrations
+    ├── 20260115105423_mig-1.cs      # Initial migration
+    ├── 20260116071827_mig-2.cs
+    ├── 20260116082257_mig-3.cs
+    ├── 20260116110917_mig-4.cs
+    ├── 20260116112252_mig-5.cs
+    ├── 20260116113725_mig-6.cs
+    ├── 20260116114353_mig-7.cs
+    ├── 20260116115930_mig-8.cs
+    ├── 20260116125140_mig-9.cs
+    ├── 20260127140404_mig-10.cs     # Latest migration
+    └── AppDbContextModelSnapshot.cs # Current DB schema
+```
+
+### FRONTEND STRUCTURE (frontend/)
+```
+frontend/
+├── index.html              # HTML entry point
+├── package.json            # Dependencies & scripts
+├── vite.config.ts         # Vite configuration
+├── tsconfig.json          # TypeScript configuration
+├── components.json        # Component configuration
+│
+├── src/
+│   ├── main.tsx           # React entry point
+│   ├── App.tsx            # Root component with routing
+│   ├── App.css            # Global styles
+│   ├── index.css          # Base styles
+│   │
+│   ├── api/
+│   │   └── axiosInstance.ts   # Axios HTTP client configuration
+│   │
+│   ├── pages/             # Page components
+│   │   ├── LoginPages.tsx      # Login page
+│   │   ├── RegisterPage.tsx    # Registration page
+│   │   ├── DashboardPage.tsx   # Main dashboard
+│   │   ├── CoursesPage.tsx     # Browse courses
+│   │   ├── CourseDetailsPage.tsx  # Course details
+│   │   ├── CourseContentPage.tsx  # Course content viewer
+│   │   ├── KitsPage.tsx        # Browse kits
+│   │   ├── KitDetailsPage.tsx  # Kit details
+│   │   ├── CartPage.tsx        # Shopping cart
+│   │   ├── MyOrdersPage.tsx    # Order history
+│   │   ├── MyCoursesPage.tsx   # Enrolled courses
+│   │   ├── AddressPage.tsx     # Address management
+│   │   └── admin/              # Admin panel pages
+│   │       ├── AdminDashboard.tsx  # Admin dashboard with stats
+│   │       ├── AdminCategories.tsx # Category management (CRUD)
+│   │       ├── AdminCourses.tsx    # Course management (CRUD)
+│   │       ├── AdminKits.tsx       # Kit management (Full CRUD with edit)
+│   │       ├── AdminEnrollments.tsx # Enrollment management (CRUD)
+│   │       ├── AdminOrders.tsx     # Order management (View & Status Update)
+│   │       └── AdminUsers.tsx      # User management (View)
+│   │
+│   ├── layout/
+│   │   ├── MainLayout.tsx      # Main application layout
+│   │   └── AdminLayout.tsx     # Admin panel layout with sidebar
+│   │
+│   ├── components/
+│   │   ├── ProtectedAdminRoute.tsx  # Admin route protection
+│   │   └── ui/            # Reusable UI components
+│   │
+│   ├── store/             # State management (Zustand)
+│   │
+│   ├── lib/
+│   │   └── utils.ts       # Utility functions
+│   │
+│   └── assets/            # Static assets
+│
+└── public/                # Public static files
+```
+
+
+## DATABASE SCHEMA
+================================================================================
+
+### ENTITIES & RELATIONSHIPS
+
+1. USERS (users table)
+   - UserId (PK)
+   - Email
+   - PasswordHash
+   - FirstName
+   - LastName
+   - PhoneNumber
+   - Role (default: "Customer")
+   - Relationships: One-to-One with Cart
+
+2. CATEGORIES
+   - CategoryId (PK)
+   - Name
+   - Description
+   - Relationships: One-to-Many with Courses
+
+3. COURSES
+   - CourseId (PK)
+   - CategoryId (FK)
+   - Name
+   - Description
+   - Difficulty
+   - DurationMinutes
+   - ThumbnailUrl
+   - IsActive
+   - Relationships: 
+     * Many-to-One with Category
+     * One-to-Many with CourseContents
+     * One-to-Many with Kits
+
+4. COURSE CONTENTS
+   - CourseContentId (PK)
+   - CourseId (FK)
+   - Title
+   - ContentType (video, document, etc.)
+   - ContentUrl
+   - Duration
+   - OrderIndex
+   - Relationships: Many-to-One with Course
+
+5. KITS (Products)
+   - KitId (PK)
+   - CourseId (FK)
+   - Name
+   - Description
+   - Price
+   - StockQuantity
+   - ImageUrl
+   - IsActive
+   - Relationships: Many-to-One with Course
+
+6. CART
+   - CartId (PK)
+   - UserId (FK)
+   - Relationships: 
+     * One-to-One with User
+     * One-to-Many with CartItems
+
+7. CART ITEMS
+   - CartItemId (PK)
+   - CartId (FK)
+   - KitId (FK)
+   - Quantity
+   - Relationships: Many-to-One with Cart and Kit
+
+8. ORDERS
+   - OrderId (PK)
+   - UserId (FK)
+   - OrderDate
+   - TotalAmount
+   - Status
+   - ShippingAddress
+   - Relationships: 
+     * Many-to-One with User
+     * One-to-Many with OrderItems
+
+9. ORDER ITEMS
+   - OrderItemId (PK)
+   - OrderId (FK)
+   - KitId (FK)
+   - Quantity
+   - Price
+   - Relationships: Many-to-One with Order and Kit
+
+10. ENROLLMENTS
+    - EnrollmentId (PK)
+    - UserId (FK)
+    - CourseId (FK)
+    - EnrollmentDate
+    - Status
+    - Progress
+    - Relationships: Many-to-One with User and Course
+
+11. ADDRESSES
+    - AddressId (PK)
+    - UserId (FK)
+    - Street
+    - City
+    - State
+    - ZipCode
+    - Country
+    - IsDefault
+    - Relationships: Many-to-One with User
+
+
+## KEY FEATURES
+================================================================================
+
+### AUTHENTICATION & AUTHORIZATION
+- JWT-based authentication
+- BCrypt password hashing
+- Role-based access (Customer, Admin)
+- Protected API endpoints
+- Secure token storage in frontend
+
+### USER MANAGEMENT
+- User registration
+- User login
+- Profile management
+- Address management
+- Role-based permissions
+
+### COURSE MANAGEMENT
+- Browse courses by category
+- View course details
+- Course content (videos, documents)
+- Course difficulty levels
+- Duration tracking
+- Course thumbnails
+
+### PRODUCT/KIT MANAGEMENT
+- Browse kits associated with courses
+- Product details
+- Stock management
+- Pricing
+- Product images
+
+### SHOPPING CART
+- Add/remove items
+- Update quantities
+- View cart total
+- Persistent cart (database-backed)
+
+### CHECKOUT & ORDERS
+- Order placement
+- Order history
+- Order status tracking
+- Shipping address selection
+- Order item details
+
+### ENROLLMENT
+- Course enrollment after purchase
+- Enrollment status tracking
+- Progress tracking
+- Access to course content
+
+### ADMIN PANEL
+- Protected admin routes with role-based access
+- Auto-redirect to /admin on admin login
+- Admin dashboard with real-time statistics:
+  * Total Users count (from /api/users)
+  * Total Courses count (from /api/courses)
+  * Total Kits count (from /api/kits)
+  * Total Categories count (from /api/categories)
+  * Total Orders count (from /api/Orders/Admin/AllOrders)
+  * Total Enrollments count (from /api/enrollments/Admin/AllEnrollments)
+  * All cards are clickable and navigate to respective management pages
+  * Hover effects with color inversion (black to white, white to black)
+- Statistics displayed in responsive grid layout (3 columns desktop, 2 tablet, 1 mobile)
+- Loading states during data fetch
+- Error handling with user-friendly messages
+- Icon-based visual presentation (Lucide React icons)
+- Admin sidebar navigation (via AdminLayout) matching main site design
+- Same design pattern as main site (Hello Kitty background, consistent styling)
+- Category Management (Full CRUD):
+  * View all categories in responsive table
+  * Add new category with modal form (name, description required)
+  * Delete category with confirmation dialog via DELETE /api/categories/{id}
+  * Real-time list updates after create/delete
+  * Success/error message notifications
+  * Horizontal scroll on mobile for table
+- Course Management (Full CRUD):
+  * View all courses with category names, difficulty, duration, status
+  * Add new course with modal form:
+    - Name, description, category dropdown, difficulty dropdown
+    - Duration in minutes, thumbnail URL (optional), active status toggle
+  * Edit existing course via PUT /api/courses/{id}
+  * Category dropdown fetched from /api/categories
+  * Difficulty options: Beginner, Intermediate, Advanced
+  * Status badges (green for active, red for inactive)
+  * Delete course with confirmation dialog (warns about kits/content)
+  * Real-time list updates after create/update/delete
+  * Success/error message notifications
+  * Responsive table with horizontal scroll on mobile
+- Kit Management (Full CRUD with Edit):
+  * View all kits with course names, price, stock quantity, status
+  * Add new kit with modal form:
+    - Name, description, course dropdown, price (decimal)
+    - Stock quantity (integer), image URL (optional), active status toggle
+  * Edit existing kit - opens pre-filled form, updates via PUT /api/kits/{id}
+  * Course dropdown fetched from /api/courses
+  * Price formatted with currency symbol (₹)
+  * Stock quantity color coding:
+    - Red if 0 (out of stock)
+    - Orange if below 5 (low stock)
+    - Green if 5 or more (in stock)
+  * Status badges (green for active, red for inactive)
+  * Delete kit with confirmation dialog
+  * Real-time list updates after create/update/delete
+  * Success/error message notifications
+  * Edit and Delete buttons per row
+  * Form mode switches between Add/Edit with different headings
+  * Responsive table with horizontal scroll on mobile
+- Enrollment Management (View & Delete):
+  * View all enrollments via GET /api/enrollments/Admin/AllEnrollments
+  * Table columns: Enrollment ID, User, Course, Enrolled Date, Actions
+  * Add new enrollment with modal form:
+    - User dropdown (from /api/users, shows name and email)
+    - Course dropdown (from /api/courses)
+  * Enrollment date formatted nicely (e.g., "Jan 15, 2026")
+  * User names/emails mapped from user IDs
+  * Course names mapped from course IDs
+  * Delete enrollment via DELETE /api/enrollments/{id}
+  * Real-time list updates after create/delete
+  * Success/error message notifications
+  * Responsive table with horizontal scroll on mobile
+  * Null-safe status handling to prevent errors
+- Order Management (View & Status Update):
+  * View all orders via GET /api/Orders/Admin/AllOrders
+  * Main table columns: Expand, Order ID, User, Order Date, Total Amount, Shipping Address, Status, Actions
+  * Order details:
+    - Order ID displayed as #123 format with monospace font
+    - User mapped from userId to name/email (fetched from /api/users)
+    - Order date formatted nicely (e.g., "Jan 27, 2026")
+    - Total amount formatted with currency (₹)
+    - Shipping address with truncation and tooltip
+  * Status badges with color coding:
+    - Pending: Yellow background
+    - Processing: Blue background
+    - Shipped: Purple background
+    - Delivered: Green background
+    - Cancelled: Red background
+  * Expandable rows (click expand icon to show/hide):
+    - Fetches order items from GET /api/Orders/Admin/AllOrders
+    - Displays nested table with columns: Kit Name, Quantity, Price/Item, Subtotal
+    - Maps kit IDs to names (from /api/kits)
+    - Loading state while fetching items
+  * Status update functionality:
+    - Dropdown in Actions column with all status options
+    - Updates via PUT /api/Orders/Admin/UpdateStatus/{orderId} with JSON string
+    - Dropdown options: Pending, Processing, Shipped, Delivered, Cancelled
+    - Disabled state while updating
+    - Success/error message notifications
+    - Auto-refresh list after successful update
+  * Responsive table with horizontal scroll on mobile
+  * Loading states during data fetch
+  * Error handling with user-friendly messages
+- User Management (View Only):
+  * View all registered users in responsive table
+  * Statistics cards showing:
+    - Total Users count
+    - Total Admins count  
+    - Total Customers count
+  * Table columns: User ID, Name, Email, Phone Number, Role
+  * User details:
+    - User ID displayed as #123 format with monospace font
+    - Full name (firstName + lastName) or "—" if not provided
+    - Email with mail icon
+    - Phone number with phone icon or "—" if not provided
+  * Role badges with color coding:
+    - Admin: Purple background
+    - Customer: Blue background
+  * Icons for visual clarity (User, Mail, Phone icons)
+  * Responsive table with horizontal scroll on mobile
+  * Loading states during data fetch
+  * Error handling with user-friendly messages
+  * No CRUD operations (view-only for now)
+
+### CATEGORY SYSTEM
+- Course categorization
+- Browse by category
+- Category management
+
+
+## API ENDPOINTS (Backend)
+================================================================================
+
+### Authentication
+- POST /api/auth/register     - Register new user
+- POST /api/auth/login        - Login user (returns JWT)
+
+### Users
+- GET    /api/users           - Get all users (Admin)
+- GET    /api/users/{id}      - Get user by ID
+- PUT    /api/users/{id}      - Update user
+- DELETE /api/users/{id}      - Delete user
+
+### Categories
+- GET    /api/categories      - Get all categories
+- GET    /api/categories/{id} - Get category by ID
+- POST   /api/categories      - Create category (Admin)
+- PUT    /api/categories/{id} - Update category
+- DELETE /api/categories/{id} - Delete category (Admin)
+
+### Courses
+- GET    /api/courses         - Get all courses
+- GET    /api/courses/{id}    - Get course by ID
+- POST   /api/courses         - Create course (Admin)
+- PUT    /api/courses/{id}    - Update course (Admin)
+- DELETE /api/courses/{id}    - Delete course (Admin)
+
+### Course Contents
+- GET    /api/coursecontents/{courseId}  - Get contents for course
+- POST   /api/coursecontents              - Create course content
+- PUT    /api/coursecontents/{id}         - Update content
+- DELETE /api/coursecontents/{id}         - Delete content
+
+### Kits
+- GET    /api/kits            - Get all kits
+- GET    /api/kits/{id}       - Get kit by ID
+- POST   /api/kits            - Create kit
+- PUT    /api/kits/{id}       - Update kit
+- DELETE /api/kits/{id}       - Delete kit
+
+### Cart
+- GET    /api/carts/{userId}  - Get user's cart
+- POST   /api/carts/items     - Add item to cart
+- PUT    /api/carts/items/{id} - Update cart item quantity
+- DELETE /api/carts/items/{id} - Remove item from cart
+
+### Checkout
+- POST   /api/checkout        - Process checkout
+
+### Orders
+- GET    /api/orders/{userId}              - Get user's orders
+- GET    /api/orders/{id}                  - Get order by ID
+- POST   /api/orders/checkout              - Process checkout
+- GET    /api/Orders/Admin/AllOrders       - Get all orders (Admin)
+- PUT    /api/Orders/Admin/UpdateStatus/{orderId} - Update order status (Admin, expects JSON string)
+
+### Enrollments
+- GET    /api/enrollments/MyEnrollments           - Get current user's enrollments
+- GET    /api/enrollments/Admin/AllEnrollments    - Get all enrollments (Admin)
+- POST   /api/enrollments                         - Create enrollment (Admin)
+- DELETE /api/enrollments/{id}                    - Delete enrollment (Admin)
+
+### Addresses
+- GET    /api/addresses/{userId}    - Get user addresses
+- POST   /api/addresses             - Create address
+- PUT    /api/addresses/{id}        - Update address
+- DELETE /api/addresses/{id}        - Delete address
+
+
+## FRONTEND ROUTING
+================================================================================
+
+### Main Routes
+- /                      → Redirects to /dashboard
+- /login                 → Login page
+- /dashboard             → Main dashboard
+- /courses               → Browse courses
+- /courses/:id           → Course details (Note: conflicting route)
+- /kits                  → Browse kits
+- /kits/:id              → Kit details
+- /cart                  → Shopping cart
+- /my-orders             → Order history
+- /my-courses            → Enrolled courses
+- /address               → Address management
+- /*                     → 404 Not Found
+
+### Admin Routes (Protected)
+All admin routes require admin role and are protected by ProtectedAdminRoute:
+- /admin                 → Admin Dashboard (statistics overview with clickable cards)
+- /admin/courses         → Courses Management (full CRUD)
+- /admin/kits            → Kits Management (full CRUD with edit)
+- /admin/categories      → Categories Management (full CRUD)
+- /admin/enrollments     → Enrollments Management (view & delete)
+- /admin/orders          → Orders Management (view & status update)
+- /admin/users           → Users Management (view only)
+
+
+## CONFIGURATION
+================================================================================
+
+### Backend Configuration (appsettings.json)
+- Database: PostgreSQL on Supabase (AWS Singapore region)
+- Connection String: Configured for SSL/TLS
+- JWT Secret Key: Custom secret for token signing
+- CORS: Allows frontend (http://localhost:5173)
+
+### Frontend Configuration
+- Dev Server: Vite on port 5173
+- API Base URL: Should be configured in axiosInstance.ts
+- Build Output: TypeScript compiled + Vite bundling
+
+
+## SETUP INSTRUCTIONS
+================================================================================
+
+### PREREQUISITES
+1. .NET 10.0 SDK
+2. Node.js 18+ and npm
+3. PostgreSQL database (or Supabase account)
+4. Visual Studio Code or Visual Studio 2022
+
+### BACKEND SETUP
+1. Navigate to Educomm folder
+2. Install dependencies:
+   dotnet restore
+
+3. Update appsettings.json with your database credentials
+
+4. Apply migrations:
+   dotnet ef database update
+
+5. Run the backend:
+   dotnet run
+   
+   Backend will run on: http://localhost:5000 or https://localhost:5001
+
+### FRONTEND SETUP
+1. Navigate to frontend folder
+2. Install dependencies:
+   npm install
+
+3. Configure API endpoint in src/api/axiosInstance.ts
+
+4. Run development server:
+   npm run dev
+   
+   Frontend will run on: http://localhost:5173
+
+### FULL STACK STARTUP
+1. Start backend in one terminal
+2. Start frontend in another terminal
+3. Access application at http://localhost:5173
+
+
+## DEVELOPMENT WORKFLOW
+================================================================================
+
+### Adding New Features
+1. Backend:
+   - Create/modify models in Models/
+   - Update AppDbContext if needed
+   - Create migration: dotnet ef migrations add MigrationName
+   - Apply migration: dotnet ef database update
+   - Add controller in Controllers/
+   - Update Swagger documentation if needed
+
+2. Frontend:
+   - Create page component in src/pages/
+   - Add route in App.tsx
+   - Create API service calls in src/api/
+   - Update state management in src/store/
+   - Add UI components as needed
+
+### Database Changes
+1. Modify models in Models/
+2. Create migration: 
+   dotnet ef migrations add <MigrationName>
+3. Review migration in Migrations/ folder
+4. Apply to database:
+   dotnet ef database update
+
+
+## SECURITY FEATURES
+================================================================================
+
+1. Password Security
+   - BCrypt hashing with salt
+   - Passwords never stored in plain text
+
+2. API Security
+   - JWT Bearer token authentication
+   - Token expiration
+   - Role-based authorization
+   - Protected endpoints
+
+3. CORS Protection
+   - Configured for specific origin (localhost:5173)
+   - Credentials allowed
+   - Specific headers and methods
+
+4. Database Security
+   - SSL/TLS connection to database
+   - Parameterized queries (EF Core)
+   - Server certificate trust configured
+
+
+## CURRENT STATE & LIMITATIONS
+================================================================================
+
+### Implemented Features
+✓ User authentication (login/register)
+✓ Course browsing and viewing
+✓ Kit/Product catalog
+✓ Shopping cart functionality
+✓ Order processing and checkout
+✓ Course enrollment
+✓ Address management
+✓ Category system
+✓ JWT authentication with role-based access
+✓ Database migrations
+✓ Admin panel infrastructure (layout, routing, protection)
+✓ Admin dashboard with clickable statistics cards (users, courses, kits, categories, orders, enrollments)
+✓ Admin category management (create, view, delete)
+✓ Admin course management (full CRUD with category/difficulty selection)
+✓ Admin kit management (full CRUD with edit, price/stock tracking)
+✓ Admin enrollment management (view, create, delete)
+✓ Admin order management (view, expandable order items, status updates)
+✓ Admin user management (view all users with role badges and statistics)
+✓ Admin-specific API endpoints for orders and enrollments
+
+### Known Issues/To-Do
+- Payment gateway integration not implemented
+- Email notifications not implemented
+- File upload for course content not implemented
+- Admin user management needs CRUD operations (currently view-only)
+- Search functionality not implemented
+- Filtering and sorting not implemented
+- Pagination not implemented for large datasets
+- Image upload/storage not implemented (currently using URLs)
+- Course progress tracking incomplete
+- Review/rating system not implemented
+- Course content management not fully implemented
+
+
+## DEPLOYMENT CONSIDERATIONS
+================================================================================
+
+### Backend Deployment
+- Host on Azure App Service, AWS, or similar
+- Update CORS policy for production domain
+- Use environment variables for sensitive data
+- Configure production database connection
+- Enable HTTPS redirection
+- Setup logging and monitoring
+
+### Frontend Deployment
+- Build production bundle: npm run build
+- Deploy to Vercel, Netlify, or similar
+- Update API base URL for production
+- Configure environment variables
+- Enable CDN for static assets
+
+### Database
+- Currently using Supabase (cloud PostgreSQL)
+- Ensure proper backup strategy
+- Monitor connection limits
+- Consider read replicas for scale
+
+
+## MIGRATION HISTORY
+================================================================================
+The project has gone through 10 database migrations:
+
+1. mig-1 (2026-01-15): Initial schema
+2. mig-2 (2026-01-16): Schema updates
+3. mig-3 (2026-01-16): Additional changes
+4. mig-4 (2026-01-16): Further modifications
+5. mig-5 (2026-01-16): Schema refinements
+6. mig-6 (2026-01-16): Model adjustments
+7. mig-7 (2026-01-16): Additional features
+8. mig-8 (2026-01-16): Schema updates
+9. mig-9 (2026-01-16): Final day 1 changes
+10. mig-10 (2026-01-27): Latest schema update
+
+
+## ENHANCEMENT OPPORTUNITIES
+================================================================================
+
+### High Priority
+1. Implement payment gateway (Stripe/PayPal)
+2. Add search functionality across courses and kits
+3. Implement filtering and sorting
+4. Add pagination for large datasets
+5. Fix routing conflicts in frontend
+6. Complete admin management pages (CRUD operations for courses, kits, categories, orders, users)
+7. Add image upload functionality
+8. Implement email notifications
+
+### Medium Priority
+1. Course progress tracking enhancement
+2. Review and rating system
+3. Wishlist feature
+4. Course recommendations
+5. Social sharing features
+6. User profile enhancements
+7. Advanced reporting and analytics
+8. Bulk operations for admin
+
+### Low Priority
+1. Dark mode theme
+2. Multi-language support
+3. Mobile app version
+4. Export data functionality
+5. Advanced search with filters
+6. Course certificates
+7. Discussion forums
+8. Live chat support
+
+
+## CONTACT & SUPPORT
+================================================================================
+This documentation was generated to help Claude AI understand and enhance the 
+Educomm platform. Use this document as a reference when making changes or 
+adding new features to the project.
+
+Last Updated: February 10, 2026
+Documentation Version: 1.0

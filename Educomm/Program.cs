@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +69,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false
         };
     });
+
+// Configure Stripe
+StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe:SecretKey").Value;
 
 var app = builder.Build();
 

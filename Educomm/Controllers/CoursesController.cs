@@ -18,20 +18,15 @@ namespace Educomm.Controllers
             _context = context;
         }
 
-        // GET: api/Courses
-        // Lists all courses (Name, Description, Price, Category)
-        // Public info that anyone logged in can see to decide what to buy.
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Course>>> GetCourses()
         {
             return await _context.Courses
-                .Include(c => c.Category) // Keep this to show Category Name
+                .Include(c => c.Category)
                 .Include(c => c.Kits)
                 .ToListAsync();
         }
 
-        // POST: api/Courses
-        // Admin Only: Create a new Course
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Course>> PostCourse(Course course)
@@ -49,8 +44,42 @@ namespace Educomm.Controllers
             return Ok(course);
         }
 
-        // DELETE: api/Courses/5
-        // Admin Only: Delete a Course
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateCourse(int id, Course course)
+        {
+            if (id != course.CourseId)
+            {
+                return BadRequest("ID mismatch.");
+            }
+
+            var categoryExists = await _context.Categories.AnyAsync(c => c.CategoryId == course.CategoryId);
+            if (!categoryExists)
+            {
+                return BadRequest("Invalid CategoryId. That category does not exist.");
+            }
+
+            _context.Entry(course).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Courses.Any(c => c.CourseId == id))
+                {
+                    return NotFound("Course not found.");
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return Ok("Course updated successfully.");
+        }
+
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCourse(int id)

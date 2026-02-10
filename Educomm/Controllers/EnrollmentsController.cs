@@ -60,5 +60,34 @@ namespace Educomm.Controllers
 
             return Ok(enrollment);
         }
+
+        // GET api: Get All Enrollments (Admin)
+        [HttpGet("Admin/AllEnrollments")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<Enrollments>>> GetAllEnrollments()
+        {
+            return await _context.Enrollments
+                .Include(e => e.Course)
+                .Include(e => e.User)
+                .ToListAsync();
+        }
+
+        // DELETE api: Delete Enrollment (Admin)
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteEnrollment(int id)
+        {
+            var enrollment = await _context.Enrollments.FindAsync(id);
+
+            if (enrollment == null)
+            {
+                return NotFound("Enrollment not found.");
+            }
+
+            _context.Enrollments.Remove(enrollment);
+            await _context.SaveChangesAsync();
+
+            return Ok("Enrollment deleted successfully.");
+        }
     }
 }

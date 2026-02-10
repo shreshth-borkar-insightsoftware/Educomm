@@ -9,7 +9,7 @@ namespace Educomm.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] 
+    [Authorize]
     public class CartsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -30,7 +30,7 @@ namespace Educomm.Controllers
         [HttpGet("MyCart")]
         public async Task<ActionResult<Cart>> GetMyCart()
         {
-            int userId = GetUserId(); //Securely get ID from token
+            int userId = GetUserId();
 
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
@@ -47,14 +47,12 @@ namespace Educomm.Controllers
 
         // POST: api/Carts/Add
         [HttpPost("Add")]
-        public async Task<ActionResult<Cart>> AddToCart(int kitId, int quantity)
+        public async Task<ActionResult<Cart>> AddToCart([FromBody] CartRequest request)
         {
             int userId = GetUserId();
 
-            //Find user cart
             var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
 
-            //If no cart exists, create one
             if (cart == null)
             {
                 cart = new Cart { UserId = userId };
@@ -62,38 +60,59 @@ namespace Educomm.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            //Check if item already exists in cart
             var existingItem = await _context.CartItems
-                .FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.KitId == kitId);
+                .FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.KitId == request.KitId);
 
             if (existingItem != null)
             {
-                existingItem.Quantity += quantity;
+                existingItem.Quantity += request.Quantity;
             }
             else
             {
                 var newItem = new CartItem
                 {
                     CartId = cart.CartId,
-                    KitId = kitId,
-                    Quantity = quantity
+                    KitId = request.KitId,
+                    Quantity = request.Quantity
                 };
                 _context.CartItems.Add(newItem);
             }
 
             await _context.SaveChangesAsync();
-
-            // Return updated cart
             return await GetMyCart();
         }
 
-        // DELETE: api/Carts/RemoveItem/5
+
+        [HttpPut("UpdateQuantity")]
+        public async Task<IActionResult> UpdateQuantity([FromBody] CartRequest request)
+        {
+            int userId = GetUserId();
+
+            var cartItem = await _context.CartItems
+                .Include(ci => ci.Cart)
+                .FirstOrDefaultAsync(ci => ci.Cart.UserId == userId && ci.KitId == request.KitId);
+
+            if (cartItem == null)
+            {
+                return NotFound("Item not found in your cart.");
+            }
+
+            cartItem.Quantity = request.Quantity;
+
+            if (cartItem.Quantity <= 0)
+            {
+                _context.CartItems.Remove(cartItem);
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok("Quantity updated successfully.");
+        }
+
         [HttpDelete("RemoveItem/{cartItemId}")]
         public async Task<IActionResult> RemoveCartItem(int cartItemId)
         {
             int userId = GetUserId();
 
-            // Find the item AND include the Cart to check ownership
             var cartItem = await _context.CartItems
                 .Include(ci => ci.Cart)
                 .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
@@ -120,7 +139,6 @@ namespace Educomm.Controllers
         {
             int userId = GetUserId();
 
-            // Find the logged-in user's cart
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
@@ -135,5 +153,11 @@ namespace Educomm.Controllers
 
             return Ok("Cart emptied.");
         }
+    }
+
+    public class CartRequest
+    {
+        public int KitId { get; set; }
+        public int Quantity { get; set; }
     }
 }

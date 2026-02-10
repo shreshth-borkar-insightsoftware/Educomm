@@ -487,3 +487,6 @@ build/
 .eslintcache
 *.log
 package-lock.json.log
+
+# Development settings with secrets
+appsettings.Development.json

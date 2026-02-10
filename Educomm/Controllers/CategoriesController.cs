@@ -34,5 +34,23 @@ namespace Educomm.Controllers
             await _context.SaveChangesAsync();
             return Ok(category);
         }
+
+        // DELETE api
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteCategory(int id)
+        {
+            var category = await _context.Categories.FindAsync(id);
+
+            if (category == null)
+            {
+                return NotFound("Category not found.");
+            }
+
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
+
+            return Ok("Category deleted successfully.");
+        }
     }
 }

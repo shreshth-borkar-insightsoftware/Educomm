@@ -28,95 +28,116 @@ namespace Educomm.Controllers
         }
 
         // POST Api: Checkout
-        // CHANGED: Removed userId parameter. It gets ID from token now.
         [HttpPost("Checkout")]
         public async Task<ActionResult<Order>> Checkout([FromBody] string shippingAddress)
         {
-            int userId = GetUserId(); // Securely get ID
+            Console.WriteLine("--- CHECKOUT PROCESS STARTED ---");
 
-            // get cart then get cart item then get kit 
-            var cart = await _context.Carts
-                .Include(c => c.CartItems)
-                .ThenInclude(ci => ci.Kit)
-                .FirstOrDefaultAsync(c => c.UserId == userId);
+            // Start a transaction to ensure either everything saves or nothing saves
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            if (cart == null || !cart.CartItems.Any())
+            try
             {
-                return BadRequest("Cart is empty.");
-            }
+                int userId = GetUserId(); // Securely get ID from token
+                Console.WriteLine($"DEBUG: User ID from token: {userId}");
 
-            // Check stock logic (Your style)
-            var cartItemsList = cart.CartItems.ToList();
+                // 1. Get cart, cart items, and the kits attached to them
+                var cart = await _context.Carts
+                    .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.Kit)
+                    .FirstOrDefaultAsync(c => c.UserId == userId);
 
-            for (int i = 0; i < cartItemsList.Count; i++)
-            {
-                var item = cartItemsList[i];
-
-                if (item.Kit.StockQuantity < item.Quantity)
+                if (cart == null || !cart.CartItems.Any())
                 {
-                    return BadRequest($"Not enough stock for {item.Kit.Name}.");
+                    Console.WriteLine("DEBUG: Checkout failed - Cart is empty.");
+                    return BadRequest("Cart is empty.");
                 }
-            }
 
-            // Order creation
-            var order = new Order
-            {
-                UserId = userId,
-                ShippingAddress = shippingAddress,
-                TotalAmount = cart.CartItems.Sum(i => i.Quantity * i.Kit.Price),
-                Status = "Pending",
-                OrderDate = DateTime.UtcNow
-            };
+                Console.WriteLine($"DEBUG: Found cart with {cart.CartItems.Count} items.");
 
-            // Minus from Stock & Add Items
-            for (int i = 0; i < cartItemsList.Count; i++)
-            {
-                var cartItem = cartItemsList[i];
-
-                //Subtract Stock
-                cartItem.Kit.StockQuantity -= cartItem.Quantity;
-
-                //Create Order Item
-                var orderItem = new OrderItem
+                // 2. Check stock for all items before doing anything else
+                foreach (var item in cart.CartItems)
                 {
-                    KitId = cartItem.KitId,
-                    Quantity = cartItem.Quantity,
-                    PriceAtPurchase = cartItem.Kit.Price
-                };
-                order.OrderItems.Add(orderItem);
-
-                //enrollment Logic
-                if (cartItem.Kit.CourseId != null)
-                {
-                    //check if enrolled
-                    bool alreadyEnrolled = await _context.Enrollments
-                        .AnyAsync(e => e.UserId == userId && e.CourseId == cartItem.Kit.CourseId);
-
-                    if (!alreadyEnrolled)
+                    if (item.Kit.StockQuantity < item.Quantity)
                     {
-                        var newEnrollment = new Enrollments
-                        {
-                            UserId = userId,
-                            CourseId = (int)cartItem.Kit.CourseId,
-                            EnrolledAt = DateTime.UtcNow,
-                            ProgressPercentage = 0,
-                            IsCompleted = false
-                        };
-                        _context.Enrollments.Add(newEnrollment);
+                        Console.WriteLine($"DEBUG: Stock fail for {item.Kit.Name}.");
+                        return BadRequest($"Not enough stock for {item.Kit.Name}.");
                     }
                 }
+
+                // 3. Initialize the Order object
+                var order = new Order
+                {
+                    UserId = userId,
+                    ShippingAddress = shippingAddress,
+                    TotalAmount = cart.CartItems.Sum(i => i.Quantity * i.Kit.Price),
+                    Status = "Pending",
+                    OrderDate = DateTime.UtcNow,
+                    OrderItems = new List<OrderItem>() // Crucial initialization to prevent NullReference
+                };
+
+                // 4. Process each item: Stock update, Item creation, and Enrollment
+                foreach (var cartItem in cart.CartItems.ToList())
+                {
+                    // Subtract Stock
+                    cartItem.Kit.StockQuantity -= cartItem.Quantity;
+
+                    // Create the individual Order Item
+                    var orderItem = new OrderItem
+                    {
+                        KitId = cartItem.KitId,
+                        Quantity = cartItem.Quantity,
+                        PriceAtPurchase = cartItem.Kit.Price
+                    };
+                    order.OrderItems.Add(orderItem);
+
+                    // Enrollment Logic: If the kit is linked to a course, enroll the user
+                    if (cartItem.Kit.CourseId != null)
+                    {
+                        bool alreadyEnrolled = await _context.Enrollments
+                            .AnyAsync(e => e.UserId == userId && e.CourseId == cartItem.Kit.CourseId);
+
+                        if (!alreadyEnrolled)
+                        {
+                            var newEnrollment = new Enrollments
+                            {
+                                UserId = userId,
+                                CourseId = (int)cartItem.Kit.CourseId,
+                                EnrolledAt = DateTime.UtcNow,
+                                ProgressPercentage = 0,
+                                IsCompleted = false
+                            };
+                            _context.Enrollments.Add(newEnrollment);
+                        }
+                    }
+                }
+
+                // 5. Save changes and empty the cart
+                _context.Orders.Add(order);
+                _context.CartItems.RemoveRange(cart.CartItems);
+
+                Console.WriteLine("DEBUG: Attempting final SaveChangesAsync...");
+                await _context.SaveChangesAsync();
+
+                // Commit the transaction to the database
+                await transaction.CommitAsync();
+
+                Console.WriteLine($"SUCCESS: Order #{order.OrderId} created in DB.");
+                return Ok(order);
             }
+            catch (Exception ex)
+            {
+                // If anything goes wrong, undo all database changes made during this request
+                await transaction.RollbackAsync();
 
-            _context.Orders.Add(order);
+                Console.WriteLine($"CRITICAL ERROR: {ex.Message}");
+                Console.WriteLine($"STACK TRACE: {ex.StackTrace}");
 
-            //emptying Cart
-            _context.CartItems.RemoveRange(cart.CartItems);
-
-            await _context.SaveChangesAsync();
-            return Ok(order);
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
         }
 
-        // GET Api only My Orders
+        // GET Api: My Orders
         [HttpGet("MyOrders")]
         public async Task<ActionResult<IEnumerable<Order>>> GetMyOrders()
         {
@@ -129,8 +150,8 @@ namespace Educomm.Controllers
                 .OrderByDescending(o => o.OrderDate) // Newest first
                 .ToListAsync();
         }
-        //admin 
-        //This lets the Admin see everyone's orders
+
+        // GET Api: Admin View All Orders
         [HttpGet("Admin/AllOrders")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<Order>>> GetAllOrders()
@@ -142,7 +163,7 @@ namespace Educomm.Controllers
                 .ToListAsync();
         }
 
-        //PUT for Update Status
+        // PUT Api: Update Order Status (Admin)
         [HttpPut("Admin/UpdateStatus/{orderId}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateOrderStatus(int orderId, [FromBody] string newStatus)
