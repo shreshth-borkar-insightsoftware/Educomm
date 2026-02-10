@@ -20,7 +20,7 @@ export default function CoursesPage() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const { data } = await api.get("/Courses");
+        const { data } = await api.get("/courses");
         const formatted = data.map((c: any) => ({
           id: c.courseId || c.Id || c.id,
           name: c.name || c.Name,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { Button } from "@/components/ui/button";
 import { 
@@ -10,11 +10,14 @@ import {
   MapPin, 
   CheckCircle2 
 } from "lucide-react";
+import PaymentNotification from "@/components/PaymentNotification";
 
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -28,7 +31,14 @@ export default function MyOrdersPage() {
       }
     };
     fetchOrders();
-  }, []);
+
+    // Check if we came from successful payment
+    if (searchParams.get("payment") === "success") {
+      setShowSuccessNotification(true);
+      // Remove the parameter from URL
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   if (loading) return (
     <div className="h-screen bg-black flex items-center justify-center">
@@ -38,6 +48,15 @@ export default function MyOrdersPage() {
 
   return (
     <div className="min-h-screen bg-black text-white p-8">
+      {/* Success Notification Modal - Auto-dismiss after 3 seconds */}
+      {showSuccessNotification && (
+        <PaymentNotification 
+          type="success" 
+          onClose={() => setShowSuccessNotification(false)}
+          autoCloseDelay={3000}
+        />
+      )}
+
       <div className="max-w-5xl mx-auto">
         <header className="flex items-center gap-4 mb-12">
           <Button 

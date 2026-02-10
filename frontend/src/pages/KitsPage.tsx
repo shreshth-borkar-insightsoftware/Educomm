@@ -29,7 +29,7 @@ export default function KitsPage() {
     const fetchKits = async () => {
       try {
         setLoading(true);
-        const { data } = await api.get("/Kits");
+        const { data } = await api.get("/kits");
         const rawData = Array.isArray(data) ? data : [];
         const formattedKits = rawData.map((k: any) => ({
           id: k.kitId || k.Id || k.id,

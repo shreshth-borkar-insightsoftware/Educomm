@@ -5,7 +5,7 @@ export default function MainLayout() {
   return (
     <div className="flex min-h-screen bg-white dark:bg-black text-black dark:text-white transition-colors relative">
 
-      <div className="fixed inset-0 z-0 pointer-events-none">
+      <div className="fixed inset-0 z-20 pointer-events-none">
         <img
           src="https://i.pinimg.com/736x/cd/22/42/cd2242f862c520578e732311e929af06.jpg"
           alt="Hello Kitty Background"

@@ -32,15 +32,22 @@ const handleLogin = async (e: React.FormEvent) => {
 
       const userData = data.user || data; 
 
+      const userRole = userData.role || userData.Role || "User";
+      
       setAuth({ 
         email: email, 
         userId: userData.userId || userData.id || userData.Id || 0,
-        role: userData.role || userData.Role || "User",
+        role: userRole,
         firstName: userData.firstName || userData.FirstName || "",
         lastName: userData.lastName || userData.LastName || ""    
       }, token); 
 
-      navigate("/dashboard");
+      // Redirect based on role
+      if (userRole === "Admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: any) {
       console.error("Login Error Details:", err);
       const errorMessage = err.response?.data?.message || err.message || "Invalid credentials.";
