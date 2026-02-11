@@ -11,6 +11,8 @@ import MyCoursesPage from "./pages/MyCoursesPage";
 import CoursesPage from "./pages/CoursesPage";
 import AddressPage from "./pages/AddressPage";
 import KitDetailsPage from "./pages/KitDetailsPage";
+import CourseDetailsPage from "./pages/CourseDetailsPage";
+import SearchResultsPage from "./pages/SearchResultsPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminCourses from "./pages/admin/AdminCourses";
@@ -37,8 +39,9 @@ function App() {
           <Route path="/my-orders" element={<MyOrdersPage />} />
           <Route path="/my-courses" element={<MyCoursesPage />} />
           <Route path="/courses" element={<CoursesPage/>} />
+          <Route path="/courses/:id" element={<CourseDetailsPage />} />
           <Route path="/address" element={<AddressPage/>} />
-          <Route path="/courses" element={<KitDetailsPage />} />
+          <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/kits/:id" element={<KitDetailsPage />} />
           
           {/* Payment Routes - Protected for logged-in users */}

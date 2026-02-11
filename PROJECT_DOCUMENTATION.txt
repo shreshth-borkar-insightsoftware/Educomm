@@ -11,7 +11,7 @@ tracking.
 Project Type: E-Learning E-Commerce Platform
 Architecture: Full-Stack Web Application (Backend API + Frontend SPA)
 Created: January 2026
-Last Updated: February 2026
+Last Updated: February 11, 2026
 
 
 ## TECHNOLOGY STACK
@@ -54,16 +54,17 @@ Educomm/
 │
 ├── Controllers/               # API Endpoints
 │   ├── AuthController.cs      # Login, Register, User authentication
-│   ├── UsersController.cs     # User management
-│   ├── CoursesController.cs   # Course CRUD operations
+│   ├── UsersController.cs     # User management (with pagination)
+│   ├── CoursesController.cs   # Course CRUD operations (with filtering, sorting, pagination)
 │   ├── CourseContentsController.cs  # Course content management
-│   ├── CategoriesController.cs     # Category management
-│   ├── KitsController.cs      # Kit/Product management
+│   ├── CategoriesController.cs     # Category management (with pagination)
+│   ├── KitsController.cs      # Kit/Product management (with filtering, sorting, pagination)
 │   ├── CartsController.cs     # Shopping cart operations
 │   ├── CheckoutController.cs  # Order checkout process
-│   ├── OrdersController.cs    # Order management
-│   ├── EnrollmentsController.cs   # Course enrollment tracking
-│   └── AddressesController.cs # User address management
+│   ├── OrdersController.cs    # Order management (with pagination)
+│   ├── EnrollmentsController.cs   # Course enrollment tracking (with pagination)
+│   ├── AddressesController.cs # User address management
+│   └── SearchController.cs    # Global search endpoint (no auth required)
 │
 ├── Models/                    # Data Models
 │   ├── User.cs               # User entity
@@ -78,7 +79,9 @@ Educomm/
 │   ├── Enrollments.cs        # Course enrollment entity
 │   ├── Addresses.cs          # User address entity
 │   └── DTOs/
-│       └── LoginDtos.cs      # Data transfer objects
+│       ├── LoginDtos.cs      # Data transfer objects for authentication
+│       ├── PaginatedResponse.cs  # Generic pagination response wrapper
+│       └── SearchResponse.cs     # Search results response model
 │
 ├── Data/
 │   └── AppDbContext.cs       # Database context & configuration
@@ -119,23 +122,24 @@ frontend/
 │   │   ├── LoginPages.tsx      # Login page
 │   │   ├── RegisterPage.tsx    # Registration page
 │   │   ├── DashboardPage.tsx   # Main dashboard
-│   │   ├── CoursesPage.tsx     # Browse courses
+│   │   ├── CoursesPage.tsx     # Browse courses (with pagination)
 │   │   ├── CourseDetailsPage.tsx  # Course details
 │   │   ├── CourseContentPage.tsx  # Course content viewer
-│   │   ├── KitsPage.tsx        # Browse kits
+│   │   ├── KitsPage.tsx        # Browse kits (with pagination)
 │   │   ├── KitDetailsPage.tsx  # Kit details
 │   │   ├── CartPage.tsx        # Shopping cart
-│   │   ├── MyOrdersPage.tsx    # Order history
-│   │   ├── MyCoursesPage.tsx   # Enrolled courses
+│   │   ├── MyOrdersPage.tsx    # Order history (with pagination)
+│   │   ├── MyCoursesPage.tsx   # Enrolled courses (with pagination)
 │   │   ├── AddressPage.tsx     # Address management
+│   │   ├── SearchResultsPage.tsx  # Search results page with tabs & filters
 │   │   └── admin/              # Admin panel pages
-│   │       ├── AdminDashboard.tsx  # Admin dashboard with stats
-│   │       ├── AdminCategories.tsx # Category management (CRUD)
-│   │       ├── AdminCourses.tsx    # Course management (CRUD)
-│   │       ├── AdminKits.tsx       # Kit management (Full CRUD with edit)
-│   │       ├── AdminEnrollments.tsx # Enrollment management (CRUD)
-│   │       ├── AdminOrders.tsx     # Order management (View & Status Update)
-│   │       └── AdminUsers.tsx      # User management (View)
+│   │       ├── AdminDashboard.tsx  # Admin dashboard with stats (uses pagination)
+│   │       ├── AdminCategories.tsx # Category management (with table pagination)
+│   │       ├── AdminCourses.tsx    # Course management (with table pagination)
+│   │       ├── AdminKits.tsx       # Kit management (with table pagination)
+│   │       ├── AdminEnrollments.tsx # Enrollment management (with table pagination)
+│   │       ├── AdminOrders.tsx     # Order management (with table pagination)
+│   │       └── AdminUsers.tsx      # User management (with table pagination)
 │   │
 │   ├── layout/
 │   │   ├── MainLayout.tsx      # Main application layout
@@ -143,7 +147,16 @@ frontend/
 │   │
 │   ├── components/
 │   │   ├── ProtectedAdminRoute.tsx  # Admin route protection
+│   │   ├── GlobalSearch.tsx         # Global search bar with dropdown
+│   │   ├── FilterSidebar.tsx        # Reusable filter sidebar for courses
+│   │   ├── KitFilterSidebar.tsx     # Reusable filter sidebar for kits
 │   │   └── ui/            # Reusable UI components
+│   │       ├── Sidebar.tsx         # Main navigation sidebar
+│   │       └── TablePagination.tsx  # Reusable pagination component for tables
+│   │
+│   ├── hooks/             # Custom React hooks
+│   │   ├── usePagination.ts   # Hook for "Load More" pagination pattern
+│   │   └── useDebounce.ts     # Hook for debouncing search input
 │   │
 │   ├── store/             # State management (Zustand)
 │   │
@@ -444,6 +457,60 @@ frontend/
 - Browse by category
 - Category management
 
+### PAGINATION SYSTEM
+- Backend pagination using PaginatedResponse<T> wrapper
+- Frontend pagination with two patterns:
+  * "Load More" pattern for user pages (accumulates results)
+  * Table pagination for admin pages (replaces results)
+- Custom usePagination hook for user pages
+- Reusable TablePagination component for admin pages
+- All major endpoints support pagination (courses, kits, orders, enrollments, users, categories)
+- Page size: 12 for courses/kits, 10 for orders/enrollments, 15 for admin tables
+- No database migrations required (app-level only)
+
+### SEARCH FUNCTIONALITY
+- Global search bar in navbar (visible on all pages)
+- Debounced search with 400ms delay
+- Live dropdown with up to 5 results each for courses and kits
+- Full search results page with tabs (All/Courses/Kits)
+- Backend search endpoint: GET /api/search
+  * Searches courses by name and description
+  * Searches kits by name and description
+  * Case-insensitive using PostgreSQL ILike
+  * Supports pagination (page, pageSize)
+  * Type filtering (all, courses, kits)
+  * No authentication required
+- Frontend features:
+  * Search highlighting (query term highlighted in yellow)
+  * Category and difficulty badges for courses
+  * Price and stock status for kits
+  * Click to navigate to detail pages
+  * Enter key to go to full search page
+  * "View all" links when more results available
+  * Responsive card grid (3 cols desktop, 2 tablet, 1 mobile)
+  * Load more pagination
+  * Empty states and error handling
+
+### FILTERING & SORTING
+- Courses endpoint supports advanced filtering:
+  * categoryId - filter by category
+  * difficulty - filter by difficulty level (Beginner, Intermediate, Advanced)
+  * minDuration/maxDuration - filter by duration range in minutes
+  * isActive - filter by active status
+  * sortBy - sort by name, duration, or newest
+  * sortOrder - asc or desc
+- Kits endpoint supports advanced filtering:
+  * courseId - filter by associated course
+  * minPrice/maxPrice - filter by price range
+  * inStock - filter by stock availability (stockQuantity > 0)
+  * isActive - filter by active status
+  * sortBy - sort by name, price_low, price_high, or newest
+  * sortOrder - asc or desc
+- All filters are optional and dynamic
+- Validation for invalid ranges (min > max returns BadRequest)
+- Unknown sort values ignored and default to "name"
+- Maintains backward compatibility (endpoints work without filters)
+
 
 ## API ENDPOINTS (Backend)
 ================================================================================
@@ -466,7 +533,9 @@ frontend/
 - DELETE /api/categories/{id} - Delete category (Admin)
 
 ### Courses
-- GET    /api/courses         - Get all courses
+- GET    /api/courses         - Get all courses (with pagination, filtering, sorting)
+  * Query params: page, pageSize, categoryId, difficulty, minDuration, maxDuration, isActive, sortBy, sortOrder
+  * Returns: PaginatedResponse<Course> with items, totalCount, page, pageSize, totalPages
 - GET    /api/courses/{id}    - Get course by ID
 - POST   /api/courses         - Create course (Admin)
 - PUT    /api/courses/{id}    - Update course (Admin)
@@ -479,7 +548,9 @@ frontend/
 - DELETE /api/coursecontents/{id}         - Delete content
 
 ### Kits
-- GET    /api/kits            - Get all kits
+- GET    /api/kits            - Get all kits (with pagination, filtering, sorting)
+  * Query params: page, pageSize, courseId, minPrice, maxPrice, inStock, isActive, sortBy, sortOrder
+  * Returns: PaginatedResponse<Kit> with items, totalCount, page, pageSize, totalPages
 - GET    /api/kits/{id}       - Get kit by ID
 - POST   /api/kits            - Create kit
 - PUT    /api/kits/{id}       - Update kit
@@ -513,6 +584,15 @@ frontend/
 - PUT    /api/addresses/{id}        - Update address
 - DELETE /api/addresses/{id}        - Delete address
 
+### Search
+- GET    /api/search          - Global search (no auth required)
+  * Query params: q (search term, required), type (all/courses/kits, default: all), page, pageSize
+  * Returns: SearchResponse with query, courses: { items, totalCount }, kits: { items, totalCount }
+  * Searches course/kit names and descriptions using PostgreSQL ILike (case-insensitive)
+  * Minimum 2 characters required
+  * Sanitizes special characters (%, _, \) for SQL safety
+  * Maximum pageSize capped at 20
+
 
 ## FRONTEND ROUTING
 ================================================================================
@@ -521,25 +601,26 @@ frontend/
 - /                      → Redirects to /dashboard
 - /login                 → Login page
 - /dashboard             → Main dashboard
-- /courses               → Browse courses
+- /courses               → Browse courses (with pagination)
 - /courses/:id           → Course details (Note: conflicting route)
-- /kits                  → Browse kits
+- /kits                  → Browse kits (with pagination)
 - /kits/:id              → Kit details
 - /cart                  → Shopping cart
-- /my-orders             → Order history
-- /my-courses            → Enrolled courses
+- /my-orders             → Order history (with pagination)
+- /my-courses            → Enrolled courses (with pagination)
 - /address               → Address management
+- /search                → Search results page (with tabs, filters, pagination)
 - /*                     → 404 Not Found
 
 ### Admin Routes (Protected)
 All admin routes require admin role and are protected by ProtectedAdminRoute:
-- /admin                 → Admin Dashboard (statistics overview with clickable cards)
-- /admin/courses         → Courses Management (full CRUD)
-- /admin/kits            → Kits Management (full CRUD with edit)
-- /admin/categories      → Categories Management (full CRUD)
-- /admin/enrollments     → Enrollments Management (view & delete)
-- /admin/orders          → Orders Management (view & status update)
-- /admin/users           → Users Management (view only)
+- /admin                 → Admin Dashboard (statistics overview with clickable cards, uses pagination for counts)
+- /admin/courses         → Courses Management (full CRUD with table pagination)
+- /admin/kits            → Kits Management (full CRUD with edit, table pagination)
+- /admin/categories      → Categories Management (full CRUD with table pagination)
+- /admin/enrollments     → Enrollments Management (view & delete with table pagination)
+- /admin/orders          → Orders Management (view & status update with table pagination)
+- /admin/users           → Users Management (view only with table pagination)
 
 
 ## CONFIGURATION
@@ -667,26 +748,31 @@ All admin routes require admin role and are protected by ProtectedAdminRoute:
 ✓ Database migrations
 ✓ Admin panel infrastructure (layout, routing, protection)
 ✓ Admin dashboard with clickable statistics cards (users, courses, kits, categories, orders, enrollments)
-✓ Admin category management (create, view, delete)
-✓ Admin course management (full CRUD with category/difficulty selection)
-✓ Admin kit management (full CRUD with edit, price/stock tracking)
-✓ Admin enrollment management (view, create, delete)
-✓ Admin order management (view, expandable order items, status updates)
-✓ Admin user management (view all users with role badges and statistics)
+✓ Admin category management (create, view, delete with pagination)
+✓ Admin course management (full CRUD with category/difficulty selection, pagination)
+✓ Admin kit management (full CRUD with edit, price/stock tracking, pagination)
+✓ Admin enrollment management (view, create, delete with pagination)
+✓ Admin order management (view, expandable order items, status updates, pagination)
+✓ Admin user management (view all users with role badges and statistics, pagination)
 ✓ Admin-specific API endpoints for orders and enrollments
+✓ Pagination system (backend PaginatedResponse, frontend usePagination hook & TablePagination component)
+✓ Global search functionality (navbar search bar with dropdown, full search results page)
+✓ Search backend with PostgreSQL ILike, case-insensitive, sanitized queries
+✓ Advanced filtering and sorting for courses and kits endpoints
+✓ Search highlighting, category/difficulty badges, price/stock indicators
+✓ Responsive design (mobile, tablet, desktop)
 
 ### Known Issues/To-Do
 - Payment gateway integration not implemented
 - Email notifications not implemented
 - File upload for course content not implemented
 - Admin user management needs CRUD operations (currently view-only)
-- Search functionality not implemented
-- Filtering and sorting not implemented
-- Pagination not implemented for large datasets
 - Image upload/storage not implemented (currently using URLs)
 - Course progress tracking incomplete
 - Review/rating system not implemented
 - Course content management not fully implemented
+- Frontend filter UI not implemented (backend supports filtering)
+- Advanced search filters not in UI yet (backend ready)
 
 
 ## DEPLOYMENT CONSIDERATIONS
@@ -735,13 +821,11 @@ The project has gone through 10 database migrations:
 
 ### High Priority
 1. Implement payment gateway (Stripe/PayPal)
-2. Add search functionality across courses and kits
-3. Implement filtering and sorting
-4. Add pagination for large datasets
-5. Fix routing conflicts in frontend
-6. Complete admin management pages (CRUD operations for courses, kits, categories, orders, users)
-7. Add image upload functionality
-8. Implement email notifications
+2. Add filter UI for courses and kits pages (backend already supports it)
+3. Fix routing conflicts in frontend
+4. Add image upload functionality
+5. Implement email notifications
+6. Complete admin user management CRUD operations
 
 ### Medium Priority
 1. Course progress tracking enhancement
@@ -752,6 +836,7 @@ The project has gone through 10 database migrations:
 6. User profile enhancements
 7. Advanced reporting and analytics
 8. Bulk operations for admin
+9. Advanced search filters UI (price range, category checkboxes, etc.)
 
 ### Low Priority
 1. Dark mode theme
@@ -770,5 +855,78 @@ This documentation was generated to help Claude AI understand and enhance the
 Educomm platform. Use this document as a reference when making changes or 
 adding new features to the project.
 
-Last Updated: February 10, 2026
-Documentation Version: 1.0
+Last Updated: February 11, 2026
+Documentation Version: 2.0
+
+================================================================================
+RECENT UPDATES (February 11, 2026):
+================================================================================
+
+1. PAGINATION SYSTEM
+   - Implemented PaginatedResponse<T> DTO for all major endpoints
+   - Backend controllers updated: Courses, Kits, Orders, Enrollments, Users, Categories
+   - All endpoints accept page and pageSize query parameters
+   - Frontend usePagination hook for "Load More" pattern (user pages)
+   - Frontend TablePagination component for table pagination (admin pages)
+   - No database migrations required (application-level only)
+   - Page sizes: 12 for courses/kits, 10 for orders/enrollments, 15 for admin tables
+
+2. GLOBAL SEARCH FEATURE
+   - Backend SearchController.cs created at /api/search endpoint
+   - No authentication required for search
+   - Searches courses and kits by name and description
+   - PostgreSQL case-insensitive search using EF.Functions.ILike
+   - Query sanitization for SQL safety (escapes %, _, \)
+   - Supports type filtering (all, courses, kits) and pagination
+   - Frontend GlobalSearch.tsx component in navbar
+   - Debounced search input (400ms delay using useDebounce hook)
+   - Live dropdown showing up to 5 results per type
+   - Full SearchResultsPage.tsx with tabs (All/Courses/Kits)
+   - Search query highlighting in results
+   - Responsive card grid layout
+   - "Load More" functionality on search results page
+   - Request cancellation using AbortController
+
+3. ADVANCED FILTERING & SORTING
+   - CoursesController filtering added:
+     * categoryId, difficulty, minDuration, maxDuration, isActive
+     * sortBy: name, duration, newest
+     * sortOrder: asc, desc
+   - KitsController filtering added:
+     * courseId, minPrice, maxPrice, inStock, isActive
+     * sortBy: name, price_low, price_high, newest
+     * sortOrder: asc, desc
+   - Dynamic query building with .Where() chaining
+   - Validation for invalid ranges (returns BadRequest)
+   - All filters optional, maintains backward compatibility
+   - Uses AsNoTracking() for performance
+
+4. FILTER UI COMPONENTS
+   - CoursesPage.tsx: Complete rewrite with advanced filter UI
+     * FilterSidebar.tsx component for desktop/mobile
+     * URL state synchronization with useSearchParams
+     * Active filter count badge
+     * Removable filter chips
+     * Two-column layout (sidebar + grid)
+     * Price range validation
+     * Instant filter application
+     * Preserves pagination with filters
+   - KitsPage.tsx: Same filter pattern applied
+     * KitFilterSidebar.tsx component
+     * Course dropdown, price range, in-stock toggle
+     * All cart functionality preserved
+     * Same responsive design pattern
+     * Filter + cart integration tested
+
+5. TECHNICAL IMPROVEMENTS
+   - AbortController for cancelling stale API requests
+   - useDebounce custom hook for search input
+   - Better error handling and loading states
+   - Responsive design improvements (sidebar vs overlay)
+   - Dark mode support throughout
+   - Accessibility improvements (keyboard navigation, escape to close)
+   - Reusable filter sidebar patterns
+   - URL-based filter state for shareable links
+
+================================================================================
+

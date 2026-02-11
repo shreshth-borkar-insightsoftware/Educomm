@@ -21,11 +21,72 @@ namespace Educomm.Controllers
 
         // GET: api/Kits
         [HttpGet]
-        public async Task<ActionResult<PaginatedResponse<Kit>>> GetKits([FromQuery] int page = 1, [FromQuery] int pageSize = 12)
+        public async Task<ActionResult<PaginatedResponse<Kit>>> GetKits(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 12,
+            [FromQuery] int? courseId = null,
+            [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null,
+            [FromQuery] bool? inStock = null,
+            [FromQuery] bool? isActive = null,
+            [FromQuery] string sortBy = "name",
+            [FromQuery] string sortOrder = "asc")
         {
+            // Validate price range
+            if (minPrice.HasValue && maxPrice.HasValue && minPrice > maxPrice)
+            {
+                return BadRequest(new { message = "minPrice cannot be greater than maxPrice" });
+            }
+
+            // Build query with filters
             var query = _context.Kits
-                .Include(k => k.Category)
-                .Include(k => k.Course);
+                .Include(k => k.Course)
+                .AsNoTracking()
+                .AsQueryable();
+
+            // Apply filters
+            if (courseId.HasValue)
+            {
+                query = query.Where(k => k.CourseId == courseId.Value);
+            }
+
+            if (minPrice.HasValue)
+            {
+                query = query.Where(k => k.Price >= minPrice.Value);
+            }
+
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(k => k.Price <= maxPrice.Value);
+            }
+
+            if (inStock.HasValue && inStock.Value)
+            {
+                query = query.Where(k => k.StockQuantity > 0);
+            }
+
+            if (isActive.HasValue)
+            {
+                query = query.Where(k => k.IsActive == isActive.Value);
+            }
+
+            // Apply sorting
+            var validSortBy = new[] { "name", "price_low", "price_high", "newest" };
+            var sortByLower = sortBy?.ToLower() ?? "name";
+            if (!validSortBy.Contains(sortByLower))
+            {
+                sortByLower = "name";
+            }
+
+            query = sortByLower switch
+            {
+                "price_low" => query.OrderBy(k => k.Price),
+                "price_high" => query.OrderByDescending(k => k.Price),
+                "newest" => query.OrderByDescending(k => k.KitId),
+                _ => sortOrder.ToLower() == "desc"
+                    ? query.OrderByDescending(k => k.Name)
+                    : query.OrderBy(k => k.Name)
+            };
 
             var totalCount = await query.CountAsync();
             var items = await query

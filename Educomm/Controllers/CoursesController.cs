@@ -20,11 +20,74 @@ namespace Educomm.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<PaginatedResponse<Course>>> GetCourses([FromQuery] int page = 1, [FromQuery] int pageSize = 12)
+        public async Task<ActionResult<PaginatedResponse<Course>>> GetCourses(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 12,
+            [FromQuery] int? categoryId = null,
+            [FromQuery] string? difficulty = null,
+            [FromQuery] int? minDuration = null,
+            [FromQuery] int? maxDuration = null,
+            [FromQuery] bool? isActive = null,
+            [FromQuery] string sortBy = "name",
+            [FromQuery] string sortOrder = "asc")
         {
+            // Validate duration range
+            if (minDuration.HasValue && maxDuration.HasValue && minDuration > maxDuration)
+            {
+                return BadRequest(new { message = "minDuration cannot be greater than maxDuration" });
+            }
+
+            // Build query with filters
             var query = _context.Courses
                 .Include(c => c.Category)
-                .Include(c => c.Kits);
+                .Include(c => c.Kits)
+                .AsNoTracking()
+                .AsQueryable();
+
+            // Apply filters
+            if (categoryId.HasValue)
+            {
+                query = query.Where(c => c.CategoryId == categoryId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(difficulty))
+            {
+                query = query.Where(c => c.Difficulty == difficulty);
+            }
+
+            if (minDuration.HasValue)
+            {
+                query = query.Where(c => c.DurationMinutes >= minDuration.Value);
+            }
+
+            if (maxDuration.HasValue)
+            {
+                query = query.Where(c => c.DurationMinutes <= maxDuration.Value);
+            }
+
+            if (isActive.HasValue)
+            {
+                query = query.Where(c => c.IsActive == isActive.Value);
+            }
+
+            // Apply sorting
+            var validSortBy = new[] { "name", "duration", "newest" };
+            var sortByLower = sortBy?.ToLower() ?? "name";
+            if (!validSortBy.Contains(sortByLower))
+            {
+                sortByLower = "name";
+            }
+
+            query = sortByLower switch
+            {
+                "duration" => sortOrder.ToLower() == "desc" 
+                    ? query.OrderByDescending(c => c.DurationMinutes)
+                    : query.OrderBy(c => c.DurationMinutes),
+                "newest" => query.OrderByDescending(c => c.CourseId),
+                _ => sortOrder.ToLower() == "desc"
+                    ? query.OrderByDescending(c => c.Name)
+                    : query.OrderBy(c => c.Name)
+            };
 
             var totalCount = await query.CountAsync();
             var items = await query
@@ -39,6 +102,24 @@ namespace Educomm.Controllers
                 Page = page,
                 PageSize = pageSize
             };
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Course>> GetCourse(int id)
+        {
+            var course = await _context.Courses
+                .Include(c => c.Category)
+                .Include(c => c.Kits)
+                .Include(c => c.CourseContents)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CourseId == id);
+
+            if (course == null)
+            {
+                return NotFound(new { message = "Course not found" });
+            }
+
+            return course;
         }
 
         [HttpPost]

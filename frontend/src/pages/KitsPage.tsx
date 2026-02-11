@@ -1,138 +1,405 @@
-import { useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useCartStore } from "@/store/useCartStore";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Package, ArrowLeft, Loader2, ShoppingCart, ShoppingBag } from "lucide-react";
-import { usePagination } from "@/hooks/usePagination";
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ShoppingCart, SlidersHorizontal, X } from 'lucide-react';
+import { useCartStore } from '@/store/useCartStore';
+import apiClient from '@/api/axiosInstance';
+import KitFilterSidebar from '@/components/KitFilterSidebar';
+
+interface Course {
+  courseId: number;
+  name: string;
+}
 
 interface Kit {
-  id: number;
+  kitId: number;
   name: string;
   description: string;
   price: number;
-  imageUrl?: string;
+  imageUrl: string;
+  course?: Course;
+}
+
+interface PaginatedResponse {
+  items: Kit[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export default function KitsPage() {
   const navigate = useNavigate();
-  const { items: rawKits, loading, hasMore, loadMore } = usePagination<any>("/kits", 12);
-  
-  const { items, addToCart, fetchCart } = useCartStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { items: cartItems, addToCart, fetchCart } = useCartStore();
 
-  const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
+  // Kits state
+  const [kits, setKits] = useState<Kit[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const kits = useMemo(() => 
-    rawKits.map((k: any) => ({
-      id: k.kitId || k.Id || k.id,
-      name: k.name || k.Name || "Unnamed Kit",
-      description: k.description || k.Description || "",
-      price: k.price || k.Price || 0,
-      imageUrl: k.imageUrl || k.ImageUrl || null,
-    })),
-    [rawKits]
-  );
+  // Filter state
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [inStock, setInStock] = useState(false);
+  const [isActive, setIsActive] = useState(true);
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [priceError, setPriceError] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(true);
 
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
+  // Fetch courses for filter dropdown
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await apiClient.get('/courses', { params: { pageSize: 100 } });
+        setCourses(response.data.items || []);
+      } catch (error) {
+        console.error('Failed to fetch courses:', error);
+      }
+    };
+    fetchCourses();
+  }, []);
+
+  // Read filters from URL on mount
+  useEffect(() => {
+    const courseId = searchParams.get('courseId');
+    const min = searchParams.get('minPrice');
+    const max = searchParams.get('maxPrice');
+    const stock = searchParams.get('inStock');
+    const active = searchParams.get('isActive');
+    const sort = searchParams.get('sortBy');
+    const order = searchParams.get('sortOrder');
+
+    if (courseId) setSelectedCourse(courseId);
+    if (min) setMinPrice(min);
+    if (max) setMaxPrice(max);
+    if (stock === 'true') setInStock(true);
+    if (active === 'false') setIsActive(false);
+    if (sort) setSortBy(sort);
+    if (order) setSortOrder(order);
+  }, []);
+
+  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  const getFilterParams = () => {
+    const params: Record<string, any> = {
+      page: currentPage,
+      pageSize: 12,
+    };
+
+    if (selectedCourse) params.courseId = selectedCourse;
+    if (minPrice) params.minPrice = minPrice;
+    if (maxPrice) params.maxPrice = maxPrice;
+    if (inStock) params.inStock = true;
+    if (isActive) params.isActive = true;
+    if (sortBy) params.sortBy = sortBy;
+    if (sortOrder) params.sortOrder = sortOrder;
+
+    return params;
+  };
+
+  const updateURL = () => {
+    const params: Record<string, string> = {};
+    
+    if (selectedCourse) params.courseId = selectedCourse;
+    if (minPrice) params.minPrice = minPrice;
+    if (maxPrice) params.maxPrice = maxPrice;
+    if (inStock) params.inStock = 'true';
+    if (!isActive) params.isActive = 'false';
+    if (sortBy !== 'name') params.sortBy = sortBy;
+    if (sortOrder !== 'asc') params.sortOrder = sortOrder;
+
+    setSearchParams(params);
+  };
+
+  const fetchKits = async (isLoadMore = false) => {
+    // Validate price range
+    if (minPrice && maxPrice && parseFloat(minPrice) > parseFloat(maxPrice)) {
+      setPriceError('Min price cannot exceed max price');
+      return;
+    }
+    setPriceError('');
+
+    setLoading(true);
+    try {
+      const params = getFilterParams();
+      const response = await apiClient.get<PaginatedResponse>('/kits', { params });
+      const { items, totalCount: count, totalPages } = response.data;
+
+      if (isLoadMore) {
+        setKits((prev) => [...prev, ...items]);
+      } else {
+        setKits(items);
+      }
+
+      setTotalCount(count);
+      setHasMore(currentPage < totalPages);
+    } catch (error) {
+      console.error('Failed to fetch kits:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch kits when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchKits(false);
+    updateURL();
+  }, [selectedCourse, minPrice, maxPrice, inStock, isActive, sortBy, sortOrder]);
+
+  const handleLoadMore = () => {
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    fetchKits(true);
+  };
+
+  const handleClearAll = () => {
+    setSelectedCourse('');
+    setMinPrice('');
+    setMaxPrice('');
+    setInStock(false);
+    setIsActive(true);
+    setSortBy('name');
+    setSortOrder('asc');
+    setPriceError('');
+    setSearchParams({});
+  };
+
+  const activeFilterCount = 
+    (selectedCourse ? 1 : 0) +
+    (minPrice ? 1 : 0) +
+    (maxPrice ? 1 : 0) +
+    (inStock ? 1 : 0) +
+    (!isActive ? 1 : 0);
+
+  const activeFilters: { label: string; onRemove: () => void }[] = [];
+  if (selectedCourse) {
+    const course = courses.find((c) => c.courseId.toString() === selectedCourse);
+    activeFilters.push({
+      label: `Course: ${course?.name || selectedCourse}`,
+      onRemove: () => setSelectedCourse(''),
+    });
+  }
+  if (minPrice) {
+    activeFilters.push({
+      label: `Min: ₹${minPrice}`,
+      onRemove: () => setMinPrice(''),
+    });
+  }
+  if (maxPrice) {
+    activeFilters.push({
+      label: `Max: ₹${maxPrice}`,
+      onRemove: () => setMaxPrice(''),
+    });
+  }
+  if (inStock) {
+    activeFilters.push({
+      label: 'In Stock',
+      onRemove: () => setInStock(false),
+    });
+  }
+  if (!isActive) {
+    activeFilters.push({
+      label: 'Include Inactive',
+      onRemove: () => setIsActive(true),
+    });
+  }
+
+  const handleAddToCart = async (kit: Kit) => {
+    try {
+      await addToCart({ 
+        id: kit.kitId, 
+        name: kit.name, 
+        price: kit.price, 
+        imageUrl: kit.imageUrl 
+      });
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+    }
+  };
+
+
+
   return (
-    <div className="min-h-screen bg-black text-white p-8 relative">
-      <div className="max-w-7xl mx-auto">
-        <header className="flex items-center gap-4 mb-12">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-neutral-800" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft size={24} />
-          </Button>
-          <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase italic">KITS</h1>
-            <p className="text-neutral-500 text-xs font-mono tracking-widest uppercase">Hardware Store</p>
-          </div>
-        </header>
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+      <div className="flex">
+        {/* Filter Sidebar */}
+        <KitFilterSidebar
+          courses={courses}
+          selectedCourse={selectedCourse}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          inStock={inStock}
+          isActive={isActive}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          priceError={priceError}
+          onCourseChange={setSelectedCourse}
+          onMinPriceChange={setMinPrice}
+          onMaxPriceChange={setMaxPrice}
+          onInStockChange={setInStock}
+          onActiveChange={setIsActive}
+          onSortChange={(newSortBy, newSortOrder) => {
+            setSortBy(newSortBy);
+            setSortOrder(newSortOrder);
+          }}
+          onClearAll={handleClearAll}
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+        />
 
-        {loading && kits.length === 0 ? (
-          <div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin text-white" size={40} /></div>
-        ) : kits.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed border-neutral-800 rounded-3xl">
-            <p className="text-neutral-500 uppercase tracking-widest text-sm">No kits found</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {kits.map((kit) => (
-                <Card key={kit.id} className="bg-neutral-950 border-neutral-800 rounded-3xl overflow-hidden flex flex-col border-t-4 border-t-neutral-700 shadow-2xl relative min-h-[450px]">
-                  <div onClick={() => navigate(`/kits/${kit.id}`)} className="w-full h-56 bg-neutral-900 flex items-center justify-center overflow-hidden border-b border-neutral-800 cursor-pointer group relative">
-                    {kit.imageUrl ? (
-                      <img src={kit.imageUrl} alt={kit.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    ) : (
-                      <div className="flex flex-col items-center text-neutral-600"><Package size={56} /></div>
-                    )}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                      <span className="text-white font-black italic text-xl tracking-[0.2em] uppercase">VIEW KIT</span>
-                    </div>
-                  </div>
-
-                  <CardHeader className="p-6 pb-2">
-                    <CardTitle className="text-2xl font-black uppercase text-white tracking-tight">{kit.name}</CardTitle>
-                  </CardHeader>
-
-                  <CardContent className="p-6 pt-0 flex-1 flex flex-col justify-between">
-                    <p className="text-sm text-neutral-400 line-clamp-2 mb-6">{kit.description}</p>
-                    <div className="flex justify-between items-center pt-4 border-t border-neutral-900">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-neutral-500 font-bold uppercase">Price</span>
-                        <p className="text-xl font-mono font-bold">₹{kit.price}</p>
-                      </div>
-                      {/* Add To Cart Button */}
-                      <button 
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          addToCart(kit); 
-                        }}
-                        className="p-3 bg-neutral-900 rounded-full hover:bg-white hover:text-black transition-all border border-neutral-800"
-                      >
-                        <ShoppingCart size={20} />
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {hasMore && (
-              <div className="flex justify-center mt-12">
+        {/* Main Content */}
+        <div className="flex-1 p-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h1 className="text-4xl font-bold text-neutral-900 dark:text-white">
+                  Hardware Kits
+                </h1>
+                
+                {/* Filter Toggle Button */}
                 <Button
-                  onClick={loadMore}
-                  disabled={loading}
-                  className="bg-white text-black hover:bg-neutral-200 font-black uppercase px-8 py-6 rounded-2xl border-2 border-white transition-all"
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className="flex items-center gap-2 bg-neutral-900 dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200"
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                      Loading...
-                    </>
-                  ) : (
-                    "Load More"
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <span className="hidden sm:inline">Filters</span>
+                  {activeFilterCount > 0 && (
+                    <span className="ml-2 bg-white dark:bg-black text-black dark:text-white text-xs rounded-full px-2 py-0.5">
+                      {activeFilterCount}
+                    </span>
                   )}
                 </Button>
               </div>
-            )}
-          </>
-        )}
 
-        {cartCount > 0 && (
-          <button
-            onClick={() => navigate("/cart")}
-            className="fixed bottom-10 right-10 z-50 bg-white text-black px-8 py-5 rounded-full font-black italic flex items-center gap-4 shadow-2xl hover:scale-105 transition-transform"
-          >
-            <ShoppingBag size={24} />
-            <span className="tracking-tighter">VIEW CART</span>
-            <span className="bg-black text-white w-7 h-7 rounded-full text-xs flex items-center justify-center font-mono">
-              {cartCount}
-            </span>
-          </button>
-        )}
+              {/* Active Filters */}
+              {activeFilters.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {activeFilters.map((filter, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-sm"
+                    >
+                      <span>{filter.label}</span>
+                      <button
+                        onClick={filter.onRemove}
+                        className="hover:text-purple-900 dark:hover:text-purple-100"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Results Count */}
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                Showing {kits.length} of {totalCount} kits
+              </p>
+            </div>
+
+            {loading && kits.length === 0 ? (
+              <div className="text-center text-neutral-600 dark:text-neutral-400 py-12">
+                Loading kits...
+              </div>
+            ) : kits.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+                  No kits matching your filters.
+                </p>
+                {activeFilterCount > 0 && (
+                  <Button onClick={handleClearAll} variant="outline">
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {kits.map((kit) => (
+                    <div
+                      key={kit.kitId}
+                      onClick={() => navigate(`/kits/${kit.kitId}`)}
+                      className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
+                    >
+                      <div className="aspect-video bg-neutral-100 dark:bg-neutral-800 relative">
+                        {kit.imageUrl ? (
+                          <img
+                            src={kit.imageUrl}
+                            alt={kit.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-neutral-400">
+                            No image
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-6">
+                        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
+                          {kit.name}
+                        </h3>
+                        <p className="text-neutral-600 dark:text-neutral-400 mb-4 line-clamp-2">
+                          {kit.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl font-bold text-neutral-900 dark:text-white">
+                            ₹{kit.price.toLocaleString()}
+                          </span>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddToCart(kit);
+                            }}
+                            className="bg-neutral-900 dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200"
+                          >
+                            Add to Cart
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {hasMore && (
+                  <div className="text-center">
+                    <Button
+                      onClick={handleLoadMore}
+                      disabled={loading}
+                      className="px-8 py-3 bg-neutral-900 dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 disabled:opacity-50"
+                    >
+                      {loading ? 'Loading...' : 'Load More'}
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Fixed Cart Button */}
+      {cartCount > 0 && (
+        <button
+          onClick={() => navigate('/cart')}
+          className="fixed bottom-8 right-8 bg-neutral-900 dark:bg-white text-white dark:text-black rounded-full p-4 shadow-lg flex items-center gap-2 z-50 hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+        >
+          <ShoppingCart className="w-6 h-6" />
+          <span className="font-bold">{cartCount}</span>
+          <span className="hidden sm:inline">View Cart</span>
+        </button>
+      )}
     </div>
   );
 }

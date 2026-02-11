@@ -1,4 +1,5 @@
 import Sidebar from "@/components/ui/Sidebar";
+import GlobalSearch from "@/components/GlobalSearch";
 import { Outlet } from "react-router-dom";
 
 export default function MainLayout() {
@@ -19,6 +20,13 @@ export default function MainLayout() {
       </div>
 
       <main className="flex-1 overflow-y-auto relative z-10">
+        {/* Search Bar */}
+        <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-sm border-b border-neutral-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <GlobalSearch />
+          </div>
+        </div>
+        
         <Outlet />
       </main>
       
