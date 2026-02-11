@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import CourseCard from '@/components/CourseCard';
+import KitCard from '@/components/KitCard';
 import api from '@/api/axiosInstance';
 
 interface SearchResults {
@@ -118,17 +119,6 @@ export default function SearchResultsPage() {
     setKitsPage(nextPage);
     setLoadingMore(true);
     fetchResults(coursesPage, nextPage, activeTab);
-  };
-
-  const highlightText = (text: string) => {
-    if (!query) return text;
-    const regex = new RegExp(`(${query})`, 'gi');
-    const parts = text.split(regex);
-    return parts.map((part, i) => 
-      regex.test(part) 
-        ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-900/50 text-inherit">{part}</mark>
-        : part
-    );
   };
 
   if (query.trim().length < 2) {
@@ -249,49 +239,19 @@ export default function SearchResultsPage() {
             {showCourses && results.courses.totalCount > 0 && (
               <div className="mb-12">
                 <h2 className="text-2xl font-bold mb-6">Courses</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {results.courses.items.map((course: any) => (
-                    <Card
+                    <CourseCard
                       key={course.courseId}
-                      onClick={() => navigate(`/courses/${course.courseId}`)}
-                      className="bg-neutral-900 border-neutral-800 hover:border-purple-500 cursor-pointer transition-all hover:scale-105"
-                    >
-                      <CardHeader>
-                        {course.thumbnailUrl ? (
-                          <img
-                            src={course.thumbnailUrl}
-                            alt={course.name}
-                            className="w-full h-40 object-cover rounded-lg mb-4"
-                          />
-                        ) : (
-                          <div className="w-full h-40 bg-gradient-to-br from-purple-900 to-neutral-900 rounded-lg mb-4 flex items-center justify-center">
-                            <Search className="w-12 h-12 text-neutral-600" />
-                          </div>
-                        )}
-                        <CardTitle className="text-white">
-                          {highlightText(course.name)}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {course.categoryName && (
-                            <span className="text-xs px-2 py-1 bg-blue-900/30 text-blue-300 rounded">
-                              {course.categoryName}
-                            </span>
-                          )}
-                          {course.difficulty && (
-                            <span className="text-xs px-2 py-1 bg-purple-900/30 text-purple-300 rounded">
-                              {course.difficulty}
-                            </span>
-                          )}
-                        </div>
-                        {course.durationMinutes > 0 && (
-                          <p className="text-sm text-neutral-400">
-                            Duration: {Math.floor(course.durationMinutes / 60)}h {course.durationMinutes % 60}m
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
+                      course={{
+                        id: course.courseId,
+                        name: course.name,
+                        description: course.description || '',
+                        difficulty: course.difficulty,
+                        categoryName: course.categoryName,
+                        kitId: course.kits && course.kits.length > 0 ? course.kits[0].kitId : null
+                      }}
+                    />
                   ))}
                 </div>
                 
@@ -300,7 +260,7 @@ export default function SearchResultsPage() {
                     <Button
                       onClick={handleLoadMoreCourses}
                       disabled={loadingMore}
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      className="bg-white text-black hover:bg-neutral-200 font-black uppercase px-8 py-6 rounded-2xl border-2 border-white transition-all"
                     >
                       {loadingMore ? (
                         <>
@@ -322,49 +282,16 @@ export default function SearchResultsPage() {
                 <h2 className="text-2xl font-bold mb-6">Kits</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {results.kits.items.map((kit: any) => (
-                    <Card
+                    <KitCard
                       key={kit.kitId}
-                      onClick={() => navigate(`/kits/${kit.kitId}`)}
-                      className="bg-neutral-900 border-neutral-800 hover:border-purple-500 cursor-pointer transition-all hover:scale-105"
-                    >
-                      <CardHeader>
-                        {kit.imageUrl ? (
-                          <img
-                            src={kit.imageUrl}
-                            alt={kit.name}
-                            className="w-full h-40 object-cover rounded-lg mb-4"
-                          />
-                        ) : (
-                          <div className="w-full h-40 bg-gradient-to-br from-green-900 to-neutral-900 rounded-lg mb-4 flex items-center justify-center">
-                            <Search className="w-12 h-12 text-neutral-600" />
-                          </div>
-                        )}
-                        <CardTitle className="text-white">
-                          {highlightText(kit.name)}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {kit.courseName && (
-                          <p className="text-sm text-neutral-400 mb-3">
-                            For: {kit.courseName}
-                          </p>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold text-white">
-                            ₹{kit.price}
-                          </span>
-                          {kit.stockQuantity > 0 ? (
-                            <span className="text-xs px-2 py-1 bg-green-900/30 text-green-300 rounded">
-                              In Stock
-                            </span>
-                          ) : (
-                            <span className="text-xs px-2 py-1 bg-red-900/30 text-red-300 rounded">
-                              Out of Stock
-                            </span>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                      kit={{
+                        kitId: kit.kitId,
+                        name: kit.name,
+                        description: kit.description || '',
+                        price: kit.price,
+                        imageUrl: kit.imageUrl || ''
+                      }}
+                    />
                   ))}
                 </div>
 
@@ -373,7 +300,7 @@ export default function SearchResultsPage() {
                     <Button
                       onClick={handleLoadMoreKits}
                       disabled={loadingMore}
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      className="bg-white text-black hover:bg-neutral-200 font-black uppercase px-8 py-6 rounded-2xl border-2 border-white transition-all"
                     >
                       {loadingMore ? (
                         <>
