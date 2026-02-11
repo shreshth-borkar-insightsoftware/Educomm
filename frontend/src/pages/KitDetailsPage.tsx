@@ -3,8 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { useCartStore } from "@/store/useCartStore";
 import { Button } from "@/components/ui/button";
-import { MoveLeft } from "lucide-react";
+import { MoveLeft, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import FloatingCartButton from "@/components/FloatingCartButton";
 
 interface Kit {
   id: number;
@@ -17,9 +18,13 @@ interface Kit {
 export default function KitDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCartStore();
+  const { addToCart, fetchCart } = useCartStore();
   const [kit, setKit] = useState<Kit | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
   useEffect(() => {
     const fetchKitDetails = async () => {
@@ -41,7 +46,11 @@ export default function KitDetailsPage() {
     fetchKitDetails();
   }, [id]);
 
-  if (loading) return <div className="min-h-screen bg-black text-white p-8">Loading...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-black text-white p-8 flex items-center justify-center">
+      <Loader2 className="animate-spin text-white w-10 h-10" />
+    </div>
+  );
   if (!kit) return <div className="min-h-screen bg-black text-white p-8">Kit not found.</div>;
 
   return (
@@ -85,6 +94,8 @@ export default function KitDetailsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      <FloatingCartButton />
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
 import apiClient from '@/api/axiosInstance';
 import KitFilterSidebar from '@/components/KitFilterSidebar';
+import FloatingCartButton from '@/components/FloatingCartButton';
 
 interface Course {
   courseId: number;
@@ -389,17 +390,8 @@ export default function KitsPage() {
         </div>
       </div>
 
-      {/* Fixed Cart Button */}
-      {cartCount > 0 && (
-        <button
-          onClick={() => navigate('/cart')}
-          className="fixed bottom-8 right-8 bg-neutral-900 dark:bg-white text-white dark:text-black rounded-full p-4 shadow-lg flex items-center gap-2 z-50 hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
-        >
-          <ShoppingCart className="w-6 h-6" />
-          <span className="font-bold">{cartCount}</span>
-          <span className="hidden sm:inline">View Cart</span>
-        </button>
-      )}
+      {/* Floating Cart Button */}
+      <FloatingCartButton />
     </div>
   );
 }
