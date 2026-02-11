@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useCartStore } from "@/store/useCartStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, ArrowLeft, Loader2, ShoppingCart, ShoppingBag } from "lucide-react";
+import { Package, ArrowLeft, Loader2, ShoppingCart } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
+import FloatingCartButton from "@/components/FloatingCartButton";
 
 interface Kit {
   id: number;
@@ -18,9 +19,7 @@ export default function KitsPage() {
   const navigate = useNavigate();
   const { items: rawKits, loading, hasMore, loadMore } = usePagination<any>("/kits", 12);
   
-  const { items, addToCart, fetchCart } = useCartStore();
-
-  const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
+  const { addToCart, fetchCart } = useCartStore();
 
   const kits = useMemo(() => 
     rawKits.map((k: any) => ({
@@ -120,18 +119,7 @@ export default function KitsPage() {
           </>
         )}
 
-        {cartCount > 0 && (
-          <button
-            onClick={() => navigate("/cart")}
-            className="fixed bottom-10 right-10 z-50 bg-white text-black px-8 py-5 rounded-full font-black italic flex items-center gap-4 shadow-2xl hover:scale-105 transition-transform"
-          >
-            <ShoppingBag size={24} />
-            <span className="tracking-tighter">VIEW CART</span>
-            <span className="bg-black text-white w-7 h-7 rounded-full text-xs flex items-center justify-center font-mono">
-              {cartCount}
-            </span>
-          </button>
-        )}
+        <FloatingCartButton />
       </div>
     </div>
   );

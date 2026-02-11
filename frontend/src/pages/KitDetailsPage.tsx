@@ -5,6 +5,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { Button } from "@/components/ui/button";
 import { MoveLeft, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import FloatingCartButton from "@/components/FloatingCartButton";
 
 interface Kit {
   id: number;
@@ -17,9 +18,13 @@ interface Kit {
 export default function KitDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCartStore();
+  const { addToCart, fetchCart } = useCartStore();
   const [kit, setKit] = useState<Kit | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
 
   useEffect(() => {
     const fetchKitDetails = async () => {
@@ -89,6 +94,8 @@ export default function KitDetailsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      <FloatingCartButton />
     </div>
   );
 }
