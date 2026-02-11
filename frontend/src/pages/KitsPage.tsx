@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
@@ -31,9 +31,8 @@ interface PaginatedResponse {
 }
 
 export default function KitsPage() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { items: cartItems, addToCart, fetchCart } = useCartStore();
+  const { addToCart, fetchCart } = useCartStore();
 
   // Kits state
   const [kits, setKits] = useState<Kit[]>([]);
@@ -89,8 +88,6 @@ export default function KitsPage() {
     if (sort) setSortBy(sort);
     if (order) setSortOrder(order);
   }, []);
-
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const getFilterParams = () => {
     const params: Record<string, any> = {
