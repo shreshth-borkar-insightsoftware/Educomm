@@ -4,6 +4,7 @@ import { Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import TablePagination from "@/components/ui/TablePagination";
 
 interface Category {
   categoryId: number;
@@ -16,16 +17,22 @@ const AdminCategories = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 15;
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (page: number = currentPage) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get("/categories");
-      setCategories(response.data);
+      const response = await api.get("/categories", { params: { page, pageSize } });
+      setCategories(response.data.items);
+      setTotalPages(response.data.totalPages);
+      setTotalCount(response.data.totalCount);
     } catch (err: any) {
       console.error("Error fetching categories:", err);
       setError(err.response?.data?.message || "Failed to load categories");
@@ -35,7 +42,7 @@ const AdminCategories = () => {
   };
 
   useEffect(() => {
-    fetchCategories();
+    fetchCategories(1);
   }, []);
 
   const handleAddCategory = async (e: React.FormEvent) => {
@@ -52,7 +59,7 @@ const AdminCategories = () => {
       setMessage({ type: "success", text: "Category added successfully!" });
       setFormData({ name: "", description: "" });
       setShowAddModal(false);
-      fetchCategories();
+      fetchCategories(currentPage);
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       console.error("Error adding category:", err);
@@ -75,7 +82,7 @@ const AdminCategories = () => {
     try {
       await api.delete(`/categories/${id}`);
       setMessage({ type: "success", text: "Category deleted successfully!" });
-      fetchCategories();
+      fetchCategories(currentPage);
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       console.error("Error deleting category:", err);
@@ -191,6 +198,17 @@ const AdminCategories = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageChange={(page) => {
+            setCurrentPage(page);
+            fetchCategories(page);
+          }}
+        />
       </div>
 
       {/* Add Category Modal */}

@@ -58,7 +58,7 @@ const AdminDashboard = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch all counts in parallel
+        // Fetch all counts in parallel (use pageSize=1 to just get totalCount)
         const [
           usersRes,
           coursesRes,
@@ -67,21 +67,21 @@ const AdminDashboard = () => {
           ordersRes,
           enrollmentsRes,
         ] = await Promise.all([
-          api.get("/users"),
-          api.get("/courses"),
-          api.get("/kits"),
-          api.get("/categories"),
-          api.get("/Orders/Admin/AllOrders"),
-          api.get("/enrollments/Admin/AllEnrollments"),
+          api.get("/users", { params: { page: 1, pageSize: 1 } }),
+          api.get("/courses", { params: { page: 1, pageSize: 1 } }),
+          api.get("/kits", { params: { page: 1, pageSize: 1 } }),
+          api.get("/categories", { params: { page: 1, pageSize: 1 } }),
+          api.get("/Orders/Admin/AllOrders", { params: { page: 1, pageSize: 1 } }),
+          api.get("/enrollments/Admin/AllEnrollments", { params: { page: 1, pageSize: 1 } }),
         ]);
 
         setStats({
-          users: usersRes.data.length || 0,
-          courses: coursesRes.data.length || 0,
-          kits: kitsRes.data.length || 0,
-          categories: categoriesRes.data.length || 0,
-          orders: ordersRes.data.length || 0,
-          enrollments: enrollmentsRes.data.length || 0,
+          users: usersRes.data.totalCount || 0,
+          courses: coursesRes.data.totalCount || 0,
+          kits: kitsRes.data.totalCount || 0,
+          categories: categoriesRes.data.totalCount || 0,
+          orders: ordersRes.data.totalCount || 0,
+          enrollments: enrollmentsRes.data.totalCount || 0,
         });
       } catch (err: any) {
         console.error("Error fetching stats:", err);

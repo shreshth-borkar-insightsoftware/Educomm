@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import TablePagination from "@/components/ui/TablePagination";
 
 interface Kit {
   kitId: number;
@@ -29,6 +30,10 @@ const AdminKits = () => {
   const [kits, setKits] = useState<KitWithCourse[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 15;
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -45,19 +50,21 @@ const AdminKits = () => {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = async (page: number = currentPage) => {
     try {
       setLoading(true);
       setError(null);
       const [kitsRes, coursesRes] = await Promise.all([
-        api.get("/kits"),
-        api.get("/courses"),
+        api.get("/kits", { params: { page, pageSize } }),
+        api.get("/courses", { params: { page: 1, pageSize: 100 } }),
       ]);
       
-      const kitsData: Kit[] = kitsRes.data;
-      const coursesData: Course[] = coursesRes.data;
+      const kitsData: Kit[] = kitsRes.data.items;
+      const coursesData: Course[] = coursesRes.data.items || coursesRes.data;
       
       setCourses(coursesData);
+      setTotalPages(kitsRes.data.totalPages);
+      setTotalCount(kitsRes.data.totalCount);
       
       // Map kits with course names
       const kitsWithCourses = kitsData.map(kit => ({
@@ -75,7 +82,7 @@ const AdminKits = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(1);
   }, []);
 
   const resetForm = () => {
@@ -148,7 +155,7 @@ const AdminKits = () => {
       }
       
       handleCloseModal();
-      fetchData();
+      fetchData(currentPage);
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       console.error("Error saving kit:", err);
@@ -171,7 +178,7 @@ const AdminKits = () => {
     try {
       await api.delete(`/kits/${id}`);
       setMessage({ type: "success", text: "Kit deleted successfully!" });
-      fetchData();
+      fetchData(currentPage);
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       console.error("Error deleting kit:", err);
@@ -313,6 +320,15 @@ const AdminKits = () => {
               )}
             </tbody>
           </table>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              fetchData(page);
+            }}
+          />
         </div>
       </div>
 

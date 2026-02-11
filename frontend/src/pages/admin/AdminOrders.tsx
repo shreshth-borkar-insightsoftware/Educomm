@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../api/axiosInstance";
 import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import TablePagination from "@/components/ui/TablePagination";
 
 interface Order {
   orderId: number;
@@ -43,28 +44,34 @@ const AdminOrders = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [kits, setKits] = useState<Kit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 15;
   const [error, setError] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [loadingItems, setLoadingItems] = useState<number | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = async (page: number = currentPage) => {
     try {
       setLoading(true);
       setError(null);
       const [ordersRes, usersRes, kitsRes] = await Promise.all([
-        api.get("/Orders/Admin/AllOrders"),
-        api.get("/users"),
-        api.get("/kits"),
+        api.get("/Orders/Admin/AllOrders", { params: { page, pageSize } }),
+        api.get("/users", { params: { page: 1, pageSize: 100 } }),
+        api.get("/kits", { params: { page: 1, pageSize: 100 } }),
       ]);
       
-      const ordersData: Order[] = ordersRes.data;
-      const usersData: User[] = usersRes.data;
-      const kitsData: Kit[] = kitsRes.data;
+      const ordersData: Order[] = ordersRes.data.items;
+      const usersData: User[] = usersRes.data.items || usersRes.data;
+      const kitsData: Kit[] = kitsRes.data.items || kitsRes.data;
       
       setUsers(usersData);
       setKits(kitsData);
+      setTotalPages(ordersRes.data.totalPages);
+      setTotalCount(ordersRes.data.totalCount);
       
       // Map orders with user details
       const ordersWithDetails = ordersData.map(order => {
@@ -89,7 +96,7 @@ const AdminOrders = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(1);
   }, []);
 
   const fetchOrderItems = async (orderId: number) => {
@@ -356,6 +363,15 @@ const AdminOrders = () => {
               )}
             </tbody>
           </table>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              fetchData(page);
+            }}
+          />
         </div>
       </div>
     </div>

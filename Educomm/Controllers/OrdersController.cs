@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Educomm.Data;
 using Educomm.Models;
+using Educomm.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
@@ -139,28 +140,54 @@ namespace Educomm.Controllers
 
         // GET Api: My Orders
         [HttpGet("MyOrders")]
-        public async Task<ActionResult<IEnumerable<Order>>> GetMyOrders()
+        public async Task<ActionResult<PaginatedResponse<Order>>> GetMyOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             int userId = GetUserId();
 
-            return await _context.Orders
+            var query = _context.Orders
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Kit)
                 .Where(o => o.UserId == userId)
-                .OrderByDescending(o => o.OrderDate) // Newest first
+                .OrderByDescending(o => o.OrderDate); // Newest first
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return new PaginatedResponse<Order>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         // GET Api: Admin View All Orders
         [HttpGet("Admin/AllOrders")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<Order>>> GetAllOrders()
+        public async Task<ActionResult<PaginatedResponse<Order>>> GetAllOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            return await _context.Orders
+            var query = _context.Orders
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Kit)
-                .OrderByDescending(o => o.OrderDate)
+                .OrderByDescending(o => o.OrderDate);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return new PaginatedResponse<Order>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         // PUT Api: Update Order Status (Admin)

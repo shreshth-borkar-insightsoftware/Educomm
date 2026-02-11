@@ -4,6 +4,7 @@ import { Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import TablePagination from "@/components/ui/TablePagination";
 
 interface Enrollment {
   enrollmentId: number;
@@ -36,6 +37,10 @@ const AdminEnrollments = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 15;
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -47,22 +52,24 @@ const AdminEnrollments = () => {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = async (page: number = currentPage) => {
     try {
       setLoading(true);
       setError(null);
       const [enrollmentsRes, usersRes, coursesRes] = await Promise.all([
-        api.get("/enrollments/Admin/AllEnrollments"),
-        api.get("/users"),
-        api.get("/courses"),
+        api.get("/enrollments/Admin/AllEnrollments", { params: { page, pageSize } }),
+        api.get("/users", { params: { page: 1, pageSize: 100 } }),
+        api.get("/courses", { params: { page: 1, pageSize: 100 } }),
       ]);
       
-      const enrollmentsData: Enrollment[] = enrollmentsRes.data;
-      const usersData: User[] = usersRes.data;
-      const coursesData: Course[] = coursesRes.data;
+      const enrollmentsData: Enrollment[] = enrollmentsRes.data.items;
+      const usersData: User[] = usersRes.data.items || usersRes.data;
+      const coursesData: Course[] = coursesRes.data.items || coursesRes.data;
       
       setUsers(usersData);
       setCourses(coursesData);
+      setTotalPages(enrollmentsRes.data.totalPages);
+      setTotalCount(enrollmentsRes.data.totalCount);
       
       // Map enrollments with user and course details
       const enrollmentsWithDetails = enrollmentsData.map(enrollment => {
@@ -90,7 +97,7 @@ const AdminEnrollments = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(1);
   }, []);
 
   const handleAddEnrollment = async (e: React.FormEvent) => {
@@ -118,7 +125,7 @@ const AdminEnrollments = () => {
         progress: "0",
       });
       setShowAddModal(false);
-      fetchData();
+      fetchData(currentPage);
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       console.error("Error adding enrollment:", err);
@@ -141,7 +148,7 @@ const AdminEnrollments = () => {
     try {
       await api.delete(`/enrollments/${id}`);
       setMessage({ type: "success", text: "Enrollment deleted successfully!" });
-      fetchData();
+      fetchData(currentPage);
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       console.error("Error deleting enrollment:", err);
@@ -284,6 +291,15 @@ const AdminEnrollments = () => {
               )}
             </tbody>
           </table>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              fetchData(page);
+            }}
+          />
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axiosInstance";
 import { User, Mail, Phone, Shield } from "lucide-react";
+import TablePagination from "@/components/ui/TablePagination";
 
 interface UserData {
   userId: number;
@@ -15,13 +16,19 @@ const AdminUsers = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 15;
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page: number = currentPage) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get("/users");
-      setUsers(response.data);
+      const response = await api.get("/users", { params: { page, pageSize } });
+      setUsers(response.data.items);
+      setTotalPages(response.data.totalPages);
+      setTotalCount(response.data.totalCount);
     } catch (err: any) {
       console.error("Error fetching users:", err);
       setError(err.response?.data?.message || "Failed to load users");
@@ -31,7 +38,7 @@ const AdminUsers = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(1);
   }, []);
 
   const getRoleBadgeColor = (role: string) => {
@@ -179,6 +186,17 @@ const AdminUsers = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageChange={(page) => {
+            setCurrentPage(page);
+            fetchUsers(page);
+          }}
+        />
       </div>
     </div>
   );

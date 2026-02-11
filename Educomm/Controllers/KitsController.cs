@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Educomm.Data;
 using Educomm.Models;
+using Educomm.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Educomm.Controllers
@@ -20,12 +21,25 @@ namespace Educomm.Controllers
 
         // GET: api/Kits
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Kit>>> GetKits()
+        public async Task<ActionResult<PaginatedResponse<Kit>>> GetKits([FromQuery] int page = 1, [FromQuery] int pageSize = 12)
         {
-            return await _context.Kits
+            var query = _context.Kits
                 .Include(k => k.Category)
-                .Include(k => k.Course)
+                .Include(k => k.Course);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return new PaginatedResponse<Kit>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         // GET: api/Kits

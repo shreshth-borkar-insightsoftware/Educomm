@@ -4,6 +4,7 @@ import { Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import TablePagination from "@/components/ui/TablePagination";
 
 interface Course {
   courseId: number;
@@ -31,6 +32,10 @@ const AdminCourses = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 15; // Small size for testing
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -43,18 +48,20 @@ const AdminCourses = () => {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = async (page: number = currentPage) => {
     try {
       setLoading(true);
       setError(null);
       const [coursesRes, categoriesRes] = await Promise.all([
-        api.get("/courses"),
-        api.get("/categories"),
+        api.get("/courses", { params: { page, pageSize } }),
+        api.get("/categories", { params: { page: 1, pageSize: 100 } }), // Get all categories
       ]);
       
-      const coursesData: Course[] = coursesRes.data;
-      const categoriesData: Category[] = categoriesRes.data;
+      const coursesData: Course[] = coursesRes.data.items;
+      const categoriesData: Category[] = categoriesRes.data.items;
       
+      setTotalPages(coursesRes.data.totalPages);
+      setTotalCount(coursesRes.data.totalCount);
       setCategories(categoriesData);
       
       // Map courses with category names
@@ -73,7 +80,7 @@ const AdminCourses = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(1);
   }, []);
 
   const handleAddCourse = async (e: React.FormEvent) => {
@@ -107,7 +114,7 @@ const AdminCourses = () => {
         isActive: true,
       });
       setShowAddModal(false);
-      fetchData();
+      fetchData(currentPage);
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       console.error("Error adding course:", err);
@@ -130,7 +137,7 @@ const AdminCourses = () => {
     try {
       await api.delete(`/courses/${id}`);
       setMessage({ type: "success", text: "Course deleted successfully!" });
-      fetchData();
+      fetchData(currentPage);
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       console.error("Error deleting course:", err);
@@ -256,6 +263,17 @@ const AdminCourses = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageChange={(page) => {
+            setCurrentPage(page);
+            fetchData(page);
+          }}
+        />
       </div>
 
       {/* Add Course Modal */}

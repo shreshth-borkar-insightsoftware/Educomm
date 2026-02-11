@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import api from "@/api/axiosInstance";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowLeft, 
@@ -11,27 +10,16 @@ import {
   CheckCircle2 
 } from "lucide-react";
 import PaymentNotification from "@/components/PaymentNotification";
+import { usePagination } from "@/hooks/usePagination";
+import { useState } from "react";
 
 export default function MyOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const { items: orders, loading, hasMore, loadMore } = usePagination<any>("/Orders/MyOrders", 10);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const { data } = await api.get("/Orders/MyOrders");
-        setOrders(data);
-      } catch (err) {
-        console.error("Failed to fetch orders:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrders();
-
     // Check if we came from successful payment
     if (searchParams.get("payment") === "success") {
       setShowSuccessNotification(true);
@@ -39,12 +27,6 @@ export default function MyOrdersPage() {
       setSearchParams({});
     }
   }, [searchParams, setSearchParams]);
-
-  if (loading) return (
-    <div className="h-screen bg-black flex items-center justify-center">
-      <Loader2 className="animate-spin text-white w-10 h-10" />
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-black text-white p-8">
@@ -75,7 +57,11 @@ export default function MyOrdersPage() {
           </div>
         </header>
 
-        {orders.length === 0 ? (
+        {loading && orders.length === 0 ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="animate-spin text-white w-10 h-10" />
+          </div>
+        ) : orders.length === 0 ? (
           <div className="text-center py-20 border-2 border-dashed border-neutral-800 rounded-3xl">
             <Package size={48} className="mx-auto text-neutral-800 mb-4" />
             <p className="uppercase tracking-widest text-sm text-neutral-500">No orders found yet.</p>
@@ -88,7 +74,8 @@ export default function MyOrdersPage() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-10">
+          <>
+            <div className="space-y-10">
             {orders.map((order: any) => (
               <div key={order.orderId} className="bg-neutral-950 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl">
                 
@@ -181,6 +168,26 @@ export default function MyOrdersPage() {
               </div>
             ))}
           </div>
+
+          {hasMore && (
+            <div className="flex justify-center mt-12">
+              <Button
+                onClick={loadMore}
+                disabled={loading}
+                className="bg-white text-black hover:bg-neutral-200 font-black uppercase px-8 py-6 rounded-2xl border-2 border-white transition-all"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                    Loading...
+                  </>
+                ) : (
+                  "Load More"
+                )}
+              </Button>
+            </div>
+          )}
+        </>
         )}
       </div>
     </div>

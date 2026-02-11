@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Educomm.Data;
 using Educomm.Models;
+using Educomm.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
@@ -29,14 +30,27 @@ namespace Educomm.Controllers
 
         // GET api
         [HttpGet("MyEnrollments")]
-        public async Task<ActionResult<IEnumerable<Enrollments>>> GetMyEnrollments()
+        public async Task<ActionResult<PaginatedResponse<Enrollments>>> GetMyEnrollments([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             int userId = GetUserId(); // Securely get ID
 
-            return await _context.Enrollments
+            var query = _context.Enrollments
                 .Include(e => e.Course)
-                .Where(e => e.UserId == userId)
+                .Where(e => e.UserId == userId);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return new PaginatedResponse<Enrollments>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         // POST api
@@ -64,12 +78,25 @@ namespace Educomm.Controllers
         // GET api: Get All Enrollments (Admin)
         [HttpGet("Admin/AllEnrollments")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<Enrollments>>> GetAllEnrollments()
+        public async Task<ActionResult<PaginatedResponse<Enrollments>>> GetAllEnrollments([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            return await _context.Enrollments
+            var query = _context.Enrollments
                 .Include(e => e.Course)
-                .Include(e => e.User)
+                .Include(e => e.User);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            return new PaginatedResponse<Enrollments>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         // DELETE api: Delete Enrollment (Admin)
