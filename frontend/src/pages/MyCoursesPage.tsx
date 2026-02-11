@@ -14,7 +14,7 @@ interface EnrolledCourse {
 
 export default function MyCoursesPage() {
   const navigate = useNavigate();
-  const { items: enrollments, loading, hasMore, loadMore } = usePagination<any>("/Enrollments/MyEnrollments", 10);
+  const { items: rawEnrollments, loading, hasMore, loadMore } = usePagination<any>("/Enrollments/MyEnrollments", 10);
 
   const courses = useMemo(() => 
     rawEnrollments.map((e: any) => ({
