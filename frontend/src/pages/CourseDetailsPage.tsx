@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { Button } from "@/components/ui/button";
-import { MoveLeft, PackageSearch } from "lucide-react";
+import { MoveLeft, PackageSearch, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CourseDetails {
@@ -37,7 +37,11 @@ export default function CourseDetailsPage() {
     fetchCourseDetails();
   }, [id]);
 
-  if (loading) return <div className="min-h-screen bg-black text-white p-8">Loading...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-black text-white p-8 flex items-center justify-center">
+      <Loader2 className="animate-spin text-white w-10 h-10" />
+    </div>
+  );
   if (!course) return <div className="min-h-screen bg-black text-white p-8">Course not found.</div>;
 
   return (
