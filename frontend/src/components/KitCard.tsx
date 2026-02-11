@@ -9,7 +9,7 @@ interface KitCardProps {
     price: number;
     imageUrl: string;
   };
-  onAddToCart?: (kit: any) => void;
+  onAddToCart?: (kit: KitCardProps['kit']) => void;
 }
 
 export default function KitCard({ kit, onAddToCart }: KitCardProps) {

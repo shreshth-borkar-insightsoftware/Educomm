@@ -6,15 +6,6 @@ import FilterSidebar from "@/components/FilterSidebar";
 import CourseCard from "@/components/CourseCard";
 import api from "@/api/axiosInstance";
 
-interface Course {
-  id: number;
-  name: string;
-  description: string;
-  kitId: number | null;
-  difficulty?: string;
-  categoryName?: string;
-}
-
 interface Category {
   categoryId: number;
   name: string;
