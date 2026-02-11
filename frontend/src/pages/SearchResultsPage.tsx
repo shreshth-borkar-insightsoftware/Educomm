@@ -249,7 +249,7 @@ export default function SearchResultsPage() {
                         description: course.description || '',
                         difficulty: course.difficulty,
                         categoryName: course.categoryName,
-                        kitId: course.kits && course.kits.length > 0 ? course.kits[0].kitId : null
+                        kitId: course.kits?.[0]?.kitId ?? null
                       }}
                     />
                   ))}
