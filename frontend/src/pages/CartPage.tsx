@@ -36,6 +36,22 @@ export default function CartPage() {
   const [showManualInput, setShowManualInput] = useState(false);
   const [showFailedNotification, setShowFailedNotification] = useState(false);
 
+  const handleDecreaseQuantity = async (itemId: number, currentQty: number) => {
+    if (currentQty <= 1) {
+      alert("Quantity cannot be less than 1. Use delete button to remove item.");
+      return;
+    }
+    await updateQuantity(itemId, -1);
+  };
+
+  const handleIncreaseQuantity = async (itemId: number, currentQty: number, stock: number) => {
+    if (currentQty >= stock) {
+      alert(`Only ${stock} items available in stock.`);
+      return;
+    }
+    await updateQuantity(itemId, 1);
+  };
+
   useEffect(() => {
     fetchCart();
     const fetchAddresses = async () => {
@@ -156,9 +172,21 @@ export default function CartPage() {
                   <p className="font-mono text-neutral-500 text-sm">₹{item.price}</p>
                 </div>
                 <div className="flex items-center gap-4 bg-black border border-neutral-800 rounded-xl p-1.5">
-                  <button onClick={() => updateQuantity(item.id, -1)} disabled={isSubmitting}><Minus size={14} /></button>
+                  <button 
+                    onClick={() => handleDecreaseQuantity(item.id, item.quantity)} 
+                    disabled={isSubmitting || item.quantity <= 1}
+                    className="disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Minus size={14} />
+                  </button>
                   <span className="font-mono font-bold w-5 text-center text-sm">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, 1)} disabled={isSubmitting}><Plus size={14} /></button>
+                  <button 
+                    onClick={() => handleIncreaseQuantity(item.id, item.quantity, item.stock)} 
+                    disabled={isSubmitting || item.quantity >= item.stock}
+                    className="disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Plus size={14} />
+                  </button>
                 </div>
                 <button onClick={() => removeFromCart(item.id)} className="text-neutral-700 hover:text-red-500 transition-colors p-2">
                   <Trash2 size={18} />

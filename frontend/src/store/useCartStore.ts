@@ -9,12 +9,13 @@ interface CartItem {
   price: number;
   imageUrl?: string;
   quantity: number;
+  stock: number;
 }
 
 interface CartState {
   items: CartItem[];
   fetchCart: () => Promise<void>;
-  addToCart: (item: Omit<CartItem, 'quantity' | 'cartItemId'>) => Promise<void>;
+  addToCart: (item: Omit<CartItem, 'quantity' | 'cartItemId' | 'stock'>) => Promise<void>;
   removeFromCart: (kitId: number) => Promise<void>;
   updateQuantity: (kitId: number, delta: number) => Promise<void>;
   clearCart: () => void;
@@ -46,7 +47,8 @@ export const useCartStore = create<CartState>()(
             name: item.kitName || item.kit?.name || item.name || "Unknown Kit",
             price: Number(item.price || item.kit?.price || 0),
             imageUrl: item.imageUrl || item.kit?.imageUrl || "",
-            quantity: item.quantity
+            quantity: item.quantity,
+            stock: item.kit?.stockQuantity || 999
           }));
           
           set({ items: formattedItems });
