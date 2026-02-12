@@ -14,6 +14,7 @@ namespace Educomm.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private const int MIN_ADDRESS_LENGTH = 10;
 
         public OrdersController(AppDbContext context)
         {
@@ -41,7 +42,7 @@ namespace Educomm.Controllers
                 return BadRequest("Shipping address is required.");
             }
 
-            if (shippingAddress.Trim().Length < 10)
+            if (shippingAddress.Trim().Length < MIN_ADDRESS_LENGTH)
             {
                 Console.WriteLine("DEBUG: Checkout failed - Shipping address is too short.");
                 return BadRequest("Please enter a complete delivery address.");

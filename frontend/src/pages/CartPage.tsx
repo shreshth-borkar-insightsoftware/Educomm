@@ -21,6 +21,8 @@ export default function CartPage() {
   const [showManualInput, setShowManualInput] = useState(false);
   const [showFailedNotification, setShowFailedNotification] = useState(false);
 
+  const MIN_ADDRESS_LENGTH = 10;
+
   useEffect(() => {
     fetchCart();
     const fetchAddresses = async () => {
@@ -76,8 +78,8 @@ export default function CartPage() {
       return;
     }
     
-    if (selectedAddressStr.trim().length < 10) {
-      alert("Please enter a complete delivery address (at least 10 characters)");
+    if (selectedAddressStr.trim().length < MIN_ADDRESS_LENGTH) {
+      alert(`Please enter a complete delivery address (at least ${MIN_ADDRESS_LENGTH} characters)`);
       return;
     }
     
