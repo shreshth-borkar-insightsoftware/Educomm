@@ -31,8 +31,10 @@ namespace Educomm.Models
 
         public bool IsActive { get; set; } = true;
 
+        [JsonIgnore]
         public ICollection<Kit> Kits { get; set; } = new List<Kit>();
 
+        [JsonIgnore]
         public ICollection<CourseContent> CourseContents { get; set; } = new List<CourseContent>();
     }
 }

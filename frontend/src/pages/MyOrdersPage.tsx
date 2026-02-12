@@ -128,6 +128,19 @@ export default function MyOrdersPage() {
                             <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-widest">
                               Unit Price: ₹{item.priceAtPurchase}
                             </p>
+                            {item.kit?.course && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <p className="text-xs text-neutral-400">
+                                  Course: <span className="font-semibold text-white">{item.kit.course.name}</span>
+                                </p>
+                                <button
+                                  onClick={() => navigate(`/courses/${item.kit.course.courseId}`)}
+                                  className="text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors"
+                                >
+                                  Go to Course →
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <p className="font-mono font-bold text-lg">₹{item.quantity * item.priceAtPurchase}</p>

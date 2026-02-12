@@ -147,6 +147,7 @@ namespace Educomm.Controllers
             var query = _context.Orders
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Kit)
+                .ThenInclude(k => k.Course)
                 .Where(o => o.UserId == userId)
                 .OrderByDescending(o => o.OrderDate); // Newest first
 
@@ -173,6 +174,7 @@ namespace Educomm.Controllers
             var query = _context.Orders
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Kit)
+                .ThenInclude(k => k.Course)
                 .OrderByDescending(o => o.OrderDate);
 
             var totalCount = await query.CountAsync();
