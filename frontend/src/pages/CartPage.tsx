@@ -95,8 +95,10 @@ export default function CartPage() {
       
       console.log("[CART] Creating checkout session...");
       
-      // Create Stripe checkout session
-      const response = await api.post("/payment/create-checkout-session");
+      // Create Stripe checkout session with shipping address
+      const response = await api.post("/payment/create-checkout-session", {
+        shippingAddress: selectedAddressStr
+      });
 
       console.log("[CART] Checkout session created:", response.data);
 

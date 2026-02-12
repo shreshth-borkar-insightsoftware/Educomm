@@ -22,7 +22,7 @@ export default function CoursesPage() {
   const [hasMore, setHasMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [isFilterOpen, setIsFilterOpen] = useState(true);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   // Filter state from URL
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('categoryId') || '');

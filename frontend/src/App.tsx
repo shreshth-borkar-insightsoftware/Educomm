@@ -12,6 +12,7 @@ import CoursesPage from "./pages/CoursesPage";
 import AddressPage from "./pages/AddressPage";
 import KitDetailsPage from "./pages/KitDetailsPage";
 import CourseDetailsPage from "./pages/CourseDetailsPage";
+import CourseContentPage from "./pages/CourseContentPage";
 import SearchResultsPage from "./pages/SearchResultsPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCategories from "./pages/admin/AdminCategories";
@@ -40,6 +41,7 @@ function App() {
           <Route path="/my-courses" element={<MyCoursesPage />} />
           <Route path="/courses" element={<CoursesPage/>} />
           <Route path="/courses/:id" element={<CourseDetailsPage />} />
+          <Route path="/courses/:id/content" element={<CourseContentPage />} />
           <Route path="/address" element={<AddressPage/>} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/kits/:id" element={<KitDetailsPage />} />

@@ -35,7 +35,7 @@ export default function PaymentSuccess() {
       try {
         console.log("[PAYMENT] Verifying session:", sessionId);
         
-        // Step 1: Verify the payment with Stripe
+        // Verify the payment status with Stripe
         const verifyResponse = await api.get(`/payment/verify-session/${sessionId}`);
         
         console.log("[PAYMENT] Verification response:", verifyResponse.data);
@@ -46,40 +46,21 @@ export default function PaymentSuccess() {
           return;
         }
 
-        // Step 2: Get the shipping address from localStorage (saved during cart)
-        const shippingAddress = localStorage.getItem("selectedAddress");
+        // Payment successful - webhook has already created the order
+        console.log("[PAYMENT] Payment verified, order created by webhook");
         
-        if (!shippingAddress) {
-          setStatus("error");
-          setErrorMessage("Shipping address not found. Please contact support.");
-          return;
-        }
-
-        console.log("[PAYMENT] Creating order with address:", shippingAddress);
-
-        // Step 3: Create the order using existing checkout endpoint
-        const checkoutResponse = await api.post(
-          "/Orders/Checkout",
-          JSON.stringify(shippingAddress),
-          {
-            headers: { "Content-Type": "application/json" }
-          }
-        );
-
-        console.log("[PAYMENT] Order created:", checkoutResponse.data);
-
-        if (checkoutResponse.status === 200 || checkoutResponse.status === 201) {
-          // Clear cart and localStorage
-          clearCart();
-          await fetchCart(); // Refetch to ensure cart is empty
-          localStorage.removeItem("selectedAddress");
-          console.log("[PAYMENT] Payment flow completed successfully, redirecting to orders");
-          
-          // Redirect to orders page with success parameter
+        // Clear cart and localStorage
+        clearCart();
+        await fetchCart(); // Refetch to ensure cart is empty
+        localStorage.removeItem("selectedAddress");
+        
+        // Show success state
+        setStatus("success");
+        
+        // Redirect to orders page after a brief delay
+        setTimeout(() => {
           navigate("/my-orders?payment=success");
-        } else {
-          throw new Error("Order creation failed");
-        }
+        }, 2000);
 
       } catch (err: any) {
         console.error("[PAYMENT] Error during payment verification/order creation:", err);

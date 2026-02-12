@@ -6,10 +6,21 @@ import { MoveLeft, PackageSearch, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CourseDetails {
-  id: number;
+  courseId: number;
   name: string;
   description: string;
-  linkedKitId?: number;
+  difficulty?: string;
+  durationMinutes?: number;
+  thumbnailUrl?: string;
+  category?: {
+    categoryId: number;
+    name: string;
+  };
+  kits?: Array<{
+    kitId: number;
+    name: string;
+    price: number;
+  }>;
 }
 
 export default function CourseDetailsPage() {
@@ -21,13 +32,8 @@ export default function CourseDetailsPage() {
   useEffect(() => {
     const fetchCourseDetails = async () => {
       try {
-        const { data } = await api.get(`/Courses/${id}`);
-        setCourse({
-          id: data.id || data.courseId,
-          name: data.name || data.Name,
-          description: data.description || data.Description,
-          linkedKitId: data.kitId || data.linkedKitId || data.KitId
-        });
+        const { data } = await api.get(`/courses/${id}`);
+        setCourse(data);
       } catch (err) {
         console.error("Error fetching course:", err);
       } finally {
@@ -55,7 +61,7 @@ export default function CourseDetailsPage() {
 
       <Card className="max-w-3xl bg-neutral-950 border-neutral-800 rounded-2xl overflow-hidden shadow-2xl">
         <CardHeader className="border-b border-neutral-900 pb-6">
-          <p className="text-xs font-mono text-neutral-500 mb-2 uppercase tracking-widest">ID: {course.id}</p>
+          <p className="text-xs font-mono text-neutral-500 mb-2 uppercase tracking-widest">ID: {course.courseId}</p>
           <CardTitle className="text-3xl font-bold uppercase tracking-tight text-white">{course.name}</CardTitle>
         </CardHeader>
         
@@ -78,11 +84,11 @@ export default function CourseDetailsPage() {
               </div>
 
               <Button 
-                onClick={() => navigate(`/kits/${course.linkedKitId}`)}
-                disabled={!course.linkedKitId}
+                onClick={() => navigate(`/kits/${course.kits?.[0]?.kitId}`)}
+                disabled={!course.kits || course.kits.length === 0}
                 className="bg-white text-black hover:bg-neutral-200 font-bold px-8 rounded-xl h-12"
               >
-                {course.linkedKitId ? "VIEW LINKED KIT" : "NO KIT LINKED"}
+                {course.kits && course.kits.length > 0 ? "VIEW LINKED KIT" : "NO KIT LINKED"}
               </Button>
             </div>
           </div>

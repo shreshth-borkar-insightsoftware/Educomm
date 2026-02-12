@@ -51,7 +51,7 @@ export default function KitsPage() {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [priceError, setPriceError] = useState('');
-  const [isFilterOpen, setIsFilterOpen] = useState(true);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     fetchCart();
@@ -268,18 +268,18 @@ export default function KitsPage() {
                 </h1>
                 
                 {/* Filter Toggle Button */}
-                <Button
+                <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className="flex items-center gap-2 bg-neutral-900 dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200"
+                  className="bg-neutral-900 dark:bg-white text-white dark:text-black px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   <span className="hidden sm:inline">Filters</span>
                   {activeFilterCount > 0 && (
-                    <span className="ml-2 bg-white dark:bg-black text-black dark:text-white text-xs rounded-full px-2 py-0.5">
+                    <span className="bg-white dark:bg-black text-black dark:text-white text-xs rounded-full px-2 py-0.5">
                       {activeFilterCount}
                     </span>
                   )}
-                </Button>
+                </button>
               </div>
 
               {/* Active Filters */}
