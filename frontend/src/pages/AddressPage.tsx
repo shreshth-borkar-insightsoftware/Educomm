@@ -71,15 +71,14 @@ export default function AddressPage() {
   return (
     <div className="min-h-screen bg-black text-white p-8 md:p-12">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-          <PageHeader title="My Addresses" showBackButton={true} />
+        <PageHeader title="My Addresses" showBackButton={true}>
           <Button 
             onClick={() => setShowForm(!showForm)} 
             className="bg-white text-black font-bold uppercase italic rounded-full px-6"
           >
             {showForm ? "Cancel" : <><Plus size={18} className="mr-2"/> Add New</>}
           </Button>
-        </div>
+        </PageHeader>
 
         {showForm && (
           <form onSubmit={handleAdd} className="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 mb-12 space-y-4 shadow-2xl">
