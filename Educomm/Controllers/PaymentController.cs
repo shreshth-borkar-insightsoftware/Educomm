@@ -151,28 +151,9 @@ namespace Educomm.Controllers
                     var userId = int.Parse(session.Metadata["userId"]);
                     Console.WriteLine($"[WEBHOOK] Creating order for user: {userId}");
 
-                    // Get shipping address from metadata
-                    string shippingAddress = "Address not provided";
-                    if (session.Metadata.ContainsKey("shippingAddress"))
-                    {
-                        shippingAddress = session.Metadata["shippingAddress"];
-                    }
-
-                    // Get user's cart
-                    var cart = await _context.Carts
-                        .Include(c => c.CartItems)
-                        .ThenInclude(ci => ci.Kit)
-                        .FirstOrDefaultAsync(c => c.UserId == userId);
-
-                    if (cart == null || !cart.CartItems.Any())
-                    {
-                        Console.WriteLine($"[WEBHOOK] ERROR: Cart not found or empty for user {userId}");
-                        return BadRequest("Cart is empty");
-                    }
-
                     // Check if order already exists for this session (prevent duplicates)
                     var existingOrder = await _context.Orders
-                        .FirstOrDefaultAsync(o => o.UserId == userId && o.Status == "Completed" && 
+                        .FirstOrDefaultAsync(o => o.UserId == userId && o.Status == "Confirmed" && 
                             o.OrderDate > DateTime.UtcNow.AddMinutes(-5));
 
                     if (existingOrder != null)
@@ -181,36 +162,8 @@ namespace Educomm.Controllers
                         return Ok(); // Already processed
                     }
 
-                    // Create the order
-                    var order = new Order
-                    {
-                        UserId = userId,
-                        OrderDate = DateTime.UtcNow,
-                        TotalAmount = (decimal)(session.AmountTotal ?? 0) / 100, // Convert from cents
-                        Status = "Completed", // Payment already successful
-                        ShippingAddress = shippingAddress,
-                        OrderItems = new List<OrderItem>()
-                    };
-
-                    // Add order items from cart
-                    foreach (var cartItem in cart.CartItems)
-                    {
-                        order.OrderItems.Add(new OrderItem
-                        {
-                            KitId = cartItem.KitId,
-                            Quantity = cartItem.Quantity,
-                            PriceAtPurchase = cartItem.Kit.Price
-                        });
-                    }
-
-                    _context.Orders.Add(order);
-
-                    // Clear the cart
-                    _context.CartItems.RemoveRange(cart.CartItems);
-
-                    await _context.SaveChangesAsync();
-
-                    Console.WriteLine($"[WEBHOOK] Order created successfully: OrderId={order.OrderId}");
+                    // Use shared helper to create order
+                    await CreateOrderFromSession(session, userId);
                 }
 
                 return Ok();
@@ -253,10 +206,27 @@ namespace Educomm.Controllers
                         return BadRequest("User ID not found in session metadata.");
                     }
 
+                    var userId = int.Parse(userIdStr);
+
+                    // FALLBACK: Check if order exists, if not create it (webhook might have failed)
+                    var existingOrder = await _context.Orders
+                        .FirstOrDefaultAsync(o => o.UserId == userId && o.Status == "Confirmed" && 
+                            o.OrderDate > DateTime.UtcNow.AddMinutes(-10));
+
+                    if (existingOrder == null)
+                    {
+                        Console.WriteLine($"[VERIFY] No order found - webhook might have failed. Creating order as fallback.");
+                        await CreateOrderFromSession(session, userId);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[VERIFY] Order already exists: OrderId={existingOrder.OrderId}");
+                    }
+
                     return Ok(new
                     {
                         success = true,
-                        userId = int.Parse(userIdStr),
+                        userId = userId,
                         paymentStatus = session.PaymentStatus,
                         amountTotal = session.AmountTotal / 100.0 // Convert from cents to rupees
                     });
@@ -275,6 +245,60 @@ namespace Educomm.Controllers
                 Console.WriteLine($"ERROR: {ex.Message}");
                 return StatusCode(500, new { message = "Failed to verify session", error = ex.Message });
             }
+        }
+
+        // Helper method to create order from session (used by both webhook and verify-session fallback)
+        private async Task CreateOrderFromSession(Session session, int userId)
+        {
+            // Get shipping address from metadata
+            string shippingAddress = "Address not provided";
+            if (session.Metadata != null && session.Metadata.ContainsKey("shippingAddress"))
+            {
+                shippingAddress = session.Metadata["shippingAddress"];
+            }
+
+            // Get user's cart
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                .ThenInclude(ci => ci.Kit)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null || !cart.CartItems.Any())
+            {
+                Console.WriteLine($"[ORDER CREATE] ERROR: Cart not found or empty for user {userId}");
+                throw new Exception("Cart is empty");
+            }
+
+            // Create the order
+            var order = new Order
+            {
+                UserId = userId,
+                OrderDate = DateTime.UtcNow,
+                TotalAmount = (decimal)(session.AmountTotal ?? 0) / 100, // Convert from cents
+                Status = "Confirmed", // Payment verified and successful
+                ShippingAddress = shippingAddress,
+                OrderItems = new List<OrderItem>()
+            };
+
+            // Add order items from cart
+            foreach (var cartItem in cart.CartItems)
+            {
+                order.OrderItems.Add(new OrderItem
+                {
+                    KitId = cartItem.KitId,
+                    Quantity = cartItem.Quantity,
+                    PriceAtPurchase = cartItem.Kit.Price
+                });
+            }
+
+            _context.Orders.Add(order);
+
+            // Clear the cart
+            _context.CartItems.RemoveRange(cart.CartItems);
+
+            await _context.SaveChangesAsync();
+
+            Console.WriteLine($"[ORDER CREATE] Order created successfully: OrderId={order.OrderId}");
         }
     }
 

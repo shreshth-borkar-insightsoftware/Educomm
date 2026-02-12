@@ -302,7 +302,7 @@ namespace Educomm.Tests.Controllers
             context.Orders.Add(new Educomm.Models.Order
             {
                 UserId = 7,
-                Status = "Completed",
+                Status = "Confirmed",
                 OrderDate = DateTime.UtcNow,
                 ShippingAddress = "Existing",
                 TotalAmount = 50
