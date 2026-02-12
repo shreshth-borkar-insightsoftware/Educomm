@@ -9,6 +9,20 @@ import {
 } from "lucide-react";
 import PaymentNotification from "@/components/PaymentNotification";
 
+const MIN_ADDRESS_LENGTH = 10;
+
+// Helper function to format address with null checks
+const formatAddress = (addr: any): string => {
+  const addressParts = [
+    addr.street,
+    addr.city,
+    addr.state,
+    addr.zipCode,
+    addr.country
+  ].filter(part => part && part.trim() !== '');
+  return addressParts.join(', ');
+};
+
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, getTotal, clearCart, fetchCart } = useCartStore();
   const navigate = useNavigate();
@@ -20,8 +34,6 @@ export default function CartPage() {
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
   const [showManualInput, setShowManualInput] = useState(false);
   const [showFailedNotification, setShowFailedNotification] = useState(false);
-
-  const MIN_ADDRESS_LENGTH = 10;
 
   useEffect(() => {
     fetchCart();
@@ -37,15 +49,7 @@ export default function CartPage() {
         if (list.length > 0) {
 
           const first = list[0];
-          // Format address with proper null checks and correct field names
-          const addressParts = [
-            first.street,
-            first.city,
-            first.state,
-            first.zipCode,
-            first.country
-          ].filter(part => part && part.trim() !== '');
-          setSelectedAddressStr(addressParts.join(', '));
+          setSelectedAddressStr(formatAddress(first));
         } else {
 
           setShowManualInput(true);
@@ -200,15 +204,7 @@ export default function CartPage() {
                   </div>
                 )}
                 {addresses.map((addr) => {
-                  // Format address with proper null checks and correct field names
-                  const addressParts = [
-                    addr.street,
-                    addr.city,
-                    addr.state,
-                    addr.zipCode,
-                    addr.country
-                  ].filter(part => part && part.trim() !== '');
-                  const fullAddr = addressParts.join(', ');
+                  const fullAddr = formatAddress(addr);
                   const isSelected = selectedAddressStr === fullAddr;
                   return (
                     <div key={addr.id || Math.random()} onClick={() => setSelectedAddressStr(fullAddr)}
