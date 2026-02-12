@@ -12,6 +12,7 @@ namespace Educomm.Controllers
     [Authorize]
     public class UsersController : ControllerBase
     {
+        private const int MAX_PAGE_SIZE = 100;
         private readonly AppDbContext _context;
 
         public UsersController(AppDbContext context)
@@ -24,6 +25,9 @@ namespace Educomm.Controllers
         [Authorize]
         public async Task<ActionResult<PaginatedResponse<User>>> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+            // Enforce maximum page size
+            pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
+
             var query = _context.Users;
 
             var totalCount = await query.CountAsync();

@@ -10,8 +10,8 @@ namespace Educomm.Controllers
     [ApiController]
     public class SearchController : ControllerBase
     {
+        private const int MAX_PAGE_SIZE = 100;
         private readonly AppDbContext _context;
-        private const int MaxPageSize = 20;
 
         public SearchController(AppDbContext context)
         {
@@ -40,7 +40,7 @@ namespace Educomm.Controllers
             }
 
             // Cap pageSize at maximum
-            pageSize = Math.Min(pageSize, MaxPageSize);
+            pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
             
             // Sanitize query for PostgreSQL LIKE - escape special characters
             var sanitizedQuery = query

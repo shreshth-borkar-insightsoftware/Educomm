@@ -12,6 +12,7 @@ namespace Educomm.Controllers
     [Authorize]
     public class KitsController : ControllerBase
     {
+        private const int MAX_PAGE_SIZE = 100;
         private readonly AppDbContext _context;
 
         public KitsController(AppDbContext context)
@@ -32,6 +33,9 @@ namespace Educomm.Controllers
             [FromQuery] string sortBy = "name",
             [FromQuery] string sortOrder = "asc")
         {
+            // Enforce maximum page size
+            pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
+
             // Validate price range
             if (minPrice.HasValue && maxPrice.HasValue && minPrice > maxPrice)
             {

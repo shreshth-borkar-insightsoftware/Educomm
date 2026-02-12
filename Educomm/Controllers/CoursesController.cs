@@ -12,6 +12,7 @@ namespace Educomm.Controllers
     [Authorize]
     public class CoursesController : ControllerBase
     {
+        private const int MAX_PAGE_SIZE = 100;
         private readonly AppDbContext _context;
 
         public CoursesController(AppDbContext context)
@@ -31,6 +32,9 @@ namespace Educomm.Controllers
             [FromQuery] string sortBy = "name",
             [FromQuery] string sortOrder = "asc")
         {
+            // Enforce maximum page size
+            pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
+
             // Validate duration range
             if (minDuration.HasValue && maxDuration.HasValue && minDuration > maxDuration)
             {

@@ -197,5 +197,29 @@ namespace Educomm.Tests.Controllers
             Assert.Equal(2, response.Page);
             Assert.Equal(5, response.Items.Count());
         }
+
+        [Fact]
+        public async Task GetCourses_PageSizeExceedsMaximum_CapsAtMaxPageSize()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            // Create 150 courses to test the limit
+            for (var i = 1; i <= 150; i++)
+            {
+                context.Courses.Add(TestDataBuilder.CreateCourse(i, categoryId: 1, name: $"Course {i:00}"));
+            }
+            await context.SaveChangesAsync();
+
+            var controller = new CoursesController(context);
+
+            // Request 1000 items
+            var result = await controller.GetCourses(page: 1, pageSize: 1000);
+
+            var response = Assert.IsType<Educomm.Models.DTOs.PaginatedResponse<Course>>(result.Value);
+            // Should only return 100 items (MAX_PAGE_SIZE)
+            Assert.Equal(100, response.Items.Count());
+            Assert.Equal(100, response.PageSize);
+        }
     }
 }
