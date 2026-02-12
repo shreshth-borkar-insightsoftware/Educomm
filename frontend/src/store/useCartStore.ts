@@ -16,19 +16,25 @@ interface CartItem {
 
 interface CartState {
   items: CartItem[];
+  isLoading: boolean;
+  error: string | null;
   fetchCart: () => Promise<void>;
   addToCart: (item: Omit<CartItem, 'quantity' | 'cartItemId' | 'stock'>) => Promise<void>;
   removeFromCart: (kitId: number) => Promise<void>;
   updateQuantity: (kitId: number, delta: number) => Promise<void>;
   clearCart: () => void;
   getTotal: () => number;
+  resetError: () => void;
 }
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      isLoading: false,
+      error: null,
       fetchCart: async () => {
+        set({ isLoading: true, error: null });
         try {
           const { data } = await api.get('/Carts/MyCart');         
           console.log("Raw Cart Data:", data);
@@ -53,9 +59,13 @@ export const useCartStore = create<CartState>()(
             stock: item.kit?.stockQuantity || DEFAULT_STOCK_FALLBACK
           }));
           
-          set({ items: formattedItems });
+          set({ items: formattedItems, isLoading: false, error: null });
         } catch (error) {
           console.error("Failed to fetch cart:", error);
+          const errorMessage = (error as any)?.response?.data?.message || 
+                              (error as any)?.message || 
+                              "Failed to load cart";
+          set({ error: errorMessage, isLoading: false });
           if ((error as any)?.response?.status === 401) set({ items: [] });
         }
       },
@@ -120,6 +130,8 @@ export const useCartStore = create<CartState>()(
         const items = get().items || [];
         return items.reduce((acc, i) => acc + (Number(i.price) * i.quantity), 0);
       },
+
+      resetError: () => set({ error: null }),
     }),
     { name: 'shopping-cart' }
   )
