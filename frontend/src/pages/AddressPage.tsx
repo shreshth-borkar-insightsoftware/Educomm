@@ -62,6 +62,22 @@ export default function AddressPage() {
     }
   };
 
+  const handleDeleteAddress = async (addressId: number) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this address?"
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/Addresses/${addressId}`);
+      setAddresses(addresses.filter(a => a.addressId !== addressId));
+    } catch (err) {
+      console.error("Error deleting address:", err);
+      alert("Failed to delete address. Please try again.");
+    }
+  };
+
   if (loading) return (
     <div className="h-screen bg-black flex items-center justify-center">
       <Loader2 className="animate-spin text-white w-10 h-10" />
@@ -139,7 +155,10 @@ export default function AddressPage() {
                     <p className="text-xs text-neutral-600 mt-1 uppercase font-bold tracking-widest">{addr.phoneNumber}</p>
                   </div>
                 </div>
-                <button className="text-neutral-800 hover:text-red-500 transition-colors p-2">
+                <button 
+                  onClick={() => handleDeleteAddress(addr.addressId)}
+                  className="text-neutral-800 hover:text-red-500 transition-colors p-2"
+                >
                   <Trash2 size={24} />
                 </button>
               </div>
