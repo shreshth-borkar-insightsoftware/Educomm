@@ -58,11 +58,20 @@ export const useCartStore = create<CartState>()(
           set({ items: formattedItems, isLoading: false, error: null });
         } catch (error) {
           console.error("Failed to fetch cart:", error);
-          const errorMessage = (error as any)?.response?.data?.message || 
-                              (error as any)?.message || 
-                              "Failed to load cart";
+          let errorMessage = "Failed to load cart";
+          if (error && typeof error === 'object') {
+            if ('response' in error && error.response && typeof error.response === 'object') {
+              if ('data' in error.response && error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
+                errorMessage = String(error.response.data.message);
+              }
+              if ('status' in error.response && error.response.status === 401) {
+                set({ items: [] });
+              }
+            } else if ('message' in error) {
+              errorMessage = String(error.message);
+            }
+          }
           set({ error: errorMessage, isLoading: false });
-          if ((error as any)?.response?.status === 401) set({ items: [] });
         }
       },
 
