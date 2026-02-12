@@ -35,7 +35,15 @@ export default function CartPage() {
         if (list.length > 0) {
 
           const first = list[0];
-          setSelectedAddressStr(`${first.street}, ${first.city}, ${first.zip}`);
+          // Format address with proper null checks and correct field names
+          const addressParts = [
+            first.street,
+            first.city,
+            first.state,
+            first.zipCode,
+            first.country
+          ].filter(part => part && part.trim() !== '');
+          setSelectedAddressStr(addressParts.join(', '));
         } else {
 
           setShowManualInput(true);
@@ -60,7 +68,18 @@ export default function CartPage() {
   }, [searchParams, setSearchParams]);
 
   const handleCheckout = async () => {
-    if (!items.length || !selectedAddressStr) return;
+    if (!items.length) return;
+    
+    // Validate address before proceeding
+    if (!selectedAddressStr || selectedAddressStr.trim().length === 0) {
+      alert("Please enter a valid delivery address");
+      return;
+    }
+    
+    if (selectedAddressStr.trim().length < 10) {
+      alert("Please enter a complete delivery address (at least 10 characters)");
+      return;
+    }
     
     try {
       setIsSubmitting(true);
@@ -179,7 +198,15 @@ export default function CartPage() {
                   </div>
                 )}
                 {addresses.map((addr) => {
-                  const fullAddr = `${addr.street}, ${addr.city}, ${addr.zip}`;
+                  // Format address with proper null checks and correct field names
+                  const addressParts = [
+                    addr.street,
+                    addr.city,
+                    addr.state,
+                    addr.zipCode,
+                    addr.country
+                  ].filter(part => part && part.trim() !== '');
+                  const fullAddr = addressParts.join(', ');
                   const isSelected = selectedAddressStr === fullAddr;
                   return (
                     <div key={addr.id || Math.random()} onClick={() => setSelectedAddressStr(fullAddr)}
@@ -191,7 +218,9 @@ export default function CartPage() {
                         <MapPin size={16} className={isSelected ? "text-white" : "text-neutral-700"} />
                         <div>
                           <p className="text-xs font-bold uppercase">{addr.street}</p>
-                          <p className="text-[10px] text-neutral-500 uppercase">{addr.city}, {addr.zip}</p>
+                          <p className="text-[10px] text-neutral-500 uppercase">
+                            {[addr.city, addr.state, addr.zipCode].filter(part => part && part.trim() !== '').join(', ')}
+                          </p>
                         </div>
                       </div>
                       {isSelected && <CheckCircle2 size={14} className="absolute top-4 right-4 text-white" />}

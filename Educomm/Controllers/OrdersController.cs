@@ -34,6 +34,19 @@ namespace Educomm.Controllers
         {
             Console.WriteLine("--- CHECKOUT PROCESS STARTED ---");
 
+            // Validate shipping address
+            if (string.IsNullOrWhiteSpace(shippingAddress))
+            {
+                Console.WriteLine("DEBUG: Checkout failed - Shipping address is empty.");
+                return BadRequest("Shipping address is required.");
+            }
+
+            if (shippingAddress.Trim().Length < 10)
+            {
+                Console.WriteLine("DEBUG: Checkout failed - Shipping address is too short.");
+                return BadRequest("Please enter a complete delivery address.");
+            }
+
             // Start a transaction to ensure either everything saves or nothing saves
             using var transaction = await _context.Database.BeginTransactionAsync();
 
