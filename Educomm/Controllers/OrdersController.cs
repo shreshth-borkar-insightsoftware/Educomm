@@ -42,7 +42,8 @@ namespace Educomm.Controllers
                 return BadRequest("Shipping address is required.");
             }
 
-            if (shippingAddress.Trim().Length < MIN_ADDRESS_LENGTH)
+            var trimmedAddress = shippingAddress.Trim();
+            if (trimmedAddress.Length < MIN_ADDRESS_LENGTH)
             {
                 Console.WriteLine("DEBUG: Checkout failed - Shipping address is too short.");
                 return BadRequest("Please enter a complete delivery address.");
@@ -84,7 +85,7 @@ namespace Educomm.Controllers
                 var order = new Order
                 {
                     UserId = userId,
-                    ShippingAddress = shippingAddress,
+                    ShippingAddress = trimmedAddress,
                     TotalAmount = cart.CartItems.Sum(i => i.Quantity * i.Kit.Price),
                     Status = "Pending",
                     OrderDate = DateTime.UtcNow,
