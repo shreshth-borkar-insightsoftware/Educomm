@@ -56,5 +56,28 @@ namespace Educomm.Tests.Controllers
             var ok = Assert.IsType<OkObjectResult>(result);
             Assert.Equal("Category deleted successfully.", ok.Value);
         }
+
+        [Fact]
+        public async Task GetCategories_PageSizeExceedsMaximum_CapsAtMaxPageSize()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            // Create 150 categories to test the limit
+            for (var i = 1; i <= 150; i++)
+            {
+                context.Categories.Add(TestDataBuilder.CreateCategory(i, $"Category {i}"));
+            }
+            await context.SaveChangesAsync();
+
+            var controller = new CategoriesController(context);
+
+            // Request 250 items
+            var result = await controller.GetCategories(page: 1, pageSize: 250);
+
+            var response = Assert.IsType<PaginatedResponse<Category>>(result.Value);
+            // Should only return 100 items (MAX_PAGE_SIZE)
+            Assert.Equal(100, response.Items.Count());
+            Assert.Equal(100, response.PageSize);
+        }
     }
 }

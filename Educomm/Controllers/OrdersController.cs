@@ -13,6 +13,7 @@ namespace Educomm.Controllers
     [Authorize]
     public class OrdersController : ControllerBase
     {
+        private const int MAX_PAGE_SIZE = 100;
         private readonly AppDbContext _context;
         private const int MIN_ADDRESS_LENGTH = 10;
 
@@ -157,6 +158,9 @@ namespace Educomm.Controllers
         [HttpGet("MyOrders")]
         public async Task<ActionResult<PaginatedResponse<Order>>> GetMyOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+            // Enforce maximum page size
+            pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
+
             int userId = GetUserId();
 
             var query = _context.Orders
@@ -186,6 +190,9 @@ namespace Educomm.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<PaginatedResponse<Order>>> GetAllOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+            // Enforce maximum page size
+            pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
+
             var query = _context.Orders
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Kit)

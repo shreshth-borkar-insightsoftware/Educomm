@@ -13,6 +13,7 @@ namespace Educomm.Controllers
     [Authorize]
     public class EnrollmentsController : ControllerBase
     {
+        private const int MAX_PAGE_SIZE = 100;
         private readonly AppDbContext _context;
 
         public EnrollmentsController(AppDbContext context)
@@ -32,6 +33,9 @@ namespace Educomm.Controllers
         [HttpGet("MyEnrollments")]
         public async Task<ActionResult<PaginatedResponse<Enrollments>>> GetMyEnrollments([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+            // Enforce maximum page size
+            pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
+
             int userId = GetUserId(); // Securely get ID
 
             var query = _context.Enrollments
@@ -80,6 +84,9 @@ namespace Educomm.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<PaginatedResponse<Enrollments>>> GetAllEnrollments([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+            // Enforce maximum page size
+            pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
+
             var query = _context.Enrollments
                 .Include(e => e.Course)
                 .Include(e => e.User);

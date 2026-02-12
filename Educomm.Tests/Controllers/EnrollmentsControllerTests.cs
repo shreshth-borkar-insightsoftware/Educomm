@@ -113,5 +113,58 @@ namespace Educomm.Tests.Controllers
             var ok = Assert.IsType<OkObjectResult>(result);
             Assert.Equal("Enrollment deleted successfully.", ok.Value);
         }
+
+        [Fact]
+        public async Task GetMyEnrollments_PageSizeExceedsMaximum_CapsAtMaxPageSize()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Users.Add(TestDataBuilder.CreateUser(1, "user1@example.com"));
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            // Create 150 courses and enrollments to test the limit
+            for (var i = 1; i <= 150; i++)
+            {
+                context.Courses.Add(TestDataBuilder.CreateCourse(i));
+                context.Enrollments.Add(TestDataBuilder.CreateEnrollment(i, userId: 1, courseId: i));
+            }
+            await context.SaveChangesAsync();
+
+            var controller = new EnrollmentsController(context);
+            TestControllerContext.SetUser(controller, userId: 1);
+
+            // Request 300 items
+            var result = await controller.GetMyEnrollments(page: 1, pageSize: 300);
+
+            var response = Assert.IsType<PaginatedResponse<Enrollments>>(result.Value);
+            // Should only return 100 items (MAX_PAGE_SIZE)
+            Assert.Equal(100, response.Items.Count());
+            Assert.Equal(100, response.PageSize);
+        }
+
+        [Fact]
+        public async Task GetAllEnrollments_PageSizeExceedsMaximum_CapsAtMaxPageSize()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Users.Add(TestDataBuilder.CreateUser(1, "user1@example.com"));
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            // Create 150 courses and enrollments to test the limit
+            for (var i = 1; i <= 150; i++)
+            {
+                context.Courses.Add(TestDataBuilder.CreateCourse(i));
+                context.Enrollments.Add(TestDataBuilder.CreateEnrollment(i, userId: 1, courseId: i));
+            }
+            await context.SaveChangesAsync();
+
+            var controller = new EnrollmentsController(context);
+
+            // Request 500 items
+            var result = await controller.GetAllEnrollments(page: 1, pageSize: 500);
+
+            var response = Assert.IsType<PaginatedResponse<Enrollments>>(result.Value);
+            // Should only return 100 items (MAX_PAGE_SIZE)
+            Assert.Equal(100, response.Items.Count());
+            Assert.Equal(100, response.PageSize);
+        }
     }
 }

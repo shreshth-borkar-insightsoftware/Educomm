@@ -12,6 +12,7 @@ namespace Educomm.Controllers
     [Authorize]
     public class CategoriesController : ControllerBase
     {
+        private const int MAX_PAGE_SIZE = 100;
         private readonly AppDbContext _context;
 
         public CategoriesController(AppDbContext context)
@@ -23,6 +24,9 @@ namespace Educomm.Controllers
         [HttpGet]
         public async Task<ActionResult<PaginatedResponse<Category>>> GetCategories([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+            // Enforce maximum page size
+            pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
+
             var query = _context.Categories;
 
             var totalCount = await query.CountAsync();

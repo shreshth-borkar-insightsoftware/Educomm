@@ -40,5 +40,28 @@ namespace Educomm.Tests.Controllers
             Assert.Equal(0, response.TotalCount);
             Assert.Empty(response.Items);
         }
+
+        [Fact]
+        public async Task GetUsers_PageSizeExceedsMaximum_CapsAtMaxPageSize()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            // Create 150 users to test the limit
+            for (var i = 1; i <= 150; i++)
+            {
+                context.Users.Add(TestDataBuilder.CreateUser(i, $"user{i}@example.com"));
+            }
+            await context.SaveChangesAsync();
+
+            var controller = new UsersController(context);
+
+            // Request 500 items
+            var result = await controller.GetUsers(page: 1, pageSize: 500);
+
+            var response = Assert.IsType<PaginatedResponse<User>>(result.Value);
+            // Should only return 100 items (MAX_PAGE_SIZE)
+            Assert.Equal(100, response.Items.Count());
+            Assert.Equal(100, response.PageSize);
+        }
     }
 }
