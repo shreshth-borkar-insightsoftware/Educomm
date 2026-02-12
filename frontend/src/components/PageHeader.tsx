@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { MoveLeft } from "lucide-react";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface PageHeaderProps {
   title: string;

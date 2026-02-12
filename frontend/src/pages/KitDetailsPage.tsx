@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { useCartStore } from "@/store/useCartStore";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ interface Kit {
 
 export default function KitDetailsPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { addToCart, fetchCart } = useCartStore();
   const [kit, setKit] = useState<Kit | null>(null);
   const [loading, setLoading] = useState(true);

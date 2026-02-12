@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { Button } from "@/components/ui/button";
-import { MapPin, Plus, Trash2, Loader2, Home, Phone } from "lucide-react";
+import { MapPin, Plus, Trash2, Loader2, Home } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 
 export default function AddressPage() {
@@ -20,8 +19,6 @@ export default function AddressPage() {
     country: "India",
     phoneNumber: "" 
   });
-
-  const navigate = useNavigate();
 
   const fetchAddresses = async () => {
     try {
