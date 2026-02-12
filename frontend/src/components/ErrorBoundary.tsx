@@ -46,16 +46,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   handleGoHome = (): void => {
-    // Reset error state and reload to home page
-    // Using window.location for full page reload to ensure clean state recovery
-    this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    });
-    
-    // Navigate to home (dashboard is the home page)
-    window.location.href = "/dashboard";
+    // Use replace to prevent back button from returning to error state
+    window.location.replace("/dashboard");
   };
 
   render() {
@@ -89,8 +81,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 </Button>
               </div>
 
-              {/* Optional Error Details - Collapsible */}
-              {this.state.error && (
+              {/* Optional Error Details - Only in Development */}
+              {this.state.error && import.meta.env.DEV && (
                 <details className="mt-6">
                   <summary className="cursor-pointer text-sm font-medium text-black dark:text-white uppercase tracking-wide mb-2">
                     Technical Details
