@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { Button } from "@/components/ui/button";
-import { MoveLeft, PackageSearch, Loader2 } from "lucide-react";
+import { PackageSearch, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import PageHeader from "@/components/PageHeader";
 
 interface CourseDetails {
   courseId: number;
@@ -52,12 +53,7 @@ export default function CourseDetailsPage() {
 
   return (
     <div className="min-h-screen bg-black p-8 text-white font-sans">
-      <div className="flex items-center gap-4 mb-10">
-        <button onClick={() => navigate(-1)} className="hover:bg-neutral-800 p-2 rounded-full transition-colors">
-          <MoveLeft className="w-6 h-6" />
-        </button>
-        <h1 className="text-4xl font-bold tracking-tighter uppercase">Course Details</h1>
-      </div>
+      <PageHeader title="Course Details" showBackButton={true} />
 
       <Card className="max-w-3xl bg-neutral-950 border-neutral-800 rounded-2xl overflow-hidden shadow-2xl">
         <CardHeader className="border-b border-neutral-900 pb-6">
