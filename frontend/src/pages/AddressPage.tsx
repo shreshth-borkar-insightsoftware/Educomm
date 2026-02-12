@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { Button } from "@/components/ui/button";
-import { MapPin, Plus, Trash2, Loader2, Home, ArrowLeft, Phone } from "lucide-react";
+import { MapPin, Plus, Trash2, Loader2, Home, ArrowLeft } from "lucide-react";
 
 export default function AddressPage() {
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -61,6 +61,22 @@ export default function AddressPage() {
       alert("Failed to save address. Check backend console.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addressId: number) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this address?"
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/Addresses/${addressId}`);
+      setAddresses(addresses.filter(a => a.addressId !== addressId));
+    } catch (err) {
+      console.error("Error deleting address:", err);
+      alert("Failed to delete address. Please try again.");
     }
   };
 
@@ -147,7 +163,10 @@ export default function AddressPage() {
                     <p className="text-xs text-neutral-600 mt-1 uppercase font-bold tracking-widest">{addr.phoneNumber}</p>
                   </div>
                 </div>
-                <button className="text-neutral-800 hover:text-red-500 transition-colors p-2">
+                <button 
+                  onClick={() => handleDeleteAddress(addr.addressId)}
+                  className="text-neutral-800 hover:text-red-500 transition-colors p-2"
+                >
                   <Trash2 size={24} />
                 </button>
               </div>
