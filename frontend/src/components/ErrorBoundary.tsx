@@ -28,6 +28,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return {
       hasError: true,
       error,
+      // Clear any previous errorInfo until componentDidCatch provides new details
+      errorInfo: null,
     };
   }
 
