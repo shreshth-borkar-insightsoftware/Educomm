@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '@/api/axiosInstance';
 
+const DEFAULT_STOCK_FALLBACK = 999;
+
 interface CartItem {
   id: number;
   cartItemId: number;
@@ -48,7 +50,7 @@ export const useCartStore = create<CartState>()(
             price: Number(item.price || item.kit?.price || 0),
             imageUrl: item.imageUrl || item.kit?.imageUrl || "",
             quantity: item.quantity,
-            stock: item.kit?.stockQuantity || 999
+            stock: item.kit?.stockQuantity || DEFAULT_STOCK_FALLBACK
           }));
           
           set({ items: formattedItems });
