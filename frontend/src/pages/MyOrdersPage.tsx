@@ -134,7 +134,7 @@ export default function MyOrdersPage() {
                                   Course: <span className="font-semibold text-white">{item.kit.course.name}</span>
                                 </p>
                                 <button
-                                  onClick={() => navigate(`/courses/${item.kit.course.courseId}`)}
+                                  onClick={() => navigate(`/courses/${item.kit?.course?.courseId}`)}
                                   className="text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors"
                                 >
                                   Go to Course →
