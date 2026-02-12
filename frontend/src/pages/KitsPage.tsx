@@ -231,7 +231,7 @@ export default function KitsPage() {
 
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+    <div className="min-h-screen bg-black text-white">
       <div className="flex">
         {/* Filter Sidebar */}
         <KitFilterSidebar
@@ -303,7 +303,6 @@ export default function KitsPage() {
               <p className="text-sm text-neutral-400">
                 Showing {kits.length} of {totalCount} kits
               </p>
-            </div>
 
             {loading && kits.length === 0 ? (
               <div className="text-center text-neutral-400 py-12">

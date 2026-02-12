@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CourseCard from '@/components/CourseCard';
@@ -23,7 +23,6 @@ type TabType = 'all' | 'courses' | 'kits';
 
 export default function SearchResultsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const query = searchParams.get('q') || '';
   const urlType = searchParams.get('type') as TabType || 'all';
 

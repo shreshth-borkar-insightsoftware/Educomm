@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Loader2, SlidersHorizontal, X } from "lucide-react";
 import FilterSidebar from "@/components/FilterSidebar";
@@ -13,7 +13,6 @@ interface Category {
 }
 
 export default function CoursesPage() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // State

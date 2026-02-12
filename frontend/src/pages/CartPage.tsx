@@ -25,7 +25,7 @@ const formatAddress = (addr: any): string => {
 };
 
 export default function CartPage() {
-  const { items, updateQuantity, removeFromCart, getTotal, clearCart, fetchCart } = useCartStore();
+  const { items, updateQuantity, removeFromCart, getTotal, fetchCart } = useCartStore();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   

@@ -6,13 +6,6 @@ import { Loader2, PlayCircle } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
 import PageHeader from "@/components/PageHeader";
 
-interface EnrolledCourse {
-  enrollmentId: number;
-  courseId: number;
-  courseName: string;
-  courseDescription: string;
-}
-
 export default function MyCoursesPage() {
   const navigate = useNavigate();
   const { items: rawEnrollments, loading, hasMore, loadMore } = usePagination<any>("/Enrollments/MyEnrollments", 10);
