@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Search } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CourseCard from '@/components/CourseCard';
 import KitCard from '@/components/KitCard';
 import api from '@/api/axiosInstance';
+import PageHeader from '@/components/PageHeader';
 
 interface SearchResults {
   query: string;
@@ -125,14 +126,7 @@ export default function SearchResultsPage() {
     return (
       <div className="min-h-screen bg-black p-8 text-white">
         <div className="max-w-7xl mx-auto">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="mb-6 text-white hover:bg-neutral-800"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
+          <PageHeader title="Search" showBackButton={true} />
           <div className="flex flex-col items-center justify-center py-20">
             <Search className="w-16 h-16 text-neutral-600 mb-4" />
             <p className="text-xl text-neutral-400">Please enter at least 2 characters to search</p>
@@ -151,26 +145,11 @@ export default function SearchResultsPage() {
     <div className="min-h-screen bg-black p-8 text-white">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="mb-6 text-white hover:bg-neutral-800"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          
-          <h1 className="text-4xl font-black tracking-tighter uppercase italic mb-3">
-            Search results for '{query}'
-          </h1>
-          
-          {results && !loading && (
-            <p className="text-neutral-400">
-              Found {results.courses.totalCount} courses and {results.kits.totalCount} kits
-            </p>
-          )}
-        </div>
+        <PageHeader 
+          title={`Search results for '${query}'`} 
+          subtitle={results && !loading ? `Found ${results.courses.totalCount} courses and ${results.kits.totalCount} kits` : undefined}
+          showBackButton={true} 
+        />
 
         {/* Tabs */}
         <div className="flex gap-2 mb-8 border-b border-neutral-800">

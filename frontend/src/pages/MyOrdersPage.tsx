@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  ArrowLeft, 
   Loader2, 
   Package, 
   Calendar, 
@@ -12,6 +11,7 @@ import {
 import PaymentNotification from "@/components/PaymentNotification";
 import { usePagination } from "@/hooks/usePagination";
 import { useState } from "react";
+import PageHeader from "@/components/PageHeader";
 
 export default function MyOrdersPage() {
   const navigate = useNavigate();
@@ -40,22 +40,7 @@ export default function MyOrdersPage() {
       )}
 
       <div className="max-w-5xl mx-auto">
-        <header className="flex items-center gap-4 mb-12">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate("/dashboard")} 
-            className="text-white hover:bg-neutral-800"
-          >
-            <ArrowLeft size={24} />
-          </Button>
-          <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase italic">ORDER HISTORY</h1>
-            <p className="text-neutral-500 text-xs font-mono tracking-widest uppercase">
-              Track your educational gear
-            </p>
-          </div>
-        </header>
+        <PageHeader title="Order History" subtitle="Track your educational gear" showBackButton={true} />
 
         {loading && orders.length === 0 ? (
           <div className="flex h-64 items-center justify-center">

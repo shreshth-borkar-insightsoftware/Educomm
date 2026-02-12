@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { MoveLeft, Loader2, SlidersHorizontal, X } from "lucide-react";
+import { Loader2, SlidersHorizontal, X } from "lucide-react";
 import FilterSidebar from "@/components/FilterSidebar";
 import CourseCard from "@/components/CourseCard";
+import PageHeader from "@/components/PageHeader";
 import api from "@/api/axiosInstance";
 
 interface Category {
@@ -187,17 +188,7 @@ export default function CoursesPage() {
       {/* Main Content */}
       <div className="flex-1 p-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <button 
-            onClick={() => navigate("/dashboard")} 
-            className="hover:bg-neutral-800 p-2 rounded-full transition-all"
-          >
-            <MoveLeft className="w-6 h-6" />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-4xl font-black tracking-tighter uppercase italic">Courses</h1>
-            <p className="text-neutral-500 text-xs font-mono tracking-widest uppercase">Academic Catalog</p>
-          </div>
+        <PageHeader title="Courses" subtitle="Academic Catalog" showBackButton={true}>
           {/* Filter Toggle Button */}
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -211,7 +202,7 @@ export default function CoursesPage() {
               </span>
             )}
           </button>
-        </div>
+        </PageHeader>
 
         {/* Active Filter Chips */}
         {activeFilters.length > 0 && (
