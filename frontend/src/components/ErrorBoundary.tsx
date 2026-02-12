@@ -44,14 +44,15 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   handleGoHome = (): void => {
-    // Reset error state and navigate to home
+    // Reset error state and reload to home page
+    // Using window.location for full page reload to ensure clean state recovery
     this.setState({
       hasError: false,
       error: null,
       errorInfo: null,
     });
     
-    // Navigate to home
+    // Navigate to home (dashboard is the home page)
     window.location.href = "/dashboard";
   };
 
