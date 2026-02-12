@@ -2,15 +2,9 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MoveLeft, Loader2, PlayCircle } from "lucide-react";
+import { Loader2, PlayCircle } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
-
-interface EnrolledCourse {
-  enrollmentId: number;
-  courseId: number;
-  courseName: string;
-  courseDescription: string;
-}
+import PageHeader from "@/components/PageHeader";
 
 export default function MyCoursesPage() {
   const navigate = useNavigate();
@@ -28,12 +22,7 @@ export default function MyCoursesPage() {
 
   return (
     <div className="min-h-screen bg-black p-8 text-white">
-      <div className="flex items-center gap-4 mb-10">
-        <Button variant="ghost" className="hover:bg-neutral-800" onClick={() => navigate("/dashboard")}>
-          <MoveLeft />
-        </Button>
-        <h1 className="text-4xl font-black uppercase italic tracking-tighter">My Learning</h1>
-      </div>
+      <PageHeader title="My Learning" showBackButton={true} />
 
       {loading && courses.length === 0 ? (
         <div className="flex h-64 items-center justify-center">

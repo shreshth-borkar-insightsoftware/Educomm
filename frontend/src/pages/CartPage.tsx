@@ -4,10 +4,11 @@ import { useCartStore } from "@/store/useCartStore";
 import api from "@/api/axiosInstance";
 import { Button } from "@/components/ui/button";
 import { 
-  Trash2, Plus, Minus, ArrowLeft, ShoppingBag, 
+  Trash2, Plus, Minus, ShoppingBag, 
   Loader2, MapPin, CheckCircle2, AlertCircle 
 } from "lucide-react";
 import PaymentNotification from "@/components/PaymentNotification";
+import PageHeader from "@/components/PageHeader";
 
 const MIN_ADDRESS_LENGTH = 10;
 
@@ -24,7 +25,7 @@ const formatAddress = (addr: any): string => {
 };
 
 export default function CartPage() {
-  const { items, updateQuantity, removeFromCart, getTotal, clearCart, fetchCart } = useCartStore();
+  const { items, updateQuantity, removeFromCart, getTotal, fetchCart } = useCartStore();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -142,12 +143,7 @@ export default function CartPage() {
       <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
         
         <div className="lg:col-span-2">
-          <header className="flex items-center gap-4 mb-12">
-            <Button variant="ghost" onClick={() => navigate(-1)} className="text-white hover:bg-neutral-900 rounded-full">
-              <ArrowLeft size={24} />
-            </Button>
-            <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white">CHECKOUT</h1>
-          </header>
+          <PageHeader title="Checkout" showBackButton={true} />
 
           <div className="space-y-4">
             {items.map((item) => (

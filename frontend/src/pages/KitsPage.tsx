@@ -7,6 +7,7 @@ import apiClient from '@/api/axiosInstance';
 import KitFilterSidebar from '@/components/KitFilterSidebar';
 import FloatingCartButton from '@/components/FloatingCartButton';
 import KitCard from '@/components/KitCard';
+import PageHeader from '@/components/PageHeader';
 
 interface Course {
   courseId: number;
@@ -230,7 +231,7 @@ export default function KitsPage() {
 
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+    <div className="min-h-screen bg-black text-white">
       <div className="flex">
         {/* Filter Sidebar */}
         <KitFilterSidebar
@@ -261,26 +262,22 @@ export default function KitsPage() {
         <div className="flex-1 p-8">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h1 className="text-4xl font-bold text-neutral-900 dark:text-white">
-                  Hardware Kits
-                </h1>
-                
-                {/* Filter Toggle Button */}
-                <button
-                  onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className="bg-neutral-900 dark:bg-white text-white dark:text-black px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  <span className="hidden sm:inline">Filters</span>
-                  {activeFilterCount > 0 && (
-                    <span className="bg-white dark:bg-black text-black dark:text-white text-xs rounded-full px-2 py-0.5">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </button>
-              </div>
+            <PageHeader title="Hardware Kits" subtitle="Hardware Store" showBackButton={false}>
+              {/* Filter Toggle Button */}
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="bg-white text-black px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-neutral-200 transition-colors"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                <span className="hidden sm:inline">Filters</span>
+                {activeFilterCount > 0 && (
+                  <span className="bg-black text-white text-xs rounded-full px-2 py-0.5">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </PageHeader>
+
 
               {/* Active Filters */}
               {activeFilters.length > 0 && (
@@ -303,18 +300,17 @@ export default function KitsPage() {
               )}
 
               {/* Results Count */}
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              <p className="text-sm text-neutral-400">
                 Showing {kits.length} of {totalCount} kits
               </p>
-            </div>
 
             {loading && kits.length === 0 ? (
-              <div className="text-center text-neutral-600 dark:text-neutral-400 py-12">
+              <div className="text-center text-neutral-400 py-12">
                 Loading kits...
               </div>
             ) : kits.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+                <p className="text-neutral-400 mb-4">
                   No kits matching your filters.
                 </p>
                 {activeFilterCount > 0 && (
@@ -336,7 +332,7 @@ export default function KitsPage() {
                     <Button
                       onClick={handleLoadMore}
                       disabled={loading}
-                      className="px-8 py-3 bg-neutral-900 dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 disabled:opacity-50"
+                      className="px-8 py-3 bg-white text-black hover:bg-neutral-200 disabled:opacity-50"
                     >
                       {loading ? 'Loading...' : 'Load More'}
                     </Button>

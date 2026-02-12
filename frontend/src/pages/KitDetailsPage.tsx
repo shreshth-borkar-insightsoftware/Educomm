@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { useCartStore } from "@/store/useCartStore";
 import { Button } from "@/components/ui/button";
-import { MoveLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import FloatingCartButton from "@/components/FloatingCartButton";
+import PageHeader from "@/components/PageHeader";
 
 interface Kit {
   id: number;
@@ -17,7 +18,6 @@ interface Kit {
 
 export default function KitDetailsPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { addToCart, fetchCart } = useCartStore();
   const [kit, setKit] = useState<Kit | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,12 +55,7 @@ export default function KitDetailsPage() {
 
   return (
     <div className="min-h-screen bg-black p-8 text-white">
-      <div className="flex items-center gap-4 mb-10">
-        <button onClick={() => navigate(-1)} className="hover:bg-neutral-800 p-2 rounded-full">
-          <MoveLeft className="w-6 h-6" />
-        </button>
-        <h1 className="text-4xl font-bold tracking-tighter uppercase">Kit Details</h1>
-      </div>
+      <PageHeader title="Kit Details" showBackButton={true} />
 
       <Card className="max-w-3xl bg-neutral-950 border-neutral-800 rounded-2xl overflow-hidden">
         <CardHeader className="border-b border-neutral-900 pb-6">

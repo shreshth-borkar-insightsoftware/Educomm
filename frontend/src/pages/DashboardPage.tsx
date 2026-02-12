@@ -9,12 +9,12 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8 md:p-12 h-full flex flex-col">
-      <header className="flex justify-between items-start mb-12">
+      <header className="mb-6">
         <div>
-          <h1 className="text-4xl font-bold tracking-tighter uppercase">
+          <h1 className="text-4xl font-black tracking-tighter uppercase italic">
             Hello, {user?.firstName}
           </h1>
-          <p className="text-neutral-500 mt-2 italic">
+          <p className="text-neutral-500 text-xs font-mono tracking-widest uppercase">
             Select a category to begin.
           </p>
         </div>
