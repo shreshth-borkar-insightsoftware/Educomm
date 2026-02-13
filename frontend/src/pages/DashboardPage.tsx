@@ -39,6 +39,8 @@ interface Order {
   }>;
 }
 
+const kitTags = ["Popular", "New", "Best Value"];
+
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
@@ -54,42 +56,39 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        // Fetch kits
-        const kitsResponse = await api.get("/kits", { params: { page: 1, pageSize: 3 } });
-        setKits(kitsResponse.data.items || []);
-      } catch (error) {
-        console.error("Failed to fetch kits:", error);
-      } finally {
-        setLoading((prev) => ({ ...prev, kits: false }));
-      }
+      // Fetch all data in parallel
+      const [kitsResult, enrollmentsResult, ordersResult] = await Promise.allSettled([
+        api.get("/kits", { params: { page: 1, pageSize: 3 } }),
+        api.get("/enrollments/MyEnrollments", { params: { page: 1, pageSize: 10 } }),
+        api.get("/Orders/MyOrders", { params: { page: 1, pageSize: 3 } }),
+      ]);
 
-      try {
-        // Fetch enrollments
-        const enrollmentsResponse = await api.get("/enrollments/MyEnrollments", { 
-          params: { page: 1, pageSize: 10 } 
-        });
-        const allEnrollments = enrollmentsResponse.data.items || [];
+      // Handle kits
+      if (kitsResult.status === "fulfilled") {
+        setKits(kitsResult.value.data.items || []);
+      } else {
+        console.error("Failed to fetch kits:", kitsResult.reason);
+      }
+      setLoading((prev) => ({ ...prev, kits: false }));
+
+      // Handle enrollments
+      if (enrollmentsResult.status === "fulfilled") {
+        const allEnrollments = enrollmentsResult.value.data.items || [];
         // Filter for incomplete enrollments and take top 3
         const incompleteEnrollments = allEnrollments.filter((e: Enrollment) => !e.isCompleted).slice(0, 3);
         setEnrollments(incompleteEnrollments);
-      } catch (error) {
-        console.error("Failed to fetch enrollments:", error);
-      } finally {
-        setLoading((prev) => ({ ...prev, enrollments: false }));
+      } else {
+        console.error("Failed to fetch enrollments:", enrollmentsResult.reason);
       }
+      setLoading((prev) => ({ ...prev, enrollments: false }));
 
-      try {
-        // Fetch orders
-        const ordersResponse = await api.get("/Orders/MyOrders", { 
-          params: { page: 1, pageSize: 3 } 
-        });
-        setOrders(ordersResponse.data.items || []);
-      } catch (error) {
-        console.error("Failed to fetch orders:", error);
-      } finally {
-        setLoading((prev) => ({ ...prev, orders: false }));
+      // Handle orders
+      if (ordersResult.status === "fulfilled") {
+        setOrders(ordersResult.value.data.items || []);
+      } else {
+        console.error("Failed to fetch orders:", ordersResult.reason);
       }
+      setLoading((prev) => ({ ...prev, orders: false }));
     };
 
     fetchData();
@@ -111,12 +110,10 @@ export default function DashboardPage() {
     }
   };
 
-  const formatOrderId = (id: number) => {
-    const year = new Date().getFullYear();
+  const formatOrderId = (id: number, orderDate: string) => {
+    const year = new Date(orderDate).getFullYear();
     return `ORD-${year}-${String(id).padStart(3, "0")}`;
   };
-
-  const kitTags = ["Popular", "New", "Best Value"];
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
@@ -326,12 +323,14 @@ export default function DashboardPage() {
                 >
                   <div className="flex-1">
                     <p className="text-white font-medium text-sm">
-                      {order.orderItems[0]?.kit?.name || "Order"}
+                      {order.orderItems.length > 0 
+                        ? (order.orderItems[0].kit?.name || "Order")
+                        : "Order"}
                       {order.orderItems.length > 1 && ` +${order.orderItems.length - 1} more`}
                     </p>
                     <div className="flex items-center gap-3 mt-1">
                       <span className="text-gray-400 text-xs">
-                        {formatOrderId(order.orderId)}
+                        {formatOrderId(order.orderId, order.orderDate)}
                       </span>
                       <span className="text-gray-400 text-xs">
                         {new Date(order.orderDate).toLocaleDateString()}
