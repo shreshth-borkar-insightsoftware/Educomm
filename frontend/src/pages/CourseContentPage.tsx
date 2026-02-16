@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button"; 
-import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import BackButton from "@/components/BackButton";
 
 export default function CourseContentPage() {
