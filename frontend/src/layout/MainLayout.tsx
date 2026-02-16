@@ -8,7 +8,7 @@ export default function MainLayout() {
 
       <div className="fixed inset-0 z-[100] pointer-events-none">
         <img
-          src="https://i.pinimg.com/736x/cd/22/42/cd2242f862c520578e732311e929af06.jpg"
+          src=" "
           alt="Hello Kitty Background"
 
           className="w-full h-full object-cover object-center opacity-10 dark:opacity-15 dark:invert mix-blend-multiply dark:mix-blend-screen"
@@ -29,7 +29,6 @@ export default function MainLayout() {
         
         <Outlet />
       </main>
-      
     </div>
   );
 }

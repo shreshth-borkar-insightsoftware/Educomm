@@ -246,7 +246,7 @@ export default function DashboardPage() {
                   onClick={() => navigate("/courses")}
                   className="text-green-400 text-sm font-medium hover:text-green-300"
                 >
-                  Browse Courses
+                  Browse New Courses
                 </button>
               </div>
             ) : (

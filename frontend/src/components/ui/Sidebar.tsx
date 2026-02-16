@@ -30,13 +30,13 @@ export default function Sidebar() {
     { name: "My Orders", path: "/my-orders", icon: ShoppingBag },
     { name: "Cart", path: "/cart", icon: ShoppingCart },
     { name: "All Kits", path: "/kits", icon: Package },
-    { name: "All Courses", path: "/courses", icon: BookLock },
+    { name: "All Courses", path: "/my-courses", icon: BookLock },
   ];
 
   return (
-    <aside className="w-64 border-r border-neutral-200 dark:border-neutral-800 hidden md:flex flex-col p-6 h-screen sticky top-0 bg-white dark:bg-black">
+    <aside className="w-64 border-r border-border hidden md:flex flex-col p-6 h-screen sticky top-0 bg-sidebar">
       <div className="mb-10">
-        <h2 className="text-xl font-bold tracking-tighter">EDUCOMM</h2>
+        <h2 className="text-xl font-bold tracking-tighter text-sidebar-foreground">EDUCOMM</h2>
       </div>
       
       <nav className="flex-1 space-y-4">
@@ -46,8 +46,8 @@ export default function Sidebar() {
             onClick={() => navigate(item.path)}
             className={`flex items-center gap-3 text-sm uppercase tracking-widest transition-colors w-full ${
               isActive(item.path) 
-                ? "font-bold text-black dark:text-white" 
-                : "text-neutral-500 hover:text-black dark:hover:text-white"
+                ? "font-bold text-sidebar-foreground" 
+                : "text-muted-foreground hover:text-sidebar-foreground"
             }`}
           >
             <item.icon size={18} /> {item.name}
