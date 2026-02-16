@@ -72,7 +72,7 @@ export default function Sidebar() {
         {user?.role === "Admin" && (
           <button
             onClick={() => navigate("/admin")}
-            className="flex items-center gap-3 text-sm uppercase tracking-widest transition-colors w-full text-neutral-500 hover:text-black dark:hover:text-white border-l-2 border-transparent hover:border-neutral-400 dark:hover:border-neutral-600 pl-1"
+            className="flex items-center gap-3 text-sm uppercase tracking-widest transition-colors w-full text-neutral-500 hover:text-black dark:hover:text-white pl-1 border-l-2 border-transparent hover:border-neutral-400 dark:hover:border-neutral-600"
           >
             <Shield size={18} /> Admin Panel
           </button>
