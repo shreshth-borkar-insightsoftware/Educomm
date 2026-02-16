@@ -1,17 +1,40 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button"; 
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import BackButton from "@/components/BackButton";
+
+interface CourseContent {
+  contentId: number;
+  courseId: number;
+  contentType: string;
+  title: string;
+  contentUrl: string;
+  sequenceOrder: number;
+  durationSeconds: number;
+}
+
+interface ContentProgress {
+  courseContentId: number;
+  title: string;
+  orderIndex: number;
+  contentType: string;
+  isCompleted: boolean;
+  completedAt: string | null;
+}
 
 export default function CourseContentPage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const enrollmentId = searchParams.get("enrollmentId");
   const navigate = useNavigate();
   const { logout } = useAuthStore(); 
-  const [content, setContent] = useState<any>(null);
+  const [content, setContent] = useState<CourseContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [markingComplete, setMarkingComplete] = useState(false);
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -21,20 +44,55 @@ export default function CourseContentPage() {
 
         if (Array.isArray(data) && data.length > 0) {
           setContent(data[0]); 
+          
+          // Fetch progress status if enrollmentId is available
+          if (enrollmentId) {
+            try {
+              const progressData = await api.get(`/progress/${enrollmentId}`);
+              const contentProgress = progressData.data.contentDetails.find(
+                (item: ContentProgress) => item.courseContentId === data[0].contentId
+              );
+              if (contentProgress) {
+                setIsCompleted(contentProgress.isCompleted);
+              }
+            } catch (err) {
+              console.error("Error fetching progress:", err);
+            }
+          }
         } else {
           setContent(null); 
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Fetch error:", err);
-        if (err.response?.status === 401) {
-          logout();
+        if (err && typeof err === 'object' && 'response' in err) {
+          const error = err as { response?: { status?: number } };
+          if (error.response?.status === 401) {
+            logout();
+          }
         }
       } finally {
         setLoading(false);
       }
     };
     fetchContent();
-  }, [id, logout]);
+  }, [id, enrollmentId, logout]);
+
+  const handleMarkComplete = async () => {
+    if (!enrollmentId || !content) return;
+    
+    try {
+      setMarkingComplete(true);
+      await api.post("/progress/complete", {
+        enrollmentId: parseInt(enrollmentId),
+        courseContentId: content.contentId
+      });
+      setIsCompleted(true);
+    } catch (err) {
+      console.error("Error marking content as complete:", err);
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
 
   if (loading) return (
     <div className="h-screen bg-black flex items-center justify-center">
@@ -60,6 +118,32 @@ export default function CourseContentPage() {
           EXIT LESSON
         </BackButton>
       </div>
+
+      {enrollmentId && (
+        <div className="absolute top-0 right-0 p-8 z-50 flex items-center gap-4">
+          {isCompleted ? (
+            <div className="flex items-center gap-2 bg-green-500/20 border border-green-500/50 text-green-400 px-4 py-2 rounded-lg">
+              <CheckCircle2 className="w-5 h-5" />
+              <span className="text-sm font-medium uppercase">Completed</span>
+            </div>
+          ) : (
+            <Button
+              onClick={handleMarkComplete}
+              disabled={markingComplete}
+              className="bg-white text-black hover:bg-neutral-200 font-bold uppercase"
+            >
+              {markingComplete ? (
+                <>
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                  Marking...
+                </>
+              ) : (
+                "Mark as Complete"
+              )}
+            </Button>
+          )}
+        </div>
+      )}
 
       <div className="flex-1 flex items-center justify-center bg-black">
         {isDirectVideo ? (
