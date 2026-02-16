@@ -31,6 +31,7 @@ export default function Sidebar() {
     { name: "Cart", path: "/cart", icon: ShoppingCart },
     { name: "All Kits", path: "/kits", icon: Package },
     { name: "All Courses", path: "/courses", icon: BookLock },
+    { name: "Address", path: "/address", icon: MapPin },
   ];
 
   return (
@@ -56,17 +57,6 @@ export default function Sidebar() {
       </nav>
 
       <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-neutral-900">
-        <button
-          onClick={() => navigate("/address")}
-          className={`flex items-center gap-3 text-sm uppercase tracking-widest transition-colors w-full ${
-            isActive("/address") 
-              ? "font-bold text-black dark:text-white" 
-              : "text-neutral-500 hover:text-black dark:hover:text-white"
-          }`}
-        >
-          <MapPin size={18} /> Address
-        </button>
-
         <Button 
           variant="ghost" 
           onClick={handleLogout}

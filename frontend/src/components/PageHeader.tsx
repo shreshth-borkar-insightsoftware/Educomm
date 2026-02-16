@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { MoveLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
+import BackButton from "./BackButton";
 
 interface PageHeaderProps {
   title: string;
@@ -14,14 +15,7 @@ export default function PageHeader({ title, subtitle, showBackButton = false, ch
 
   return (
     <div className="flex items-center gap-4 mb-6">
-      {showBackButton && (
-        <button 
-          onClick={() => navigate(-1)} 
-          className="hover:bg-neutral-800 p-2 rounded-full transition-all"
-        >
-          <MoveLeft className="w-6 h-6" />
-        </button>
-      )}
+      {showBackButton && <BackButton />}
       <div className="flex-1">
         <h1 className="text-4xl font-black tracking-tighter uppercase italic">{title}</h1>
         {subtitle && (

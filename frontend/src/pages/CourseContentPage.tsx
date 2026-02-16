@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button"; 
-import { MoveLeft, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import BackButton from "@/components/BackButton";
 
 export default function CourseContentPage() {
   const { id } = useParams();
@@ -54,14 +55,9 @@ export default function CourseContentPage() {
 
   return (
     <div className="h-screen w-full bg-black flex flex-col relative overflow-hidden">
-      <div className="absolute top-0 left-0 p-8 z-50">
-        <Button 
-          variant="ghost" 
-          className="text-white hover:bg-white/10 font-bold italic" 
-          onClick={() => navigate("/my-courses")}
-        >
-          <MoveLeft className="mr-2" /> EXIT LESSON
-        </Button>
+      <div className="absolute top-0 left-0 p-8 z-50 flex items-center gap-4">
+        <BackButton />
+        <span className="text-white font-bold italic uppercase tracking-wide">EXIT LESSON</span>
       </div>
 
       <div className="flex-1 flex items-center justify-center bg-black">
