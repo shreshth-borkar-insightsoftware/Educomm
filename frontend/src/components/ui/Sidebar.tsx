@@ -33,7 +33,6 @@ export default function Sidebar() {
     { name: "All Kits", path: "/kits", icon: Package },
     { name: "All Courses", path: "/courses", icon: BookLock },
     { name: "Address", path: "/address", icon: MapPin },
-    ...(user?.role === "Admin" ? [{ name: "Admin Panel", path: "/admin", icon: Shield }] : []),
   ];
 
   const baseNavClasses = "flex items-center gap-3 text-sm uppercase tracking-widest transition-all w-full pl-1 border-l-2";
@@ -58,7 +57,15 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="pt-4 border-t border-neutral-100 dark:border-neutral-900">
+      <div className="pt-4 border-t border-neutral-100 dark:border-neutral-900 space-y-2">
+        {user?.role === "Admin" && (
+          <button
+            onClick={() => navigate("/admin")}
+            className={`${baseNavClasses} ${isActive("/admin") ? activeNavClasses : inactiveNavClasses}`}
+          >
+            <Shield size={18} /> Admin Panel
+          </button>
+        )}
         <button
           onClick={handleLogout}
           className={`${baseNavClasses} border-transparent text-muted-foreground hover:text-red-500 dark:hover:text-red-400 hover:border-red-400 dark:hover:border-red-500`}
