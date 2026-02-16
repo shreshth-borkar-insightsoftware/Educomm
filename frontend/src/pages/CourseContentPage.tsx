@@ -55,9 +55,10 @@ export default function CourseContentPage() {
 
   return (
     <div className="h-screen w-full bg-black flex flex-col relative overflow-hidden">
-      <div className="absolute top-0 left-0 p-8 z-50 flex items-center gap-4">
-        <BackButton />
-        <span className="text-white font-bold italic uppercase tracking-wide">EXIT LESSON</span>
+      <div className="absolute top-0 left-0 p-8 z-50">
+        <BackButton to="/my-courses" className="font-bold italic uppercase tracking-wide">
+          EXIT LESSON
+        </BackButton>
       </div>
 
       <div className="flex-1 flex items-center justify-center bg-black">
