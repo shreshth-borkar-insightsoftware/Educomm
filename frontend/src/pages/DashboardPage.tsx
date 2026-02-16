@@ -120,10 +120,10 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-4xl font-black tracking-tighter uppercase italic">
             Welcome back, {user?.firstName}
           </h1>
-          <p className="text-gray-400 mt-1">Here's what's happening with your learning journey</p>
+          <p className="text-neutral-500 text-xs font-mono tracking-widest uppercase mt-1">Here's what's happening with your learning journey</p>
         </header>
 
         {/* Top Section - Hero Cards */}
@@ -134,8 +134,8 @@ export default function DashboardPage() {
             className="bg-gray-900 border border-gray-800 rounded-xl p-6 cursor-pointer hover:border-gray-700 transition-colors"
           >
             <Package className="w-8 h-8 text-purple-400 mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Hardware Kits</h2>
-            <p className="text-gray-400 text-sm mb-4">
+            <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Hardware Kits</h2>
+            <p className="text-neutral-400 text-sm mb-4">
               Browse and order physical resources for hands-on learning.
             </p>
             <button className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors">
@@ -149,8 +149,8 @@ export default function DashboardPage() {
             className="bg-gray-900 border border-gray-800 rounded-xl p-6 cursor-pointer hover:border-gray-700 transition-colors"
           >
             <Monitor className="w-8 h-8 text-purple-400 mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Digital Courses</h2>
-            <p className="text-gray-400 text-sm mb-4">
+            <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Digital Courses</h2>
+            <p className="text-neutral-400 text-sm mb-4">
               Access curated courses in electronics and programming.
             </p>
             <button className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors">
@@ -166,7 +166,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-purple-400" />
-                <h3 className="text-lg font-bold text-white">Featured Kits</h3>
+                <h3 className="text-lg font-black uppercase tracking-tight text-white">Featured Kits</h3>
               </div>
               <button 
                 onClick={() => navigate("/kits")}
@@ -183,7 +183,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : kits.length === 0 ? (
-              <p className="text-gray-400 text-sm py-8 text-center">
+              <p className="text-neutral-400 text-sm py-8 text-center">
                 No kits available.{" "}
                 <button 
                   onClick={() => navigate("/kits")}
@@ -221,7 +221,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-purple-400" />
-                <h3 className="text-lg font-bold text-white">Continue Learning</h3>
+                <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
               </div>
               <button 
                 onClick={() => navigate("/courses")}
@@ -239,7 +239,7 @@ export default function DashboardPage() {
               </div>
             ) : enrollments.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-gray-400 text-sm mb-2">
+                <p className="text-neutral-400 text-sm mb-2">
                   No courses started yet. Browse courses to get started!
                 </p>
                 <button 
@@ -287,7 +287,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-purple-400" />
-              <h3 className="text-lg font-bold text-white">Recent Orders</h3>
+              <h3 className="text-lg font-black uppercase tracking-tight text-white">Recent Orders</h3>
             </div>
             <button 
               onClick={() => navigate("/my-orders")}
@@ -304,7 +304,7 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : orders.length === 0 ? (
-            <p className="text-gray-400 text-sm py-8 text-center">
+            <p className="text-neutral-400 text-sm py-8 text-center">
               No orders yet.{" "}
               <button 
                 onClick={() => navigate("/kits")}
@@ -329,10 +329,10 @@ export default function DashboardPage() {
                       {order.orderItems.length > 1 && ` +${order.orderItems.length - 1} more`}
                     </p>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-gray-400 text-xs">
+                      <span className="text-neutral-400 text-xs">
                         {formatOrderId(order.orderId, order.orderDate)}
                       </span>
-                      <span className="text-gray-400 text-xs">
+                      <span className="text-neutral-400 text-xs">
                         {new Date(order.orderDate).toLocaleDateString()}
                       </span>
                     </div>
