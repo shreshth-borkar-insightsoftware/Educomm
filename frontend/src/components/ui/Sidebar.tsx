@@ -30,7 +30,7 @@ export default function Sidebar() {
     { name: "My Orders", path: "/my-orders", icon: ShoppingBag },
     { name: "Cart", path: "/cart", icon: ShoppingCart },
     { name: "All Kits", path: "/kits", icon: Package },
-    { name: "All Courses", path: "/my-courses", icon: BookLock },
+    { name: "All Courses", path: "/courses", icon: BookLock },
   ];
 
   return (
