@@ -48,30 +48,37 @@ namespace Educomm.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            // Enrich with module counts
-            var enrichedItems = new List<EnrollmentDto>();
-            foreach (var enrollment in enrollments)
+            // Get all enrollment IDs to fetch progress in one query
+            var enrollmentIds = enrollments.Select(e => e.EnrollmentId).ToList();
+            var courseIds = enrollments.Select(e => e.CourseId).Distinct().ToList();
+
+            // Fetch all module counts for these courses in one query
+            var moduleCounts = await _context.CourseContents
+                .Where(cc => courseIds.Contains(cc.CourseId))
+                .GroupBy(cc => cc.CourseId)
+                .Select(g => new { CourseId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.CourseId, x => x.Count);
+
+            // Fetch all completed module counts for these enrollments in one query
+            var completedCounts = await _context.CourseContentProgress
+                .Where(p => enrollmentIds.Contains(p.EnrollmentId) && p.IsCompleted)
+                .GroupBy(p => p.EnrollmentId)
+                .Select(g => new { EnrollmentId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.EnrollmentId, x => x.Count);
+
+            // Map to DTOs with pre-fetched data
+            var enrichedItems = enrollments.Select(enrollment => new EnrollmentDto
             {
-                var totalModules = await _context.CourseContents
-                    .CountAsync(cc => cc.CourseId == enrollment.CourseId);
-
-                var completedModules = await _context.CourseContentProgress
-                    .Where(p => p.EnrollmentId == enrollment.EnrollmentId && p.IsCompleted)
-                    .CountAsync();
-
-                enrichedItems.Add(new EnrollmentDto
-                {
-                    EnrollmentId = enrollment.EnrollmentId,
-                    UserId = enrollment.UserId,
-                    CourseId = enrollment.CourseId,
-                    CourseName = enrollment.Course?.Name,
-                    EnrolledAt = enrollment.EnrolledAt,
-                    IsCompleted = enrollment.IsCompleted,
-                    ProgressPercentage = enrollment.ProgressPercentage,
-                    TotalModules = totalModules,
-                    CompletedModules = completedModules
-                });
-            }
+                EnrollmentId = enrollment.EnrollmentId,
+                UserId = enrollment.UserId,
+                CourseId = enrollment.CourseId,
+                CourseName = enrollment.Course?.Name,
+                EnrolledAt = enrollment.EnrolledAt,
+                IsCompleted = enrollment.IsCompleted,
+                ProgressPercentage = enrollment.ProgressPercentage,
+                TotalModules = moduleCounts.GetValueOrDefault(enrollment.CourseId, 0),
+                CompletedModules = completedCounts.GetValueOrDefault(enrollment.EnrollmentId, 0)
+            }).ToList();
 
             return new PaginatedResponse<EnrollmentDto>
             {

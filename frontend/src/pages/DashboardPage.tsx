@@ -87,7 +87,8 @@ export default function DashboardPage() {
       // Fetch all data in parallel
       const [kitsResult, enrollmentsResult, ordersResult] = await Promise.allSettled([
         api.get("/kits", { params: { page: 1, pageSize: 3 } }),
-        api.get("/enrollments/MyEnrollments", { params: { page: 1, pageSize: 100 } }),
+        // Fetch reasonable amount of enrollments, sorted by most recent
+        api.get("/enrollments/MyEnrollments", { params: { page: 1, pageSize: 50 } }),
         api.get("/Orders/MyOrders", { params: { page: 1, pageSize: 3 } }),
       ]);
 
@@ -333,7 +334,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[1000px] overflow-y-auto' : 'max-h-auto'}`}>
+                <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-auto'}`}>
                   {displayEnrollments.map((enrollment) => (
                     <div key={enrollment.enrollmentId} className="border-b border-gray-800 pb-4 last:border-b-0">
                       <div 
