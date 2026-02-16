@@ -33,11 +33,12 @@ export default function Sidebar() {
     { name: "All Kits", path: "/kits", icon: Package },
     { name: "All Courses", path: "/courses", icon: BookLock },
     { name: "Address", path: "/address", icon: MapPin },
+    ...(user?.role === "Admin" ? [{ name: "Admin Panel", path: "/admin", icon: Shield }] : []),
   ];
 
-  if (user?.role === "Admin") {
-    navItems.push({ name: "Admin Panel", path: "/admin", icon: Shield });
-  }
+  const baseNavClasses = "flex items-center gap-3 text-sm uppercase tracking-widest transition-all w-full pl-1 border-l-2";
+  const activeNavClasses = "text-sidebar-foreground border-neutral-600 dark:border-neutral-400";
+  const inactiveNavClasses = "text-muted-foreground border-transparent hover:text-sidebar-foreground hover:border-neutral-400 dark:hover:border-neutral-600";
 
   return (
     <aside className="w-64 border-r border-border hidden md:flex flex-col p-6 h-screen sticky top-0 bg-sidebar">
@@ -50,11 +51,7 @@ export default function Sidebar() {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className={`flex items-center gap-3 text-sm uppercase tracking-widest transition-all w-full pl-1 border-l-2 ${
-              isActive(item.path) 
-                ? "text-sidebar-foreground border-neutral-600 dark:border-neutral-400" 
-                : "text-muted-foreground border-transparent hover:text-sidebar-foreground hover:border-neutral-400 dark:hover:border-neutral-600"
-            }`}
+            className={`${baseNavClasses} ${isActive(item.path) ? activeNavClasses : inactiveNavClasses}`}
           >
             <item.icon size={18} /> {item.name}
           </button>
@@ -64,7 +61,7 @@ export default function Sidebar() {
       <div className="pt-4 border-t border-neutral-100 dark:border-neutral-900">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 text-sm uppercase tracking-widest transition-all w-full pl-1 border-l-2 border-transparent text-muted-foreground hover:text-red-500 dark:hover:text-red-400 hover:border-red-400 dark:hover:border-red-500"
+          className={`${baseNavClasses} border-transparent text-muted-foreground hover:text-red-500 dark:hover:text-red-400 hover:border-red-400 dark:hover:border-red-500`}
         >
           <LogOut size={18} /> Logout
         </button>
