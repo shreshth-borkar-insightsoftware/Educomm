@@ -1,5 +1,6 @@
 import Sidebar from "@/components/ui/Sidebar";
 import GlobalSearch from "@/components/GlobalSearch";
+import Footer from "@/components/Footer";
 import { Outlet } from "react-router-dom";
 
 export default function MainLayout() {
@@ -28,6 +29,8 @@ export default function MainLayout() {
         </div>
         
         <Outlet />
+        
+        <Footer />
       </main>
     </div>
   );
