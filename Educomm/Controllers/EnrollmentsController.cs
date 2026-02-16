@@ -31,7 +31,7 @@ namespace Educomm.Controllers
 
         // GET api
         [HttpGet("MyEnrollments")]
-        public async Task<ActionResult<PaginatedResponse<Enrollments>>> GetMyEnrollments([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<PaginatedResponse<EnrollmentDto>>> GetMyEnrollments([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             // Enforce maximum page size
             pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
@@ -43,14 +43,39 @@ namespace Educomm.Controllers
                 .Where(e => e.UserId == userId);
 
             var totalCount = await query.CountAsync();
-            var items = await query
+            var enrollments = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            return new PaginatedResponse<Enrollments>
+            // Enrich with module counts
+            var enrichedItems = new List<EnrollmentDto>();
+            foreach (var enrollment in enrollments)
             {
-                Items = items,
+                var totalModules = await _context.CourseContents
+                    .CountAsync(cc => cc.CourseId == enrollment.CourseId);
+
+                var completedModules = await _context.CourseContentProgress
+                    .Where(p => p.EnrollmentId == enrollment.EnrollmentId && p.IsCompleted)
+                    .CountAsync();
+
+                enrichedItems.Add(new EnrollmentDto
+                {
+                    EnrollmentId = enrollment.EnrollmentId,
+                    UserId = enrollment.UserId,
+                    CourseId = enrollment.CourseId,
+                    CourseName = enrollment.Course?.Name,
+                    EnrolledAt = enrollment.EnrolledAt,
+                    IsCompleted = enrollment.IsCompleted,
+                    ProgressPercentage = enrollment.ProgressPercentage,
+                    TotalModules = totalModules,
+                    CompletedModules = completedModules
+                });
+            }
+
+            return new PaginatedResponse<EnrollmentDto>
+            {
+                Items = enrichedItems,
                 TotalCount = totalCount,
                 Page = page,
                 PageSize = pageSize
