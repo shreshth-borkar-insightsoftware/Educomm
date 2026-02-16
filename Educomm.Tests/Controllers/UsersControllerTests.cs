@@ -63,5 +63,28 @@ namespace Educomm.Tests.Controllers
             Assert.Equal(100, response.Items.Count());
             Assert.Equal(100, response.PageSize);
         }
+
+        // ──── NEW TEST ────
+
+        [Fact]
+        public async Task GetUsers_Pagination_ReturnsSecondPage()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            for (var i = 1; i <= 12; i++)
+            {
+                context.Users.Add(TestDataBuilder.CreateUser(i, $"user{i}@example.com"));
+            }
+            await context.SaveChangesAsync();
+
+            var controller = new UsersController(context);
+
+            var result = await controller.GetUsers(page: 2, pageSize: 5);
+
+            var response = Assert.IsType<PaginatedResponse<User>>(result.Value);
+            Assert.Equal(2, response.Page);
+            Assert.Equal(5, response.Items.Count());
+            Assert.Equal(12, response.TotalCount);
+        }
     }
 }

@@ -17,7 +17,7 @@ namespace Educomm.Tests.Controllers
             var controller = new OrdersController(context);
             TestControllerContext.SetUser(controller, userId: 1);
 
-            var result = await controller.Checkout("Address");
+            var result = await controller.Checkout("123 Test Street, City, State");
 
             var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
             Assert.Equal("Cart is empty.", badRequest.Value);
@@ -39,7 +39,7 @@ namespace Educomm.Tests.Controllers
             var controller = new OrdersController(context);
             TestControllerContext.SetUser(controller, userId: 1);
 
-            var result = await controller.Checkout("Address");
+            var result = await controller.Checkout("123 Test Street, City, State");
 
             var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
             Assert.Contains("Not enough stock", badRequest.Value?.ToString());
@@ -64,7 +64,7 @@ namespace Educomm.Tests.Controllers
             var controller = new OrdersController(context);
             TestControllerContext.SetUser(controller, userId: 1);
 
-            var result = await controller.Checkout("Address");
+            var result = await controller.Checkout("123 Test Street, City, State");
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
             var order = Assert.IsType<Educomm.Models.Order>(ok.Value);
@@ -105,7 +105,7 @@ namespace Educomm.Tests.Controllers
             var controller = new OrdersController(context);
             TestControllerContext.SetUser(controller, userId: 2);
 
-            var result = await controller.Checkout("Address");
+            var result = await controller.Checkout("123 Test Street, City, State");
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
             var order = Assert.IsType<Educomm.Models.Order>(ok.Value);
@@ -139,13 +139,99 @@ namespace Educomm.Tests.Controllers
             var controller = new OrdersController(context);
             TestControllerContext.SetUser(controller, userId: 3);
 
-            var result = await controller.Checkout("Address");
+            var result = await controller.Checkout("123 Test Street, City, State");
 
             var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
             Assert.Contains("Not enough stock", badRequest.Value?.ToString());
 
             Assert.Empty(context.Orders);
             Assert.Equal(2, context.CartItems.Count());
+        }
+
+        // ──── NEW TESTS ────
+
+        [Fact]
+        public async Task Checkout_NullShippingAddress_ReturnsBadRequest()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+
+            var controller = new OrdersController(context);
+            TestControllerContext.SetUser(controller, userId: 1);
+
+            var result = await controller.Checkout(null!);
+
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Shipping address is required.", badRequest.Value);
+        }
+
+        [Fact]
+        public async Task Checkout_ShortShippingAddress_ReturnsBadRequest()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+
+            var controller = new OrdersController(context);
+            TestControllerContext.SetUser(controller, userId: 1);
+
+            var result = await controller.Checkout("Short");
+
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("Please enter a complete delivery address.", badRequest.Value);
+        }
+
+        [Fact]
+        public async Task Checkout_AlreadyEnrolled_SkipsEnrollment()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+
+            context.Users.Add(TestDataBuilder.CreateUser(1, "user1@example.com"));
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            context.Courses.Add(TestDataBuilder.CreateCourse(1, categoryId: 1));
+            var kit = TestDataBuilder.CreateKit(1, categoryId: 1, courseId: 1);
+            kit.StockQuantity = 5;
+            context.Kits.Add(kit);
+            context.Carts.Add(TestDataBuilder.CreateCart(1, userId: 1));
+            context.CartItems.Add(TestDataBuilder.CreateCartItem(1, cartId: 1, kitId: 1, quantity: 1));
+            // Already enrolled
+            context.Enrollments.Add(TestDataBuilder.CreateEnrollment(1, userId: 1, courseId: 1));
+            await context.SaveChangesAsync();
+
+            var controller = new OrdersController(context);
+            TestControllerContext.SetUser(controller, userId: 1);
+
+            var result = await controller.Checkout("Test shipping address for order");
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsType<Educomm.Models.Order>(ok.Value);
+            // Should still have only 1 enrollment (no duplicate)
+            Assert.Single(context.Enrollments);
+        }
+
+        [Fact]
+        public async Task Checkout_KitWithoutCourse_NoEnrollmentCreated()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+
+            context.Users.Add(TestDataBuilder.CreateUser(1, "user1@example.com"));
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            var kit = TestDataBuilder.CreateKit(1, categoryId: 1, courseId: null);
+            kit.StockQuantity = 5;
+            context.Kits.Add(kit);
+            context.Carts.Add(TestDataBuilder.CreateCart(1, userId: 1));
+            context.CartItems.Add(TestDataBuilder.CreateCartItem(1, cartId: 1, kitId: 1, quantity: 1));
+            await context.SaveChangesAsync();
+
+            var controller = new OrdersController(context);
+            TestControllerContext.SetUser(controller, userId: 1);
+
+            var result = await controller.Checkout("Test shipping address for order");
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.IsType<Educomm.Models.Order>(ok.Value);
+            Assert.Empty(context.Enrollments);
         }
     }
 }

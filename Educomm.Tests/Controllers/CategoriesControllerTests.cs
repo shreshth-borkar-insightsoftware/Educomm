@@ -79,5 +79,37 @@ namespace Educomm.Tests.Controllers
             Assert.Equal(100, response.Items.Count());
             Assert.Equal(100, response.PageSize);
         }
+
+        // ──── NEW TESTS ────
+
+        [Fact]
+        public async Task PostCategory_Valid_ReturnsOk()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            var controller = new CategoriesController(context);
+
+            var category = TestDataBuilder.CreateCategory(1, "New Category");
+            var result = await controller.PostCategory(category);
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var saved = Assert.IsType<Category>(ok.Value);
+            Assert.Equal("New Category", saved.Name);
+            Assert.Single(context.Categories);
+        }
+
+        [Fact]
+        public async Task GetCategories_Empty_ReturnsEmptyPaginated()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            var controller = new CategoriesController(context);
+
+            var result = await controller.GetCategories();
+
+            var response = Assert.IsType<PaginatedResponse<Category>>(result.Value);
+            Assert.Equal(0, response.TotalCount);
+            Assert.Empty(response.Items);
+        }
     }
 }

@@ -71,9 +71,11 @@ namespace Educomm.Controllers
                     var userId = int.Parse(session.Metadata["userId"]);
 
                     // Check if order already exists
+                    var amountToMatch = (decimal)(session.AmountTotal ?? 0);
                     var existingOrder = await _context.Orders
                         .AnyAsync(o => o.UserId == userId && 
-                                      Math.Abs((o.TotalAmount * 100) - (session.AmountTotal ?? 0)) < 1);
+                                      ((o.TotalAmount * 100) - amountToMatch) > -1 &&
+                                      ((o.TotalAmount * 100) - amountToMatch) < 1);
 
                     if (existingOrder)
                     {

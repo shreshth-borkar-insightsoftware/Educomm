@@ -89,13 +89,16 @@ namespace Educomm.Controllers
 
         private async Task<SearchResultSet> SearchCoursesAsync(string searchPattern, int page, int pageSize)
         {
+            // Extract the raw search term from the LIKE pattern (remove surrounding %)
+            var searchTerm = searchPattern.Trim('%').ToLower();
+
             var query = _context.Courses
                 .Include(c => c.Category)
                 .Include(c => c.Kits)
                 .AsNoTracking()
                 .Where(c => 
-                    EF.Functions.ILike(c.Name, searchPattern) || 
-                    EF.Functions.ILike(c.Description ?? "", searchPattern));
+                    c.Name.ToLower().Contains(searchTerm) || 
+                    (c.Description ?? "").ToLower().Contains(searchTerm));
 
             var totalCount = await query.CountAsync();
             
@@ -132,12 +135,15 @@ namespace Educomm.Controllers
 
         private async Task<SearchResultSet> SearchKitsAsync(string searchPattern, int page, int pageSize)
         {
+            // Extract the raw search term from the LIKE pattern (remove surrounding %)
+            var searchTerm = searchPattern.Trim('%').ToLower();
+
             var query = _context.Kits
                 .Include(k => k.Course)
                 .AsNoTracking()
                 .Where(k => 
-                    EF.Functions.ILike(k.Name, searchPattern) || 
-                    EF.Functions.ILike(k.Description ?? "", searchPattern));
+                    k.Name.ToLower().Contains(searchTerm) || 
+                    (k.Description ?? "").ToLower().Contains(searchTerm));
 
             var totalCount = await query.CountAsync();
             

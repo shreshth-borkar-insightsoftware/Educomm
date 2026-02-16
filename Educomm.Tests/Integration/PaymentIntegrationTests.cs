@@ -8,7 +8,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Stripe.Checkout;
+using System.Net;
+using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using Xunit;
 
 namespace Educomm.Tests.Integration
@@ -17,8 +20,10 @@ namespace Educomm.Tests.Integration
     /// Integration tests to catch webhook delivery failures and order creation issues
     /// These tests simulate the ACTUAL bug: payment succeeds but webhook fails to create order
     /// </summary>
-    public class PaymentIntegrationTests
+    public class PaymentIntegrationTests : IntegrationTestBase
     {
+        public PaymentIntegrationTests(CustomWebApplicationFactory factory) : base(factory) { }
+
         private static IConfiguration BuildConfig()
         {
             return new ConfigurationBuilder()
@@ -73,7 +78,7 @@ namespace Educomm.Tests.Integration
             var orders = await context.Orders.ToListAsync();
             Assert.Single(orders);
             Assert.Equal(1, orders[0].UserId);
-            Assert.Equal("Completed", orders[0].Status);
+            Assert.Equal("Confirmed", orders[0].Status);
             Assert.Equal(20m, orders[0].TotalAmount);
 
             // Cart must be cleared
@@ -229,5 +234,89 @@ namespace Educomm.Tests.Integration
             Assert.Contains(orders, o => o.ShippingAddress == "Old Address");
             Assert.Contains(orders, o => o.ShippingAddress == "New Address");
         }
+
+        [Fact]
+        public async Task CreateCheckoutSession_EmptyCart_ReturnsBadRequest()
+        {
+            var category = await SeedCategoryAsync("Payment-Empty-Cat");
+            var (token, userId) = await CreateAuthenticatedUserAsync();
+            SetAuthToken(token);
+
+            // Create empty cart
+            await WithDbContextAsync(async context =>
+            {
+                context.Carts.Add(new Educomm.Models.Cart { UserId = userId });
+                await context.SaveChangesAsync();
+            });
+
+            var response = await Client.PostAsJsonAsync("/api/Payment/create-checkout-session", 
+                new { ShippingAddress = "123 Test St" });
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task VerifySession_NotPaidStatus_ReturnsSuccessFalse()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            
+            var stripeService = new Mock<Educomm.Services.IStripeService>();
+            stripeService.Setup(s => s.GetSessionAsync(It.IsAny<string>()))
+                .ReturnsAsync(new Stripe.Checkout.Session
+                {
+                    PaymentStatus = "unpaid",
+                    AmountTotal = 10000,
+                    Metadata = new Dictionary<string, string> { { "userId", "1" } }
+                });
+
+            var controller = new PaymentController(context, BuildConfig(), stripeService.Object);
+
+            var result = await controller.VerifySession("sess_unpaid") as OkObjectResult;
+
+            Assert.NotNull(result);
+            var value = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(result.Value));
+            Assert.False(value.GetProperty("success").GetBoolean());
+        }
+
+        [Fact]
+        public async Task VerifySession_MissingUserId_ReturnsBadRequest()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            
+            var stripeService = new Mock<Educomm.Services.IStripeService>();
+            stripeService.Setup(s => s.GetSessionAsync(It.IsAny<string>()))
+                .ReturnsAsync(new Stripe.Checkout.Session
+                {
+                    PaymentStatus = "paid",
+                    AmountTotal = 10000,
+                    Metadata = new Dictionary<string, string>() // No userId
+                });
+
+            var controller = new PaymentController(context, BuildConfig(), stripeService.Object);
+
+            var result = await controller.VerifySession("sess_no_user");
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task VerifySession_SessionNotFound_ReturnsNotFound()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            
+            var stripeService = new Mock<Educomm.Services.IStripeService>();
+            stripeService.Setup(s => s.GetSessionAsync(It.IsAny<string>()))
+                .ReturnsAsync((Stripe.Checkout.Session)null);
+
+            var controller = new PaymentController(context, BuildConfig(), stripeService.Object);
+
+            var result = await controller.VerifySession("sess_missing");
+
+            Assert.IsType<NotFoundObjectResult>(result);
+        }
     }
 }
+

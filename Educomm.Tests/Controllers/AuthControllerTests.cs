@@ -97,5 +97,24 @@ namespace Educomm.Tests.Controllers
             var saved = Assert.IsType<Educomm.Models.User>(ok.Value);
             Assert.NotEqual("plain", saved.PasswordHash);
         }
+
+        // ──── NEW TEST ────
+
+        [Fact]
+        public async Task Login_UserNotFound_ReturnsBadRequest()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            var controller = new AuthController(context, BuildConfig());
+
+            var result = await controller.Login(new LoginDto
+            {
+                Email = "nonexistent@example.com",
+                Password = "P@ssw0rd"
+            });
+
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Equal("User not found.", badRequest.Value);
+        }
     }
 }

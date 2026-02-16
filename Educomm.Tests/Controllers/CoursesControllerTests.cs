@@ -221,5 +221,178 @@ namespace Educomm.Tests.Controllers
             Assert.Equal(100, response.Items.Count());
             Assert.Equal(100, response.PageSize);
         }
+
+        // ──── NEW TESTS: Fill missing branches ────
+
+        [Fact]
+        public async Task GetCourses_FilterByIsActive_ReturnsOnlyActive()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            var active = TestDataBuilder.CreateCourse(1, categoryId: 1, name: "Active Course");
+            active.IsActive = true;
+            var inactive = TestDataBuilder.CreateCourse(2, categoryId: 1, name: "Inactive Course");
+            inactive.IsActive = false;
+            context.Courses.AddRange(active, inactive);
+            await context.SaveChangesAsync();
+
+            var controller = new CoursesController(context);
+
+            var result = await controller.GetCourses(isActive: true);
+
+            var response = Assert.IsType<Educomm.Models.DTOs.PaginatedResponse<Course>>(result.Value);
+            Assert.Single(response.Items);
+            Assert.True(response.Items.First().IsActive);
+        }
+
+        [Fact]
+        public async Task GetCourses_SortByNewest_ReturnsDescendingById()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            context.Courses.AddRange(
+                TestDataBuilder.CreateCourse(1, categoryId: 1, name: "Old Course"),
+                TestDataBuilder.CreateCourse(2, categoryId: 1, name: "New Course"));
+            await context.SaveChangesAsync();
+
+            var controller = new CoursesController(context);
+
+            var result = await controller.GetCourses(sortBy: "newest");
+
+            var response = Assert.IsType<Educomm.Models.DTOs.PaginatedResponse<Course>>(result.Value);
+            Assert.Equal("New Course", response.Items.First().Name);
+        }
+
+        [Fact]
+        public async Task GetCourses_SortByNameDesc_ReturnsDescending()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            context.Courses.AddRange(
+                TestDataBuilder.CreateCourse(1, categoryId: 1, name: "Alpha"),
+                TestDataBuilder.CreateCourse(2, categoryId: 1, name: "Zeta"));
+            await context.SaveChangesAsync();
+
+            var controller = new CoursesController(context);
+
+            var result = await controller.GetCourses(sortBy: "name", sortOrder: "desc");
+
+            var response = Assert.IsType<Educomm.Models.DTOs.PaginatedResponse<Course>>(result.Value);
+            Assert.Equal("Zeta", response.Items.First().Name);
+        }
+
+        [Fact]
+        public async Task GetCourses_NoFilters_ReturnsAll()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            context.Courses.AddRange(
+                TestDataBuilder.CreateCourse(1, categoryId: 1, name: "Course A"),
+                TestDataBuilder.CreateCourse(2, categoryId: 1, name: "Course B"),
+                TestDataBuilder.CreateCourse(3, categoryId: 1, name: "Course C"));
+            await context.SaveChangesAsync();
+
+            var controller = new CoursesController(context);
+
+            var result = await controller.GetCourses();
+
+            var response = Assert.IsType<Educomm.Models.DTOs.PaginatedResponse<Course>>(result.Value);
+            Assert.Equal(3, response.TotalCount);
+        }
+
+        [Fact]
+        public async Task GetCourse_Found_ReturnsCourse()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            context.Courses.Add(TestDataBuilder.CreateCourse(1, categoryId: 1, name: "Test Course"));
+            await context.SaveChangesAsync();
+
+            var controller = new CoursesController(context);
+
+            var result = await controller.GetCourse(1);
+
+            var course = Assert.IsType<Course>(result.Value);
+            Assert.Equal("Test Course", course.Name);
+        }
+
+        [Fact]
+        public async Task UpdateCourse_InvalidCategory_ReturnsBadRequest()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            context.Courses.Add(TestDataBuilder.CreateCourse(1, categoryId: 1));
+            await context.SaveChangesAsync();
+
+            var controller = new CoursesController(context);
+
+            var course = TestDataBuilder.CreateCourse(1, categoryId: 99);
+            var result = await controller.UpdateCourse(1, course);
+
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Invalid CategoryId. That category does not exist.", badRequest.Value);
+        }
+
+        [Fact]
+        public async Task UpdateCourse_Success_ReturnsOk()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            context.Courses.Add(TestDataBuilder.CreateCourse(1, categoryId: 1, name: "Original Name"));
+            await context.SaveChangesAsync();
+
+            var controller = new CoursesController(context);
+
+            // Detach the tracked entity
+            context.ChangeTracker.Clear();
+
+            var updated = TestDataBuilder.CreateCourse(1, categoryId: 1, name: "Updated Name");
+            var result = await controller.UpdateCourse(1, updated);
+
+            Assert.IsType<OkObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task UpdateCourse_NotFound_ReturnsNotFound()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            await context.SaveChangesAsync();
+
+            var controller = new CoursesController(context);
+
+            var course = TestDataBuilder.CreateCourse(999, categoryId: 1);
+            var result = await controller.UpdateCourse(999, course);
+
+            // The entry state is Modified but the entity doesn't exist.
+            // SaveChangesAsync will throw DbUpdateConcurrencyException → NotFound
+            Assert.IsType<NotFoundObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task DeleteCourse_Success_DeletesCourse()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            context.Courses.Add(TestDataBuilder.CreateCourse(1, categoryId: 1));
+            await context.SaveChangesAsync();
+
+            var controller = new CoursesController(context);
+
+            var result = await controller.DeleteCourse(1);
+
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal("Course deleted.", ok.Value);
+            Assert.Empty(context.Courses);
+        }
     }
 }

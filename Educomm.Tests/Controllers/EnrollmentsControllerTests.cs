@@ -166,5 +166,44 @@ namespace Educomm.Tests.Controllers
             Assert.Equal(100, response.Items.Count());
             Assert.Equal(100, response.PageSize);
         }
+
+        // ──── NEW TESTS ────
+
+        [Fact]
+        public async Task GetMyEnrollments_Empty_ReturnsEmptyPaginated()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            var controller = new EnrollmentsController(context);
+            TestControllerContext.SetUser(controller, userId: 99);
+
+            var result = await controller.GetMyEnrollments();
+
+            var response = Assert.IsType<PaginatedResponse<Enrollments>>(result.Value);
+            Assert.Equal(0, response.TotalCount);
+            Assert.Empty(response.Items);
+        }
+
+        [Fact]
+        public async Task EnrollUser_ValidCourse_ReturnsOk()
+        {
+            using var db = TestDbContextFactory.CreateSqliteContext();
+            var context = db.Context;
+            context.Users.Add(TestDataBuilder.CreateUser(1, "user1@example.com"));
+            context.Categories.Add(TestDataBuilder.CreateCategory(1));
+            context.Courses.Add(TestDataBuilder.CreateCourse(1));
+            await context.SaveChangesAsync();
+
+            var controller = new EnrollmentsController(context);
+
+            var enrollment = TestDataBuilder.CreateEnrollment(1, userId: 1, courseId: 1);
+            var result = await controller.EnrollUser(enrollment);
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var saved = Assert.IsType<Enrollments>(ok.Value);
+            Assert.Equal(1, saved.UserId);
+            Assert.Equal(1, saved.CourseId);
+            Assert.Single(context.Enrollments);
+        }
     }
 }
