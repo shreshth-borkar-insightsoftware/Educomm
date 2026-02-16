@@ -138,7 +138,7 @@ export default function DashboardPage() {
             <p className="text-gray-400 text-sm mb-4">
               Browse and order physical resources for hands-on learning.
             </p>
-            <button className="text-green-400 text-sm font-medium flex items-center gap-1 hover:text-green-300 transition-colors">
+            <button className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors">
               SHOP NOW <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -153,7 +153,7 @@ export default function DashboardPage() {
             <p className="text-gray-400 text-sm mb-4">
               Access curated courses in electronics and programming.
             </p>
-            <button className="text-green-400 text-sm font-medium flex items-center gap-1 hover:text-green-300 transition-colors">
+            <button className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors">
               BROWSE COURSES <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -170,7 +170,7 @@ export default function DashboardPage() {
               </div>
               <button 
                 onClick={() => navigate("/kits")}
-                className="text-green-400 text-sm font-medium hover:text-green-300 transition-colors"
+                className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
               >
                 View All
               </button>
@@ -187,7 +187,7 @@ export default function DashboardPage() {
                 No kits available.{" "}
                 <button 
                   onClick={() => navigate("/kits")}
-                  className="text-green-400 hover:text-green-300"
+                  className="text-white hover:text-gray-300"
                 >
                   Browse catalog
                 </button>
@@ -204,10 +204,10 @@ export default function DashboardPage() {
                       <Package className="w-5 h-5 text-gray-400" />
                       <div>
                         <p className="text-white font-medium text-sm">{kit.name}</p>
-                        <p className="text-gray-400 text-xs">₹{kit.price}</p>
+                        <p className="text-gray-300 text-xs">₹{kit.price}</p>
                       </div>
                     </div>
-                    <span className="text-xs text-purple-400 bg-purple-500/10 border border-purple-500/30 px-2 py-1 rounded">
+                    <span className="text-xs text-white bg-transparent border border-gray-700 px-2 py-1 rounded">
                       {kitTags[index % kitTags.length]}
                     </span>
                   </div>
@@ -225,7 +225,7 @@ export default function DashboardPage() {
               </div>
               <button 
                 onClick={() => navigate("/courses")}
-                className="text-green-400 text-sm font-medium hover:text-green-300 transition-colors"
+                className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
               >
                 All Courses
               </button>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
                 </p>
                 <button 
                   onClick={() => navigate("/courses")}
-                  className="text-green-400 text-sm font-medium hover:text-green-300"
+                  className="text-white text-sm font-medium hover:text-gray-300"
                 >
                   Browse New Courses
                 </button>
@@ -258,7 +258,7 @@ export default function DashboardPage() {
                         <p className="text-white font-medium text-sm">
                           {enrollment.course?.name || "Untitled Course"}
                         </p>
-                        <span className="text-green-400 text-xs font-medium">
+                        <span className="text-gray-300 text-xs font-medium">
                           {enrollment.progressPercentage}%
                         </span>
                       </div>
@@ -273,7 +273,7 @@ export default function DashboardPage() {
                 </div>
                 <button 
                   onClick={() => navigate("/courses")}
-                  className="text-green-400 text-sm font-medium flex items-center gap-1 hover:text-green-300 transition-colors"
+                  className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors"
                 >
                   View All Courses <ArrowRight className="w-4 h-4" />
                 </button>
@@ -291,7 +291,7 @@ export default function DashboardPage() {
             </div>
             <button 
               onClick={() => navigate("/my-orders")}
-              className="text-green-400 text-sm font-medium hover:text-green-300 transition-colors"
+              className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
             >
               View All
             </button>
@@ -308,7 +308,7 @@ export default function DashboardPage() {
               No orders yet.{" "}
               <button 
                 onClick={() => navigate("/kits")}
-                className="text-green-400 hover:text-green-300"
+                className="text-white hover:text-gray-300"
               >
                 Start shopping!
               </button>
