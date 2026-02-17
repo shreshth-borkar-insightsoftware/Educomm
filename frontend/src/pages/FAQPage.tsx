@@ -60,37 +60,51 @@ export default function FAQPage() {
 
         {/* FAQ Accordion */}
         <div className="space-y-4 mb-12">
-          {faqs.map((faq, index) => (
-            <div 
-              key={index}
-              className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden transition-all"
-            >
-              <button
-                onClick={() => toggleFAQ(index)}
-                className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-800/50 transition-colors"
-              >
-                <h3 className="text-lg font-bold text-white pr-4">{faq.question}</h3>
-                <div className="flex-shrink-0">
-                  {openIndex === index ? (
-                    <Minus className="w-5 h-5 text-white" />
-                  ) : (
-                    <Plus className="w-5 h-5 text-white" />
-                  )}
-                </div>
-              </button>
-              
+          {faqs.map((faq, index) => {
+            const panelId = `faq-panel-${index}`;
+            const buttonId = `faq-button-${index}`;
+            const isOpen = openIndex === index;
+            
+            return (
               <div 
-                className={`transition-all duration-300 ease-in-out ${
-                  openIndex === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                }`}
-                style={{ overflow: 'hidden' }}
+                key={index}
+                className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden transition-all"
               >
-                <div className="px-6 pb-6">
-                  <p className="text-gray-400 leading-relaxed">{faq.answer}</p>
+                <button
+                  id={buttonId}
+                  onClick={() => toggleFAQ(index)}
+                  aria-expanded={isOpen}
+                  aria-controls={panelId}
+                  className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-800/50 transition-colors"
+                >
+                  <h3 className="text-lg font-bold text-white pr-4">{faq.question}</h3>
+                  <div className="flex-shrink-0">
+                    {isOpen ? (
+                      <Minus className="w-5 h-5 text-white" />
+                    ) : (
+                      <Plus className="w-5 h-5 text-white" />
+                    )}
+                  </div>
+                </button>
+                
+                <div 
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={buttonId}
+                  aria-hidden={!isOpen}
+                  className={`grid overflow-hidden transition-all duration-300 ease-in-out ${
+                    isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                  }`}
+                >
+                  <div className="min-h-0">
+                    <div className="px-6 pb-6">
+                      <p className="text-gray-400 leading-relaxed">{faq.answer}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Bottom CTA */}
