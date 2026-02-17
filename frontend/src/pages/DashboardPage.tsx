@@ -291,9 +291,9 @@ export default function DashboardPage() {
                 className="flex items-center gap-2 cursor-pointer"
                 onClick={() => enrollments.length > 0 && setIsExpanded(!isExpanded)}
                 role="button"
-                tabIndex={enrollments.length > 0 ? 0 : -1}
+                tabIndex={enrollments.length > 0 ? 0 : undefined}
                 aria-disabled={enrollments.length === 0}
-                aria-expanded={enrollments.length > 0 ? isExpanded : undefined}
+                aria-expanded={enrollments.length > 0 ? isExpanded : false}
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && enrollments.length > 0) {
                     e.preventDefault();
@@ -312,7 +312,7 @@ export default function DashboardPage() {
                 <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
                 {enrollments.length > 0 && (
                   <span 
-                    className="text-white transition-colors"
+                    className="text-white transition-colors pointer-events-none"
                     aria-hidden="true"
                   >
                     {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -323,6 +323,7 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => navigate("/my-courses")}
                 className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
+                aria-label="Navigate to My Learning page"
               >
                 My Learning
               </button>
