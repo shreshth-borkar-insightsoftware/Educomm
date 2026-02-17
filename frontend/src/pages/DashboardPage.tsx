@@ -357,6 +357,7 @@ export default function DashboardPage() {
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
+                            e.stopPropagation();
                             navigate(`/courses/${enrollment.courseId}`);
                           }
                         }}
