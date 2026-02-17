@@ -290,6 +290,15 @@ export default function DashboardPage() {
               <div 
                 className="flex items-center gap-2 cursor-pointer"
                 onClick={() => enrollments.length > 0 && setIsExpanded(!isExpanded)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && enrollments.length > 0) {
+                    e.preventDefault();
+                    setIsExpanded(!isExpanded);
+                  }
+                }}
+                aria-label={isExpanded ? "Collapse Continue Learning section" : "Expand Continue Learning section"}
               >
                 <Zap className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
@@ -335,7 +344,19 @@ export default function DashboardPage() {
                 <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}>
                   {displayEnrollments.map((enrollment) => (
                     <div key={enrollment.enrollmentId} className="border-b border-gray-800 pb-4 last:border-b-0">
-                      <div>
+                      <div
+                        className="cursor-pointer hover:bg-gray-800/30 p-2 -m-2 rounded-lg transition-colors"
+                        onClick={() => navigate(`/courses/${enrollment.courseId}`)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            navigate(`/courses/${enrollment.courseId}`);
+                          }
+                        }}
+                        aria-label={`Go to ${enrollment.courseName}`}
+                      >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 flex-1">
                             <p className="text-white font-medium text-sm">
