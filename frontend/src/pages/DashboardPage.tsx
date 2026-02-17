@@ -288,12 +288,14 @@ export default function DashboardPage() {
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 transition-all duration-300 ease-in-out">
             <div className="flex items-center justify-between mb-4">
               <div 
+                id="continue-learning-header"
                 className="flex items-center gap-2 cursor-pointer"
                 onClick={() => enrollments.length > 0 && setIsExpanded(!isExpanded)}
                 role="button"
                 tabIndex={enrollments.length > 0 ? 0 : undefined}
                 aria-disabled={enrollments.length === 0}
                 aria-expanded={enrollments.length > 0 ? isExpanded : false}
+                aria-controls="continue-learning-content"
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && enrollments.length > 0) {
                     e.preventDefault();
@@ -308,8 +310,8 @@ export default function DashboardPage() {
                       : "Expand Continue Learning section"
                 }
               >
-                <Zap className="w-5 h-5 text-purple-400" />
-                <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
+                <Zap className="w-5 h-5 text-purple-400 pointer-events-none" />
+                <h3 className="text-lg font-black uppercase tracking-tight text-white pointer-events-none">Continue Learning</h3>
                 {enrollments.length > 0 && (
                   <span 
                     className="text-white transition-colors pointer-events-none"
@@ -323,7 +325,6 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => navigate("/my-courses")}
                 className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
-                aria-label="Navigate to My Learning page"
               >
                 My Learning
               </button>
@@ -349,7 +350,12 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}>
+                <div 
+                  id="continue-learning-content"
+                  role="region"
+                  aria-labelledby="continue-learning-header"
+                  className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}
+                >
                   {displayEnrollments.map((enrollment) => (
                     <div key={enrollment.enrollmentId} className="border-b border-gray-800 pb-4 last:border-b-0">
                       <div className="p-3">
@@ -359,6 +365,7 @@ export default function DashboardPage() {
                               type="button"
                               onClick={() => navigate(`/courses/${enrollment.courseId}`)}
                               className="text-white font-medium text-sm hover:text-gray-300 transition-colors text-left"
+                              aria-label={`View details for ${enrollment.courseName || "Untitled Course"} course`}
                             >
                               {enrollment.courseName || "Untitled Course"}
                             </button>
