@@ -351,14 +351,12 @@ export default function DashboardPage() {
                   {displayEnrollments.map((enrollment) => (
                     <div key={enrollment.enrollmentId} className="border-b border-gray-800 pb-4 last:border-b-0">
                       <div
-                        className="cursor-pointer hover:bg-gray-800/30 p-2 -m-2 rounded-lg transition-colors"
+                        className="cursor-pointer hover:bg-gray-800/30 p-3 rounded-lg transition-colors"
                         onClick={(e) => {
-                          // Only navigate if clicking on the card itself, not on inner buttons
-                          if (e.target === e.currentTarget || (e.currentTarget as HTMLElement).contains(e.target as Node)) {
-                            const target = e.target as HTMLElement;
-                            if (!target.closest('button')) {
-                              navigate(`/courses/${enrollment.courseId}`);
-                            }
+                          // Only navigate if not clicking on a button
+                          const target = e.target as HTMLElement;
+                          if (!target.closest('button')) {
+                            navigate(`/courses/${enrollment.courseId}`);
                           }
                         }}
                         role="button"
@@ -462,7 +460,7 @@ export default function DashboardPage() {
                     }}
                     className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors mt-4"
                   >
-                    View All in My Learning <ArrowRight className="w-4 h-4" />
+                    View All in My Learning <ArrowRight className="w-4 h-4" aria-hidden="true" />
                   </button>
                 )}
               </>
