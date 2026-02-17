@@ -1,8 +1,10 @@
+import { Link } from "react-router-dom";
+
 export default function Footer() {
   const links = [
-    { name: "About", href: "#" },
+    { name: "About", href: "/about" },
     { name: "Contact", href: "#" },
-    { name: "FAQ", href: "#" },
+    { name: "FAQ", href: "/faq" },
     { name: "Privacy", href: "#" },
     { name: "Terms", href: "#" },
   ];
@@ -19,13 +21,23 @@ export default function Footer() {
           {/* Navigation Links */}
           <nav className="flex flex-wrap items-center justify-center gap-6">
             {links.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                {link.name}
-              </a>
+              link.href.startsWith('#') ? (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  {link.name}
+                </a>
+              ) : (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  {link.name}
+                </Link>
+              )
             ))}
           </nav>
         </div>
