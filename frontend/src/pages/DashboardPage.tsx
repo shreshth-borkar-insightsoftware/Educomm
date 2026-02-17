@@ -291,8 +291,9 @@ export default function DashboardPage() {
                 className="flex items-center gap-2 cursor-pointer"
                 onClick={() => enrollments.length > 0 && setIsExpanded(!isExpanded)}
                 role="button"
-                tabIndex={0}
+                tabIndex={enrollments.length > 0 ? 0 : -1}
                 aria-disabled={enrollments.length === 0}
+                aria-expanded={enrollments.length > 0 ? isExpanded : undefined}
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && enrollments.length > 0) {
                     e.preventDefault();
@@ -398,7 +399,11 @@ export default function DashboardPage() {
                                 : `View modules for ${enrollment.courseName}`}
                             >
                               {expandedCourse === enrollment.enrollmentId ? "Hide" : "View"} modules
-                              {expandedCourse === enrollment.enrollmentId ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              {expandedCourse === enrollment.enrollmentId ? (
+                                <ChevronUp className="w-3 h-3" aria-hidden="true" />
+                              ) : (
+                                <ChevronDown className="w-3 h-3" aria-hidden="true" />
+                              )}
                             </button>
                           </div>
                         )}
