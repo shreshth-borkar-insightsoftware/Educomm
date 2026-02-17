@@ -18,9 +18,9 @@ export default function KitCard({ kit, onAddToCart }: KitCardProps) {
   return (
     <div
       onClick={() => navigate(`/kits/${kit.kitId}`)}
-      className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
+      className="bg-neutral-800 border border-neutral-700 rounded-lg hover:border-neutral-600 transition-colors cursor-pointer overflow-hidden"
     >
-      <div className="aspect-video bg-neutral-100 dark:bg-neutral-800 relative">
+      <div className="aspect-video bg-neutral-900 relative">
         {kit.imageUrl ? (
           <img
             src={kit.imageUrl}
@@ -34,14 +34,14 @@ export default function KitCard({ kit, onAddToCart }: KitCardProps) {
         )}
       </div>
       <div className="p-6">
-        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
+        <h3 className="text-xl font-bold text-white mb-2">
           {kit.name}
         </h3>
-        <p className="text-neutral-600 dark:text-neutral-400 mb-4 line-clamp-2">
+        <p className="text-neutral-400 mb-4 line-clamp-2">
           {kit.description}
         </p>
         <div className="flex items-center justify-between">
-          <span className="text-2xl font-bold text-neutral-900 dark:text-white">
+          <span className="text-2xl font-bold text-white">
             ₹{kit.price.toLocaleString()}
           </span>
           {onAddToCart && (
@@ -50,7 +50,7 @@ export default function KitCard({ kit, onAddToCart }: KitCardProps) {
                 e.stopPropagation();
                 onAddToCart(kit);
               }}
-              className="bg-neutral-900 dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200"
+              className="bg-white text-black hover:bg-neutral-200"
             >
               Add to Cart
             </Button>

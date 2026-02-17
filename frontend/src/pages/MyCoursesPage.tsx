@@ -47,12 +47,12 @@ export default function MyCoursesPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => (
-              <Card key={course.enrollmentId} className="bg-neutral-950 border-neutral-800 text-white hover:border-neutral-700 transition-all">
+              <Card key={course.enrollmentId} className="bg-neutral-800 border border-neutral-700 text-white hover:border-neutral-600 transition-colors">
                 <CardHeader>
                   <CardTitle className="uppercase font-bold tracking-tight">{course.courseName}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-neutral-500 text-sm line-clamp-2">{course.courseDescription}</p>
+                  <p className="text-neutral-400 text-sm line-clamp-2">{course.courseDescription}</p>
                   <Button 
                     className="w-full bg-white text-black hover:bg-neutral-200 font-bold"
                     onClick={() => navigate(`/courses/${course.courseId}/content?enrollmentId=${course.enrollmentId}`)}

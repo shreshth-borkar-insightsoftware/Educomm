@@ -163,7 +163,7 @@ export default function CartPage() {
 
           <div className="space-y-4">
             {items.map((item) => (
-              <div key={item.id} className="flex items-center gap-6 bg-neutral-950 p-5 rounded-3xl border border-neutral-800">
+              <div key={item.id} className="flex items-center gap-6 bg-neutral-800 p-5 rounded-xl border border-neutral-700">
                 <div className="w-20 h-20 bg-neutral-900 rounded-2xl overflow-hidden shrink-0">
                   {item.imageUrl && <img src={item.imageUrl} className="w-full h-full object-cover" alt={item.name} />}
                 </div>
@@ -171,7 +171,7 @@ export default function CartPage() {
                   <h3 className="text-md font-black uppercase italic leading-tight">{item.name}</h3>
                   <p className="font-mono text-neutral-500 text-sm">₹{item.price}</p>
                 </div>
-                <div className="flex items-center gap-4 bg-black border border-neutral-800 rounded-xl p-1.5">
+                <div className="flex items-center gap-4 bg-neutral-900 border border-neutral-700 rounded-xl p-1.5">
                   <button 
                     onClick={() => handleDecreaseQuantity(item.id, item.quantity)} 
                     disabled={isSubmitting || item.quantity <= 1}
@@ -197,7 +197,7 @@ export default function CartPage() {
         </div>
 
         <div className="space-y-8">
-          <div className="bg-neutral-950 border border-neutral-800 rounded-3xl p-6">
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xs font-black uppercase tracking-widest text-neutral-500">Shipping To</h3>
               
@@ -215,7 +215,7 @@ export default function CartPage() {
               <div className="space-y-3 animate-in fade-in">
                 <p className="text-xs text-neutral-400">Enter full delivery address:</p>
                 <textarea 
-                  className="w-full bg-black border border-neutral-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-white min-h-[80px]"
+                  className="w-full bg-neutral-900 border border-neutral-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-neutral-600 min-h-[80px]"
                   placeholder="Street, City, Zip Code..."
                   value={selectedAddressStr}
                   onChange={(e) => setSelectedAddressStr(e.target.value)}
@@ -235,7 +235,7 @@ export default function CartPage() {
                   return (
                     <div key={addr.id || Math.random()} onClick={() => setSelectedAddressStr(fullAddr)}
                       className={`p-4 rounded-2xl border cursor-pointer transition-all relative overflow-hidden ${
-                        isSelected ? "border-white bg-white/5" : "border-neutral-900 hover:border-neutral-700"
+                        isSelected ? "border-white bg-white/5" : "border-neutral-700 hover:border-neutral-600"
                       }`}
                     >
                       <div className="flex items-start gap-3">

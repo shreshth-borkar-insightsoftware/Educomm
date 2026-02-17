@@ -97,12 +97,12 @@ export default function AddressPage() {
         </PageHeader>
 
         {showForm && (
-          <form onSubmit={handleAdd} className="bg-neutral-900 p-8 rounded-3xl border border-neutral-800 mb-12 space-y-4 shadow-2xl">
+          <form onSubmit={handleAdd} className="bg-neutral-800 p-8 rounded-xl border border-neutral-700 mb-12 space-y-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">Street Address</label>
               <input 
                 placeholder="House No, Street Name..." 
-                className="w-full bg-black p-4 rounded-xl border border-neutral-800 focus:border-white outline-none transition-all" 
+                className="w-full bg-neutral-900 p-4 rounded-xl border border-neutral-700 focus:border-neutral-600 outline-none transition-all" 
                 value={newAddress.street}
                 onChange={e => setNewAddress({...newAddress, street: e.target.value})} 
                 required 
@@ -111,20 +111,20 @@ export default function AddressPage() {
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
                  <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">City</label>
-                 <input placeholder="City" className="w-full bg-black p-4 rounded-xl border border-neutral-800 focus:border-white outline-none" 
+                 <input placeholder="City" className="w-full bg-neutral-900 p-4 rounded-xl border border-neutral-700 focus:border-neutral-600 outline-none" 
                   value={newAddress.city}
                   onChange={e => setNewAddress({...newAddress, city: e.target.value})} required />
                </div>
                <div className="space-y-2">
                  <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">Zip Code</label>
-                 <input placeholder="Zip Code" className="w-full bg-black p-4 rounded-xl border border-neutral-800 focus:border-white outline-none" 
+                 <input placeholder="Zip Code" className="w-full bg-neutral-900 p-4 rounded-xl border border-neutral-700 focus:border-neutral-600 outline-none" 
                   value={newAddress.zipCode}
                   onChange={e => setNewAddress({...newAddress, zipCode: e.target.value})} required />
                </div>
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase text-neutral-500 ml-1">Phone Number</label>
-              <input placeholder="Mobile Number" className="w-full bg-black p-4 rounded-xl border border-neutral-800 focus:border-white outline-none" 
+              <input placeholder="Mobile Number" className="w-full bg-neutral-900 p-4 rounded-xl border border-neutral-700 focus:border-neutral-600 outline-none" 
                 value={newAddress.phoneNumber}
                 onChange={e => setNewAddress({...newAddress, phoneNumber: e.target.value})} required />
             </div>
@@ -135,14 +135,14 @@ export default function AddressPage() {
         )}
 
         {addresses.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed border-neutral-800 rounded-3xl">
+          <div className="text-center py-20 border-2 border-dashed border-neutral-700 rounded-xl">
             <MapPin size={48} className="mx-auto text-neutral-800 mb-4" />
             <p className="uppercase tracking-widest text-sm text-neutral-500 font-bold">No addresses found.</p>
           </div>
         ) : (
           <div className="grid gap-6">
             {addresses.map((addr) => (
-              <div key={addr.addressId} className="flex justify-between items-center p-8 bg-neutral-950 border border-neutral-800 rounded-3xl hover:border-neutral-600 transition-all group">
+              <div key={addr.addressId} className="flex justify-between items-center p-8 bg-neutral-800 border border-neutral-700 rounded-xl hover:border-neutral-600 transition-all group">
                 <div className="flex gap-6 items-center">
                   <div className="p-4 bg-neutral-900 rounded-2xl group-hover:bg-white group-hover:text-black transition-colors">
                     <Home size={24} />

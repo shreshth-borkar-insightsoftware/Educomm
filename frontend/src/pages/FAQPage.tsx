@@ -68,14 +68,14 @@ export default function FAQPage() {
             return (
               <div 
                 key={index}
-                className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden transition-all"
+                className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden transition-all"
               >
                 <button
                   id={buttonId}
                   onClick={() => toggleFAQ(index)}
                   aria-expanded={isOpen}
                   aria-controls={panelId}
-                  className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-800/50 transition-colors"
+                  className="w-full flex items-center justify-between p-6 text-left hover:bg-neutral-800/50 transition-colors"
                 >
                   <h3 className="text-lg font-bold text-white pr-4">{faq.question}</h3>
                   <div className="flex-shrink-0">
@@ -108,7 +108,7 @@ export default function FAQPage() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-8 text-center">
           <h3 className="text-2xl font-bold text-white mb-3">Still have questions?</h3>
           <p className="text-gray-400 mb-6">
             Our support team is here to help

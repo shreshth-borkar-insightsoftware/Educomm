@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "@/api/axiosInstance";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button"; 
-import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, X } from "lucide-react";
 import BackButton from "@/components/BackButton";
 
 interface CourseContent {
@@ -131,39 +131,54 @@ export default function CourseContentPage() {
 
   return (
     <div className="h-screen w-full bg-black flex flex-col relative overflow-hidden">
-      <div className="absolute top-0 left-0 p-8 z-50">
-        <BackButton to="/my-courses" className="font-bold italic uppercase tracking-wide">
+      {/* Fixed top bar with solid background and proper z-index */}
+      <div className="fixed top-0 left-0 right-0 bg-gray-900 z-50 px-4 py-3 flex items-center justify-between">
+        {/* Left side: Exit Lesson button */}
+        <BackButton to="/my-courses" className="font-bold italic uppercase tracking-wide text-white hover:text-gray-300">
           EXIT LESSON
         </BackButton>
+
+        {/* Right side: Completion badge + close icon */}
+        <div className="flex items-center gap-4">
+          {enrollmentId && (
+            <>
+              {isCompleted ? (
+                <div className="flex items-center gap-2 bg-green-500/20 border border-green-500/50 text-green-400 px-4 py-2 rounded-lg">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="text-sm font-medium uppercase">Completed</span>
+                </div>
+              ) : (
+                <Button
+                  onClick={handleMarkComplete}
+                  disabled={markingComplete}
+                  className="bg-white text-black hover:bg-neutral-200 font-bold uppercase"
+                >
+                  {markingComplete ? (
+                    <>
+                      <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                      Marking...
+                    </>
+                  ) : (
+                    "Mark as Complete"
+                  )}
+                </Button>
+              )}
+            </>
+          )}
+          
+          {/* Close (X) icon */}
+          <button
+            onClick={() => navigate("/my-courses")}
+            className="text-white hover:text-gray-300 transition-colors p-2 rounded-full hover:bg-gray-800"
+            aria-label="Close lesson"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
       </div>
 
-      {enrollmentId && (
-        <div className="absolute top-0 right-0 p-8 z-50 flex items-center gap-4">
-          {isCompleted ? (
-            <div className="flex items-center gap-2 bg-green-500/20 border border-green-500/50 text-green-400 px-4 py-2 rounded-lg">
-              <CheckCircle2 className="w-5 h-5" />
-              <span className="text-sm font-medium uppercase">Completed</span>
-            </div>
-          ) : (
-            <Button
-              onClick={handleMarkComplete}
-              disabled={markingComplete}
-              className="bg-white text-black hover:bg-neutral-200 font-bold uppercase"
-            >
-              {markingComplete ? (
-                <>
-                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                  Marking...
-                </>
-              ) : (
-                "Mark as Complete"
-              )}
-            </Button>
-          )}
-        </div>
-      )}
-
-      <div className="flex-1 flex items-center justify-center bg-black">
+      {/* Content area with top offset to account for fixed header */}
+      <div className="flex-1 flex items-center justify-center bg-black mt-16">
         {isDirectVideo ? (
           <video 
             src={content.contentUrl} 

@@ -57,8 +57,8 @@ export default function KitDetailsPage() {
     <div className="min-h-screen bg-black p-8 text-white">
       <PageHeader title="Kit Details" showBackButton={true} />
 
-      <Card className="max-w-3xl bg-neutral-950 border-neutral-800 rounded-2xl overflow-hidden">
-        <CardHeader className="border-b border-neutral-900 pb-6">
+      <Card className="max-w-3xl bg-neutral-800 border border-neutral-700 rounded-xl overflow-hidden">
+        <CardHeader className="border-b border-neutral-700 pb-6">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-mono text-neutral-500 mb-2 uppercase">Product ID: {kit.id}</p>

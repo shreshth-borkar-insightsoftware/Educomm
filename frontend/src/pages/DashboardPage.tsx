@@ -199,7 +199,7 @@ export default function DashboardPage() {
           {/* Hardware Kits Card */}
           <div 
             onClick={() => navigate("/kits")}
-            className="bg-gray-900 border border-gray-800 rounded-xl p-6 cursor-pointer hover:border-gray-700 transition-colors"
+            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-gray-600 transition-colors"
           >
             <Package className="w-8 h-8 text-purple-400 mb-4" />
             <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Hardware Kits</h2>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
           {/* Digital Courses Card */}
           <div 
             onClick={() => navigate("/courses")}
-            className="bg-gray-900 border border-gray-800 rounded-xl p-6 cursor-pointer hover:border-gray-700 transition-colors"
+            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-gray-600 transition-colors"
           >
             <Monitor className="w-8 h-8 text-purple-400 mb-4" />
             <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Digital Courses</h2>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
         {/* Middle Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Featured Kits */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-purple-400" />
@@ -247,7 +247,7 @@ export default function DashboardPage() {
             {loading.kits ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 bg-gray-800/50 rounded-lg animate-pulse" />
+                  <div key={i} className="h-16 bg-gray-700/50 rounded-lg animate-pulse" />
                 ))}
               </div>
             ) : kits.length === 0 ? (
@@ -266,7 +266,7 @@ export default function DashboardPage() {
                   <div 
                     key={kit.kitId}
                     onClick={() => navigate(`/kits/${kit.kitId}`)}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-700/40 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <Package className="w-5 h-5 text-gray-400" />
@@ -275,7 +275,7 @@ export default function DashboardPage() {
                         <p className="text-gray-300 text-xs">₹{kit.price}</p>
                       </div>
                     </div>
-                    <span className="text-xs text-white bg-transparent border border-gray-700 px-2 py-1 rounded">
+                    <span className="text-xs text-gray-300 bg-transparent border border-gray-600 px-2 py-1 rounded">
                       {kitTags[index % kitTags.length]}
                     </span>
                   </div>
@@ -285,33 +285,28 @@ export default function DashboardPage() {
           </div>
 
           {/* Continue Learning */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 transition-all duration-300 ease-in-out">
-            <div className="flex items-center justify-between mb-4">
-              <div 
-                id="continue-learning-header"
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => enrollments.length > 0 && setIsExpanded(!isExpanded)}
-                role="button"
-                tabIndex={enrollments.length > 0 ? 0 : undefined}
-                aria-disabled={enrollments.length === 0}
-                aria-expanded={enrollments.length > 0 ? isExpanded : false}
-                aria-controls="continue-learning-content"
-                onKeyDown={(e) => {
-                  if ((e.key === 'Enter' || e.key === ' ') && enrollments.length > 0) {
-                    e.preventDefault();
-                    setIsExpanded(!isExpanded);
-                  }
-                }}
-                aria-label={
-                  enrollments.length === 0 
-                    ? "No courses to expand" 
-                    : isExpanded 
-                      ? "Collapse Continue Learning section" 
-                      : "Expand Continue Learning section"
-                }
-              >
-                <Zap className="w-5 h-5 text-purple-400 pointer-events-none" />
-                <h3 className="text-lg font-black uppercase tracking-tight text-white pointer-events-none">Continue Learning</h3>
+
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 transition-all duration-300 ease-in-out">
+            <div 
+              className="flex items-center justify-between mb-4 cursor-pointer"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              <div className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-purple-400" />
+                <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                {!isExpanded && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate("/my-courses");
+                    }}
+                    className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
+                  >
+                    All Courses
+                  </button>
+                )}
                 {enrollments.length > 0 && (
                   <span 
                     className="text-white transition-colors pointer-events-none"
@@ -333,7 +328,7 @@ export default function DashboardPage() {
             {loading.enrollments ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 bg-gray-800/50 rounded-lg animate-pulse" />
+                  <div key={i} className="h-16 bg-gray-700/50 rounded-lg animate-pulse" />
                 ))}
               </div>
             ) : displayEnrollments.length === 0 ? (
@@ -357,8 +352,12 @@ export default function DashboardPage() {
                   className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}
                 >
                   {displayEnrollments.map((enrollment) => (
-                    <div key={enrollment.enrollmentId} className="border-b border-gray-800 pb-4 last:border-b-0">
-                      <div className="p-3">
+
+                    <div key={enrollment.enrollmentId} className="border-b border-neutral-700 pb-4 last:border-b-0">
+                      <div 
+                        className="cursor-pointer"
+                        onClick={() => toggleCourseExpansion(enrollment.enrollmentId)}
+                      >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 flex-1">
                             <button
@@ -379,7 +378,7 @@ export default function DashboardPage() {
                             {enrollment.progressPercentage}%
                           </span>
                         </div>
-                        <div className="w-full bg-gray-800 rounded-full h-1.5">
+                        <div className="w-full bg-gray-700 rounded-full h-1.5">
                           <div 
                             className="bg-green-500 h-1.5 rounded-full transition-all"
                             style={{ width: `${enrollment.progressPercentage}%` }}
@@ -425,7 +424,7 @@ export default function DashboardPage() {
                             .map((module) => (
                               <div 
                                 key={module.courseContentId}
-                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
+                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700/40 transition-colors cursor-pointer"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   navigate(`/courses/${enrollment.courseId}/content?enrollmentId=${enrollment.enrollmentId}&courseContentId=${module.courseContentId}`);
@@ -468,7 +467,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Bottom Section - Recent Orders */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-purple-400" />
@@ -485,7 +484,7 @@ export default function DashboardPage() {
           {loading.orders ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-gray-800/50 rounded-lg animate-pulse" />
+                <div key={i} className="h-16 bg-gray-700/50 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : orders.length === 0 ? (
@@ -504,7 +503,7 @@ export default function DashboardPage() {
                 <div 
                   key={order.orderId}
                   onClick={() => navigate("/my-orders")}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-700/40 transition-colors cursor-pointer"
                 >
                   <div className="flex-1">
                     <p className="text-white font-medium text-sm">

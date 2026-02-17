@@ -55,7 +55,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-neutral-950 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Hero Section */}
         <PageHeader title="About Educomm" />
@@ -71,7 +71,7 @@ export default function AboutPage() {
         {/* Our Mission Section */}
         <section className="mb-16">
           <h2 className="text-3xl font-black tracking-tighter uppercase mb-6">Our Mission</h2>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 md:p-8">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 md:p-8">
             <p className="text-gray-300 text-lg leading-relaxed">
               We believe the best way to learn technology is by doing. Our mission is to make quality STEM education 
               accessible to everyone by combining expert-designed courses with the physical tools you need to build, 
@@ -88,7 +88,7 @@ export default function AboutPage() {
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors"
+                className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 hover:border-neutral-700 transition-colors"
               >
                 {feature.icon}
                 <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
@@ -105,10 +105,10 @@ export default function AboutPage() {
             {steps.map((step, index) => (
               <div 
                 key={index}
-                className="bg-gray-900 border border-gray-800 rounded-xl p-6"
+                className="bg-neutral-900 border border-neutral-800 rounded-xl p-6"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-white font-bold">
                     {step.number}
                   </div>
                   <div className="text-gray-400">
@@ -125,7 +125,7 @@ export default function AboutPage() {
         {/* Our Numbers Section */}
         <section className="mb-16">
           <h2 className="text-3xl font-black tracking-tighter uppercase mb-6">Our Numbers</h2>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-8">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
@@ -142,7 +142,7 @@ export default function AboutPage() {
         </section>
 
         {/* Contact CTA Section */}
-        <section className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+        <section className="bg-neutral-900 border border-neutral-800 rounded-xl p-8 text-center">
           <p className="text-gray-300 text-lg mb-4">
             Have questions? We'd love to hear from you.
           </p>
