@@ -1,8 +1,8 @@
 export default function Footer() {
   const links = [
-    { name: "About", href: "#" },
+    { name: "About", href: "/about" },
     { name: "Contact", href: "#" },
-    { name: "FAQ", href: "#" },
+    { name: "FAQ", href: "/faq" },
     { name: "Privacy", href: "#" },
     { name: "Terms", href: "#" },
   ];

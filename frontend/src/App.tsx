@@ -24,6 +24,8 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
+import AboutPage from "./pages/AboutPage";
+import FAQPage from "./pages/FAQPage";
 
 function App() {
   return (
@@ -47,6 +49,8 @@ function App() {
             <Route path="/address" element={<AddressPage/>} />
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/kits/:id" element={<KitDetailsPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/faq" element={<FAQPage />} />
             
             {/* Payment Routes - Protected for logged-in users */}
             <Route path="/payment/success" element={<PaymentSuccess />} />
