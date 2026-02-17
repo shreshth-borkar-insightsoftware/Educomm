@@ -285,6 +285,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Continue Learning */}
+
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 transition-all duration-300 ease-in-out">
             <div 
               className="flex items-center justify-between mb-4 cursor-pointer"
@@ -307,11 +308,21 @@ export default function DashboardPage() {
                   </button>
                 )}
                 {enrollments.length > 0 && (
-                  <button className="text-white hover:text-gray-300 transition-colors">
+                  <span 
+                    className="text-white transition-colors pointer-events-none"
+                    aria-hidden="true"
+                  >
                     {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                  </button>
+                  </span>
                 )}
               </div>
+              <button 
+                type="button"
+                onClick={() => navigate("/my-courses")}
+                className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
+              >
+                My Learning
+              </button>
             </div>
 
             {loading.enrollments ? (
@@ -334,8 +345,14 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}>
+                <div 
+                  id="continue-learning-content"
+                  role="region"
+                  aria-labelledby="continue-learning-header"
+                  className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}
+                >
                   {displayEnrollments.map((enrollment) => (
+
                     <div key={enrollment.enrollmentId} className="border-b border-neutral-700 pb-4 last:border-b-0">
                       <div 
                         className="cursor-pointer"
@@ -343,9 +360,14 @@ export default function DashboardPage() {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 flex-1">
-                            <p className="text-white font-medium text-sm">
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/courses/${enrollment.courseId}`)}
+                              className="text-white font-medium text-sm hover:text-gray-300 transition-colors text-left"
+                              aria-label={`View details for ${enrollment.courseName || "Untitled Course"} course`}
+                            >
                               {enrollment.courseName || "Untitled Course"}
-                            </p>
+                            </button>
                             {enrollment.isCompleted && (
                               <span className="text-xs bg-green-500/20 border border-green-500/50 text-green-400 px-2 py-0.5 rounded">
                                 Completed
@@ -365,9 +387,30 @@ export default function DashboardPage() {
                         {isExpanded && (
                           <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
                             <span>{enrollment.completedModules} of {enrollment.totalModules} modules</span>
-                            <button className="hover:text-white transition-colors flex items-center gap-1">
+                            <button 
+                              type="button"
+                              className="hover:text-white transition-colors flex items-center gap-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCourseExpansion(enrollment.enrollmentId);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleCourseExpansion(enrollment.enrollmentId);
+                                }
+                              }}
+                              aria-label={expandedCourse === enrollment.enrollmentId 
+                                ? `Hide modules for ${enrollment.courseName}` 
+                                : `View modules for ${enrollment.courseName}`}
+                            >
                               {expandedCourse === enrollment.enrollmentId ? "Hide" : "View"} modules
-                              {expandedCourse === enrollment.enrollmentId ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              {expandedCourse === enrollment.enrollmentId ? (
+                                <ChevronUp className="w-3 h-3" aria-hidden="true" />
+                              ) : (
+                                <ChevronDown className="w-3 h-3" aria-hidden="true" />
+                              )}
                             </button>
                           </div>
                         )}
@@ -415,7 +458,7 @@ export default function DashboardPage() {
                     }}
                     className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors mt-4"
                   >
-                    View All Courses <ArrowRight className="w-4 h-4" />
+                    View All in My Learning <ArrowRight className="w-4 h-4" aria-hidden="true" />
                   </button>
                 )}
               </>
