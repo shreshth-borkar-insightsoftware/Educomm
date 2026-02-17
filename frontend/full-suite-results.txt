@@ -1,0 +1,12 @@
+﻿
+Running 106 tests using 1 worker
+
+  Γ£ô    1 [chromium] ΓÇ║ e2e\admin-courses.spec.ts:7:3 ΓÇ║ Admin Course Management ΓÇ║ Admin courses page loads with table and Add button (7.9s)
+  Γ£ô    2 [chromium] ΓÇ║ e2e\admin-courses.spec.ts:30:3 ΓÇ║ Admin Course Management ΓÇ║ Admin can open Add Course modal and fill form (9.1s)
+  Γ£ô    3 [chromium] ΓÇ║ e2e\admin-courses.spec.ts:74:3 ΓÇ║ Admin Course Management ΓÇ║ Admin can delete a course (7.7s)
+  Γ£ô    4 [chromium] ΓÇ║ e2e\admin-courses.spec.ts:101:3 ΓÇ║ Admin Course Management ΓÇ║ Admin courses page shows pagination when enough data (5.2s)
+  Γ£ô    5 [chromium] ΓÇ║ e2e\admin-enrollments.spec.ts:6:3 ΓÇ║ Admin Enrollment Management ΓÇ║ Admin enrollments page loads with table and Add button (5.3s)
+  Γ£ô    6 [chromium] ΓÇ║ e2e\admin-enrollments.spec.ts:22:3 ΓÇ║ Admin Enrollment Management ΓÇ║ Admin can open Add Enrollment modal and see user/course dropdowns (7.0s)
+  Γ£ô    7 [chromium] ΓÇ║ e2e\admin-enrollments.spec.ts:54:3 ΓÇ║ Admin Enrollment Management ΓÇ║ Admin can create a new enrollment (9.7s)
+  Γ£ô    8 [chromium] ΓÇ║ e2e\admin-enrollments.spec.ts:91:3 ΓÇ║ Admin Enrollment Management ΓÇ║ Admin can delete an enrollment (7.5s)
+  Γ£ô    9 [chromium] ΓÇ║ e2e\admin-enrollments.spec.ts:111:3 ΓÇ║ Admin Enrollment Management ΓÇ║ Admin enrollments page shows formatted dates and pagination (5.4s)

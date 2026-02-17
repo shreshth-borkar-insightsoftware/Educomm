@@ -13,7 +13,6 @@ namespace Educomm.Models
         public int CategoryId { get; set; }
 
         [ForeignKey("CategoryId")]
-        [JsonIgnore]
         public Category? Category { get; set; }
 
 
@@ -31,7 +30,6 @@ namespace Educomm.Models
 
         public bool IsActive { get; set; } = true;
 
-        [JsonIgnore]
         public ICollection<Kit> Kits { get; set; } = new List<Kit>();
 
         [JsonIgnore]

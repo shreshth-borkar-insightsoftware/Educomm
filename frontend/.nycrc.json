@@ -1,0 +1,8 @@
+{
+  "report-dir": "coverage",
+  "temp-dir": ".nyc_output",
+  "reporter": ["html", "text", "text-summary"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "e2e", "src/**/*.test.*", "src/**/*.spec.*"],
+  "all": true
+}

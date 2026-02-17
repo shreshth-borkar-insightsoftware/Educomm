@@ -42,30 +42,30 @@ export default function CourseContentPage() {
       try {
         setLoading(true);
         
+        let fetchedContent: CourseContent | null = null;
+        
         // If courseContentId is provided, fetch that specific content
         if (courseContentId) {
           const { data } = await api.get(`/CourseContents/${courseContentId}`);
           if (Array.isArray(data) && data.length > 0) {
-            setContent(data[0]); 
-          } else {
-            setContent(null);
+            fetchedContent = data[0]; 
           }
         } else {
           // Otherwise, fetch by courseId (original behavior)
           const { data } = await api.get(`/CourseContents/${id}`);
           if (Array.isArray(data) && data.length > 0) {
-            setContent(data[0]); 
-          } else {
-            setContent(null); 
+            fetchedContent = data[0]; 
           }
         }
         
+        setContent(fetchedContent);
+        
         // Fetch progress status if enrollmentId and content are available
-        if (enrollmentId && content) {
+        if (enrollmentId && fetchedContent) {
           try {
             const progressData = await api.get(`/progress/${enrollmentId}`);
             const contentProgress = progressData.data.contentDetails.find(
-              (item: ContentProgress) => item.courseContentId === content.contentId
+              (item: ContentProgress) => item.courseContentId === fetchedContent!.contentId
             );
             if (contentProgress) {
               setIsCompleted(contentProgress.isCompleted);
@@ -87,7 +87,7 @@ export default function CourseContentPage() {
       }
     };
     fetchContent();
-  }, [id, courseContentId, enrollmentId, logout, content]);
+  }, [id, courseContentId, enrollmentId, logout]);
 
   const handleMarkComplete = async () => {
     if (!enrollmentId || !content) return;

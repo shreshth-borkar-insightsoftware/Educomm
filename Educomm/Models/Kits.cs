@@ -19,6 +19,7 @@ namespace Educomm.Models
         public int? CourseId { get; set; }
 
         [ForeignKey("CourseId")]
+        [JsonIgnore]
         public Course? Course { get; set; }
 
         [Required]

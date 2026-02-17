@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Educomm.Models
 {
@@ -15,7 +16,11 @@ namespace Educomm.Models
         public string Description { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        [JsonIgnore]
         public ICollection<Course> Courses { get; set; } = new List<Course>();
+
+        [JsonIgnore]
         public ICollection<Kit> Kits { get; set; } = new List<Kit>();
     }
 }
