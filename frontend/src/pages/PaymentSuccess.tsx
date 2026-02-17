@@ -78,7 +78,7 @@ export default function PaymentSuccess() {
   if (status === "verifying") {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-neutral-950 border border-neutral-800 rounded-3xl p-12 text-center">
+        <div className="max-w-md w-full bg-gray-800 border border-gray-700 rounded-xl p-12 text-center">
           <Loader2 size={64} className="mx-auto mb-6 animate-spin text-white" />
           <h1 className="text-2xl font-black uppercase tracking-tighter mb-3">
             Verifying Payment
@@ -94,7 +94,7 @@ export default function PaymentSuccess() {
   if (status === "error") {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-neutral-950 border border-neutral-800 rounded-3xl p-12 text-center">
+        <div className="max-w-md w-full bg-gray-800 border border-gray-700 rounded-xl p-12 text-center">
           <XCircle size={64} className="mx-auto mb-6 text-red-500" />
           <h1 className="text-2xl font-black uppercase tracking-tighter mb-3">
             Verification Failed
@@ -115,7 +115,7 @@ export default function PaymentSuccess() {
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-neutral-950 border border-neutral-800 rounded-3xl p-12 text-center">
+      <div className="max-w-md w-full bg-gray-800 border border-gray-700 rounded-xl p-12 text-center">
         <CheckCircle size={64} className="mx-auto mb-6 text-green-500" />
         <h1 className="text-2xl font-black uppercase tracking-tighter mb-3">
           Payment Successful!
