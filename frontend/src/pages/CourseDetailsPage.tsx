@@ -55,8 +55,8 @@ export default function CourseDetailsPage() {
     <div className="min-h-screen bg-black p-8 text-white font-sans">
       <PageHeader title="Course Details" showBackButton={true} />
 
-      <Card className="max-w-3xl bg-neutral-950 border-neutral-800 rounded-2xl overflow-hidden shadow-2xl">
-        <CardHeader className="border-b border-neutral-900 pb-6">
+      <Card className="max-w-3xl bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+        <CardHeader className="border-b border-gray-700 pb-6">
           <p className="text-xs font-mono text-neutral-500 mb-2 uppercase tracking-widest">ID: {course.courseId}</p>
           <CardTitle className="text-3xl font-bold uppercase tracking-tight text-white">{course.name}</CardTitle>
         </CardHeader>
@@ -67,8 +67,8 @@ export default function CourseDetailsPage() {
             <p className="text-neutral-300 leading-relaxed text-lg">{course.description}</p>
           </div>
 
-          <div className="pt-6 border-t border-neutral-900">
-            <div className="bg-neutral-900/50 p-6 rounded-2xl border border-neutral-800 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="pt-6 border-t border-gray-700">
+            <div className="bg-gray-900 p-6 rounded-xl border border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="bg-white p-3 rounded-xl">
                   <PackageSearch className="text-black w-6 h-6" />

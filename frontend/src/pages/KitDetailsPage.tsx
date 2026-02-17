@@ -57,15 +57,15 @@ export default function KitDetailsPage() {
     <div className="min-h-screen bg-black p-8 text-white">
       <PageHeader title="Kit Details" showBackButton={true} />
 
-      <Card className="max-w-3xl bg-neutral-950 border-neutral-800 rounded-2xl overflow-hidden">
-        <CardHeader className="border-b border-neutral-900 pb-6">
+      <Card className="max-w-3xl bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+        <CardHeader className="border-b border-gray-700 pb-6">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs font-mono text-neutral-500 mb-2 uppercase">Product ID: {kit.id}</p>
               <CardTitle className="text-3xl font-bold uppercase tracking-tight text-white">{kit.name}</CardTitle>
             </div>
             {kit.price && (
-              <div className="text-2xl font-bold text-white bg-neutral-900 px-4 py-2 rounded-xl">₹{kit.price}</div>
+              <div className="text-2xl font-bold text-white bg-gray-900 px-4 py-2 rounded-xl">₹{kit.price}</div>
             )}
           </div>
         </CardHeader>
@@ -75,7 +75,7 @@ export default function KitDetailsPage() {
             <p className="text-neutral-300 leading-relaxed text-lg">{kit.description}</p>
           </div>
           <div className="grid grid-cols-2 gap-4 pt-4">
-             <div className="bg-neutral-900 p-4 rounded-xl">
+             <div className="bg-gray-900 p-4 rounded-xl">
                <p className="text-xs text-neutral-500 uppercase mb-1">Stock Availability</p>
                <p className="text-xl font-bold">{kit.stock ?? 'N/A'}</p>
              </div>
