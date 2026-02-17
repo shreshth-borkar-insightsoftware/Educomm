@@ -292,6 +292,7 @@ export default function DashboardPage() {
                 onClick={() => enrollments.length > 0 && setIsExpanded(!isExpanded)}
                 role="button"
                 tabIndex={enrollments.length > 0 ? 0 : -1}
+                aria-disabled={enrollments.length === 0}
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && enrollments.length > 0) {
                     e.preventDefault();
@@ -349,18 +350,10 @@ export default function DashboardPage() {
                 <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}>
                   {displayEnrollments.map((enrollment) => (
                     <div key={enrollment.enrollmentId} className="border-b border-gray-800 pb-4 last:border-b-0">
-                      <div
-                        className="cursor-pointer hover:bg-gray-800/30 p-2 -m-2 rounded-lg transition-colors"
+                      <button
+                        type="button"
+                        className="cursor-pointer hover:bg-gray-800/30 p-2 -m-2 rounded-lg transition-colors w-full text-left"
                         onClick={() => navigate(`/courses/${enrollment.courseId}`)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            navigate(`/courses/${enrollment.courseId}`);
-                          }
-                        }}
                         aria-label={`Go to ${enrollment.courseName}`}
                       >
                         <div className="flex items-center justify-between mb-2">
@@ -410,7 +403,7 @@ export default function DashboardPage() {
                             </button>
                           </div>
                         )}
-                      </div>
+                      </button>
 
                       {/* Expanded module list */}
                       {isExpanded && expandedCourse === enrollment.enrollmentId && courseProgress[enrollment.enrollmentId] && (
