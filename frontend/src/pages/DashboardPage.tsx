@@ -393,6 +393,13 @@ export default function DashboardPage() {
                                 e.stopPropagation();
                                 toggleCourseExpansion(enrollment.enrollmentId);
                               }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleCourseExpansion(enrollment.enrollmentId);
+                                }
+                              }}
                               aria-label={expandedCourse === enrollment.enrollmentId 
                                 ? `Hide modules for ${enrollment.courseName}` 
                                 : `View modules for ${enrollment.courseName}`}
