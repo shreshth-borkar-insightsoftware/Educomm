@@ -1,5 +1,5 @@
 import PageHeader from "@/components/PageHeader";
-import { Monitor, Package, Wrench, Search, ShoppingCart, Rocket, TrendingUp } from "lucide-react";
+import { Monitor, Package, Wrench, Search, ShoppingCart, TrendingUp } from "lucide-react";
 
 export default function AboutPage() {
   const features = [
