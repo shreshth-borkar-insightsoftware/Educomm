@@ -291,7 +291,7 @@ export default function DashboardPage() {
                 className="flex items-center gap-2 cursor-pointer"
                 onClick={() => enrollments.length > 0 && setIsExpanded(!isExpanded)}
                 role="button"
-                tabIndex={enrollments.length > 0 ? 0 : -1}
+                tabIndex={0}
                 aria-disabled={enrollments.length === 0}
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && enrollments.length > 0) {
@@ -311,7 +311,7 @@ export default function DashboardPage() {
                 <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
                 {enrollments.length > 0 && (
                   <span 
-                    className="text-white hover:text-gray-300 transition-colors"
+                    className="text-white transition-colors"
                     aria-hidden="true"
                   >
                     {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -350,30 +350,16 @@ export default function DashboardPage() {
                 <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}>
                   {displayEnrollments.map((enrollment) => (
                     <div key={enrollment.enrollmentId} className="border-b border-gray-800 pb-4 last:border-b-0">
-                      <div
-                        className="cursor-pointer hover:bg-gray-800/30 p-3 rounded-lg transition-colors"
-                        onClick={(e) => {
-                          // Only navigate if not clicking on a button
-                          const target = e.target as HTMLElement;
-                          if (!target.closest('button')) {
-                            navigate(`/courses/${enrollment.courseId}`);
-                          }
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            navigate(`/courses/${enrollment.courseId}`);
-                          }
-                        }}
-                        aria-label={`Go to ${enrollment.courseName}`}
-                      >
+                      <div className="p-3">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 flex-1">
-                            <p className="text-white font-medium text-sm">
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/courses/${enrollment.courseId}`)}
+                              className="text-white font-medium text-sm hover:text-gray-300 transition-colors text-left"
+                            >
                               {enrollment.courseName || "Untitled Course"}
-                            </p>
+                            </button>
                             {enrollment.isCompleted && (
                               <span className="text-xs bg-green-500/20 border border-green-500/50 text-green-400 px-2 py-0.5 rounded">
                                 Completed
