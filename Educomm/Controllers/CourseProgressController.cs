@@ -22,8 +22,17 @@ namespace Educomm.Controllers
         private int GetUserId()
         {
             var idClaim = User.FindFirst("UserId");
-            if (idClaim == null) return 0;
-            return int.Parse(idClaim.Value);
+            if (idClaim == null)
+            {
+                return 0;
+            }
+
+            if (!int.TryParse(idClaim.Value, out var userId))
+            {
+                return 0;
+            }
+
+            return userId;
         }
 
         // POST /api/progress/complete
@@ -151,7 +160,13 @@ namespace Educomm.Controllers
                 .Where(p => p.EnrollmentId == enrollmentId)
                 .ToListAsync();
 
-            var progressDict = progressRecords.ToDictionary(p => p.CourseContentId, p => p);
+            // Group by CourseContentId and take the most recent (in case of duplicates)
+            var progressDict = progressRecords
+                .GroupBy(p => p.CourseContentId)
+                .ToDictionary(
+                    g => g.Key, 
+                    g => g.OrderByDescending(p => p.CompletedAt ?? DateTime.MinValue).First()
+                );
 
             var contentDetails = courseContents.Select(cc => new
             {

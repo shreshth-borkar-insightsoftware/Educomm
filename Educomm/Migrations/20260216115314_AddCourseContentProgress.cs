@@ -57,6 +57,12 @@ namespace Educomm.Migrations
                 name: "IX_CourseContentProgress_EnrollmentId",
                 table: "CourseContentProgress",
                 column: "EnrollmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseContentProgress_EnrollmentId_CourseContentId",
+                table: "CourseContentProgress",
+                columns: new[] { "EnrollmentId", "CourseContentId" },
+                unique: true);
         }
 
         /// <inheritdoc />

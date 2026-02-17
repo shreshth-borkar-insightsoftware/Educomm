@@ -29,6 +29,7 @@ export default function CourseContentPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const enrollmentId = searchParams.get("enrollmentId");
+  const courseContentId = searchParams.get("courseContentId");
   const navigate = useNavigate();
   const { logout } = useAuthStore(); 
   const [content, setContent] = useState<CourseContent | null>(null);
@@ -40,27 +41,38 @@ export default function CourseContentPage() {
     const fetchContent = async () => {
       try {
         setLoading(true);
-        const { data } = await api.get(`/CourseContents/${id}`);
-
-        if (Array.isArray(data) && data.length > 0) {
-          setContent(data[0]); 
-          
-          // Fetch progress status if enrollmentId is available
-          if (enrollmentId) {
-            try {
-              const progressData = await api.get(`/progress/${enrollmentId}`);
-              const contentProgress = progressData.data.contentDetails.find(
-                (item: ContentProgress) => item.courseContentId === data[0].contentId
-              );
-              if (contentProgress) {
-                setIsCompleted(contentProgress.isCompleted);
-              }
-            } catch (err) {
-              console.error("Error fetching progress:", err);
-            }
+        
+        // If courseContentId is provided, fetch that specific content
+        if (courseContentId) {
+          const { data } = await api.get(`/CourseContents/${courseContentId}`);
+          if (Array.isArray(data) && data.length > 0) {
+            setContent(data[0]); 
+          } else {
+            setContent(null);
           }
         } else {
-          setContent(null); 
+          // Otherwise, fetch by courseId (original behavior)
+          const { data } = await api.get(`/CourseContents/${id}`);
+          if (Array.isArray(data) && data.length > 0) {
+            setContent(data[0]); 
+          } else {
+            setContent(null); 
+          }
+        }
+        
+        // Fetch progress status if enrollmentId and content are available
+        if (enrollmentId && content) {
+          try {
+            const progressData = await api.get(`/progress/${enrollmentId}`);
+            const contentProgress = progressData.data.contentDetails.find(
+              (item: ContentProgress) => item.courseContentId === content.contentId
+            );
+            if (contentProgress) {
+              setIsCompleted(contentProgress.isCompleted);
+            }
+          } catch (err) {
+            console.error("Error fetching progress:", err);
+          }
         }
       } catch (err: unknown) {
         console.error("Fetch error:", err);
@@ -75,15 +87,21 @@ export default function CourseContentPage() {
       }
     };
     fetchContent();
-  }, [id, enrollmentId, logout]);
+  }, [id, courseContentId, enrollmentId, logout, content]);
 
   const handleMarkComplete = async () => {
     if (!enrollmentId || !content) return;
     
+    const parsedEnrollmentId = Number(enrollmentId);
+    if (!Number.isInteger(parsedEnrollmentId) || parsedEnrollmentId <= 0) {
+      console.error("Invalid enrollmentId:", enrollmentId);
+      return;
+    }
+
     try {
       setMarkingComplete(true);
       await api.post("/progress/complete", {
-        enrollmentId: parseInt(enrollmentId),
+        enrollmentId: parsedEnrollmentId,
         courseContentId: content.contentId
       });
       setIsCompleted(true);

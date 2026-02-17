@@ -334,7 +334,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-auto'}`}>
+                <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}>
                   {displayEnrollments.map((enrollment) => (
                     <div key={enrollment.enrollmentId} className="border-b border-gray-800 pb-4 last:border-b-0">
                       <div 
@@ -384,7 +384,7 @@ export default function DashboardPage() {
                                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  navigate(`/courses/${enrollment.courseId}/content?enrollmentId=${enrollment.enrollmentId}`);
+                                  navigate(`/courses/${enrollment.courseId}/content?enrollmentId=${enrollment.enrollmentId}&courseContentId=${module.courseContentId}`);
                                 }}
                               >
                                 <div className="flex-shrink-0">
