@@ -7,7 +7,13 @@ import {
   Star, 
   Zap, 
   Clock, 
-  ArrowRight
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  Circle,
+  Video,
+  FileText
 } from "lucide-react";
 import api from "@/api/axiosInstance";
 
@@ -18,14 +24,33 @@ interface Kit {
   imageUrl?: string;
 }
 
-interface Enrollment {
+interface EnrollmentDto {
   enrollmentId: number;
-  course?: {
-    courseId: number;
-    name: string;
-  };
+  courseId: number;
+  courseName: string;
   progressPercentage: number;
   isCompleted: boolean;
+  totalModules: number;
+  completedModules: number;
+}
+
+interface CourseProgress {
+  enrollmentId: number;
+  courseId: number;
+  courseName: string;
+  contentDetails: Array<{
+    courseContentId: number;
+    title: string;
+    orderIndex: number;
+    contentType: string;
+    isCompleted: boolean;
+    completedAt: string | null;
+  }>;
+  summary: {
+    totalModules: number;
+    completedModules: number;
+    progressPercentage: number;
+  };
 }
 
 interface Order {
@@ -46,20 +71,24 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   const [kits, setKits] = useState<Kit[]>([]);
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [enrollments, setEnrollments] = useState<EnrollmentDto[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState({
     kits: true,
     enrollments: true,
     orders: true,
   });
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedCourse, setExpandedCourse] = useState<number | null>(null);
+  const [courseProgress, setCourseProgress] = useState<Record<number, CourseProgress>>({});
 
   useEffect(() => {
     const fetchData = async () => {
       // Fetch all data in parallel
       const [kitsResult, enrollmentsResult, ordersResult] = await Promise.allSettled([
         api.get("/kits", { params: { page: 1, pageSize: 3 } }),
-        api.get("/enrollments/MyEnrollments", { params: { page: 1, pageSize: 10 } }),
+        // Fetch reasonable amount of enrollments, sorted by most recent
+        api.get("/enrollments/MyEnrollments", { params: { page: 1, pageSize: 50 } }),
         api.get("/Orders/MyOrders", { params: { page: 1, pageSize: 3 } }),
       ]);
 
@@ -74,9 +103,7 @@ export default function DashboardPage() {
       // Handle enrollments
       if (enrollmentsResult.status === "fulfilled") {
         const allEnrollments = enrollmentsResult.value.data.items || [];
-        // Filter for incomplete enrollments and take top 3
-        const incompleteEnrollments = allEnrollments.filter((e: Enrollment) => !e.isCompleted).slice(0, 3);
-        setEnrollments(incompleteEnrollments);
+        setEnrollments(allEnrollments);
       } else {
         console.error("Failed to fetch enrollments:", enrollmentsResult.reason);
       }
@@ -93,6 +120,47 @@ export default function DashboardPage() {
 
     fetchData();
   }, []);
+
+  const fetchCourseProgress = async (enrollmentId: number) => {
+    if (courseProgress[enrollmentId]) {
+      return; // Already fetched
+    }
+    try {
+      const { data } = await api.get(`/progress/${enrollmentId}`);
+      setCourseProgress((prev) => ({
+        ...prev,
+        [enrollmentId]: data
+      }));
+    } catch (err) {
+      console.error("Error fetching course progress:", err);
+    }
+  };
+
+  const toggleCourseExpansion = async (enrollmentId: number) => {
+    if (expandedCourse === enrollmentId) {
+      setExpandedCourse(null);
+    } else {
+      setExpandedCourse(enrollmentId);
+      await fetchCourseProgress(enrollmentId);
+    }
+  };
+
+  const getContentTypeIcon = (contentType: string) => {
+    const type = contentType?.toLowerCase() || "";
+    if (type.includes("video")) {
+      return <Video className="w-4 h-4 text-gray-400" />;
+    }
+    return <FileText className="w-4 h-4 text-gray-400" />;
+  };
+
+  // Sort enrollments: in-progress by highest progress, then completed
+  const sortedEnrollments = [...enrollments].sort((a, b) => {
+    if (a.isCompleted && !b.isCompleted) return 1;
+    if (!a.isCompleted && b.isCompleted) return -1;
+    return b.progressPercentage - a.progressPercentage;
+  });
+
+  const displayEnrollments = isExpanded ? sortedEnrollments : sortedEnrollments.filter(e => !e.isCompleted).slice(0, 3);
 
   const getStatusBadgeClass = (status: string) => {
     const normalized = status?.toLowerCase() || "pending";
@@ -217,18 +285,33 @@ export default function DashboardPage() {
           </div>
 
           {/* Continue Learning */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 transition-all duration-300 ease-in-out">
+            <div 
+              className="flex items-center justify-between mb-4 cursor-pointer"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
               </div>
-              <button 
-                onClick={() => navigate("/courses")}
-                className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
-              >
-                All Courses
-              </button>
+              <div className="flex items-center gap-2">
+                {!isExpanded && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate("/my-courses");
+                    }}
+                    className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
+                  >
+                    All Courses
+                  </button>
+                )}
+                {enrollments.length > 0 && (
+                  <button className="text-white hover:text-gray-300 transition-colors">
+                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  </button>
+                )}
+              </div>
             </div>
 
             {loading.enrollments ? (
@@ -237,7 +320,7 @@ export default function DashboardPage() {
                   <div key={i} className="h-16 bg-gray-800/50 rounded-lg animate-pulse" />
                 ))}
               </div>
-            ) : enrollments.length === 0 ? (
+            ) : displayEnrollments.length === 0 ? (
               <div className="py-8 text-center">
                 <p className="text-neutral-400 text-sm mb-2">
                   No courses started yet. Browse courses to get started!
@@ -251,32 +334,90 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                <div className="space-y-4 mb-4">
-                  {enrollments.map((enrollment) => (
-                    <div key={enrollment.enrollmentId}>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-white font-medium text-sm">
-                          {enrollment.course?.name || "Untitled Course"}
-                        </p>
-                        <span className="text-gray-300 text-xs font-medium">
-                          {enrollment.progressPercentage}%
-                        </span>
+                <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}>
+                  {displayEnrollments.map((enrollment) => (
+                    <div key={enrollment.enrollmentId} className="border-b border-gray-800 pb-4 last:border-b-0">
+                      <div 
+                        className="cursor-pointer"
+                        onClick={() => toggleCourseExpansion(enrollment.enrollmentId)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 flex-1">
+                            <p className="text-white font-medium text-sm">
+                              {enrollment.courseName || "Untitled Course"}
+                            </p>
+                            {enrollment.isCompleted && (
+                              <span className="text-xs bg-green-500/20 border border-green-500/50 text-green-400 px-2 py-0.5 rounded">
+                                Completed
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-gray-300 text-xs font-medium">
+                            {enrollment.progressPercentage}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-800 rounded-full h-1.5">
+                          <div 
+                            className="bg-green-500 h-1.5 rounded-full transition-all"
+                            style={{ width: `${enrollment.progressPercentage}%` }}
+                          />
+                        </div>
+                        {isExpanded && (
+                          <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
+                            <span>{enrollment.completedModules} of {enrollment.totalModules} modules</span>
+                            <button className="hover:text-white transition-colors flex items-center gap-1">
+                              {expandedCourse === enrollment.enrollmentId ? "Hide" : "View"} modules
+                              {expandedCourse === enrollment.enrollmentId ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <div className="w-full bg-gray-800 rounded-full h-1.5">
-                        <div 
-                          className="bg-green-500 h-1.5 rounded-full transition-all"
-                          style={{ width: `${enrollment.progressPercentage}%` }}
-                        />
-                      </div>
+
+                      {/* Expanded module list */}
+                      {isExpanded && expandedCourse === enrollment.enrollmentId && courseProgress[enrollment.enrollmentId] && (
+                        <div className="mt-3 space-y-2 ml-4">
+                          {courseProgress[enrollment.enrollmentId].contentDetails
+                            .sort((a, b) => a.orderIndex - b.orderIndex)
+                            .map((module) => (
+                              <div 
+                                key={module.courseContentId}
+                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/50 transition-colors cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/courses/${enrollment.courseId}/content?enrollmentId=${enrollment.enrollmentId}&courseContentId=${module.courseContentId}`);
+                                }}
+                              >
+                                <div className="flex-shrink-0">
+                                  {module.isCompleted ? (
+                                    <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                  ) : (
+                                    <Circle className="w-4 h-4 text-gray-600" />
+                                  )}
+                                </div>
+                                {getContentTypeIcon(module.contentType)}
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-sm ${module.isCompleted ? 'text-gray-400' : 'text-white'} truncate`}>
+                                    {module.orderIndex}. {module.title}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
-                <button 
-                  onClick={() => navigate("/courses")}
-                  className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors"
-                >
-                  View All Courses <ArrowRight className="w-4 h-4" />
-                </button>
+                {isExpanded && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate("/my-courses");
+                    }}
+                    className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors mt-4"
+                  >
+                    View All Courses <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
               </>
             )}
           </div>

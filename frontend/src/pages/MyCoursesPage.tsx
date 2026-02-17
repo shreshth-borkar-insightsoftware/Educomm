@@ -6,12 +6,23 @@ import { Loader2, PlayCircle } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
 import PageHeader from "@/components/PageHeader";
 
+interface Enrollment {
+  enrollmentId?: number;
+  id?: number;
+  courseId?: number;
+  course?: {
+    courseId?: number;
+    name?: string;
+    description?: string;
+  };
+}
+
 export default function MyCoursesPage() {
   const navigate = useNavigate();
-  const { items: rawEnrollments, loading, hasMore, loadMore } = usePagination<any>("/Enrollments/MyEnrollments", 10);
+  const { items: rawEnrollments, loading, hasMore, loadMore } = usePagination<Enrollment>("/Enrollments/MyEnrollments", 10);
 
   const courses = useMemo(() => 
-    rawEnrollments.map((e: any) => ({
+    rawEnrollments.map((e: Enrollment) => ({
       enrollmentId: e.enrollmentId || e.id,
       courseId: e.course?.courseId || e.courseId,
       courseName: e.course?.name || "Standard Course",
@@ -44,7 +55,7 @@ export default function MyCoursesPage() {
                   <p className="text-neutral-500 text-sm line-clamp-2">{course.courseDescription}</p>
                   <Button 
                     className="w-full bg-white text-black hover:bg-neutral-200 font-bold"
-                    onClick={() => navigate(`/courses/${course.courseId}/content`)}
+                    onClick={() => navigate(`/courses/${course.courseId}/content?enrollmentId=${course.enrollmentId}`)}
                   >
                     <PlayCircle className="mr-2 h-4 w-4" /> START LESSON
                   </Button>

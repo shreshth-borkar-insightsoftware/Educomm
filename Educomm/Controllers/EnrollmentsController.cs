@@ -31,7 +31,7 @@ namespace Educomm.Controllers
 
         // GET api
         [HttpGet("MyEnrollments")]
-        public async Task<ActionResult<PaginatedResponse<Enrollments>>> GetMyEnrollments([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<PaginatedResponse<EnrollmentDto>>> GetMyEnrollments([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             // Enforce maximum page size
             pageSize = Math.Min(pageSize, MAX_PAGE_SIZE);
@@ -43,14 +43,46 @@ namespace Educomm.Controllers
                 .Where(e => e.UserId == userId);
 
             var totalCount = await query.CountAsync();
-            var items = await query
+            var enrollments = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            return new PaginatedResponse<Enrollments>
+            // Get all enrollment IDs to fetch progress in one query
+            var enrollmentIds = enrollments.Select(e => e.EnrollmentId).ToList();
+            var courseIds = enrollments.Select(e => e.CourseId).Distinct().ToList();
+
+            // Fetch all module counts for these courses in one query
+            var moduleCounts = await _context.CourseContents
+                .Where(cc => courseIds.Contains(cc.CourseId))
+                .GroupBy(cc => cc.CourseId)
+                .Select(g => new { CourseId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.CourseId, x => x.Count);
+
+            // Fetch all completed module counts for these enrollments in one query
+            var completedCounts = await _context.CourseContentProgress
+                .Where(p => enrollmentIds.Contains(p.EnrollmentId) && p.IsCompleted)
+                .GroupBy(p => p.EnrollmentId)
+                .Select(g => new { EnrollmentId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.EnrollmentId, x => x.Count);
+
+            // Map to DTOs with pre-fetched data
+            var enrichedItems = enrollments.Select(enrollment => new EnrollmentDto
             {
-                Items = items,
+                EnrollmentId = enrollment.EnrollmentId,
+                UserId = enrollment.UserId,
+                CourseId = enrollment.CourseId,
+                CourseName = enrollment.Course?.Name,
+                EnrolledAt = enrollment.EnrolledAt,
+                IsCompleted = enrollment.IsCompleted,
+                ProgressPercentage = enrollment.ProgressPercentage,
+                TotalModules = moduleCounts.GetValueOrDefault(enrollment.CourseId, 0),
+                CompletedModules = completedCounts.GetValueOrDefault(enrollment.EnrollmentId, 0)
+            }).ToList();
+
+            return new PaginatedResponse<EnrollmentDto>
+            {
+                Items = enrichedItems,
                 TotalCount = totalCount,
                 Page = page,
                 PageSize = pageSize

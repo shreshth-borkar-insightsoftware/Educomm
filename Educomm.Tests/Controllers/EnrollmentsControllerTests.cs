@@ -16,7 +16,8 @@ namespace Educomm.Tests.Controllers
             var context = db.Context;
             context.Users.Add(TestDataBuilder.CreateUser(1, "user1@example.com"));
             context.Categories.Add(TestDataBuilder.CreateCategory(1));
-            context.Courses.Add(TestDataBuilder.CreateCourse(1));
+            var course = TestDataBuilder.CreateCourse(1);
+            context.Courses.Add(course);
             context.Enrollments.Add(TestDataBuilder.CreateEnrollment(1, userId: 1, courseId: 1));
             await context.SaveChangesAsync();
 
@@ -25,9 +26,14 @@ namespace Educomm.Tests.Controllers
 
             var result = await controller.GetMyEnrollments();
 
-            var response = Assert.IsType<PaginatedResponse<Enrollments>>(result.Value);
+            var response = Assert.IsType<PaginatedResponse<EnrollmentDto>>(result.Value);
             Assert.Equal(1, response.TotalCount);
             Assert.Single(response.Items);
+            var enrollment = response.Items.First();
+            Assert.Equal(1, enrollment.EnrollmentId);
+            Assert.Equal(1, enrollment.UserId);
+            Assert.Equal(1, enrollment.CourseId);
+            Assert.NotNull(enrollment.CourseName);
         }
 
         [Fact]
@@ -135,7 +141,7 @@ namespace Educomm.Tests.Controllers
             // Request 300 items
             var result = await controller.GetMyEnrollments(page: 1, pageSize: 300);
 
-            var response = Assert.IsType<PaginatedResponse<Enrollments>>(result.Value);
+            var response = Assert.IsType<PaginatedResponse<EnrollmentDto>>(result.Value);
             // Should only return 100 items (MAX_PAGE_SIZE)
             Assert.Equal(100, response.Items.Count());
             Assert.Equal(100, response.PageSize);
@@ -179,7 +185,7 @@ namespace Educomm.Tests.Controllers
 
             var result = await controller.GetMyEnrollments();
 
-            var response = Assert.IsType<PaginatedResponse<Enrollments>>(result.Value);
+            var response = Assert.IsType<PaginatedResponse<EnrollmentDto>>(result.Value);
             Assert.Equal(0, response.TotalCount);
             Assert.Empty(response.Items);
         }

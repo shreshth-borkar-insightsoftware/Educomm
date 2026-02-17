@@ -20,6 +20,7 @@ namespace Educomm.Data
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Enrollments> Enrollments { get; set; }
         public DbSet<Address> Addresses { get; set; }
+        public DbSet<CourseContentProgress> CourseContentProgress { get; set; }
 
     }
 }
