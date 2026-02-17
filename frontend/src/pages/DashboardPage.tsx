@@ -286,32 +286,25 @@ export default function DashboardPage() {
 
           {/* Continue Learning */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 transition-all duration-300 ease-in-out">
-            <div 
-              className="flex items-center justify-between mb-4 cursor-pointer"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mb-4">
+              <div 
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => enrollments.length > 0 && setIsExpanded(!isExpanded)}
+              >
                 <Zap className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
-              </div>
-              <div className="flex items-center gap-2">
-                {!isExpanded && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate("/my-courses");
-                    }}
-                    className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
-                  >
-                    All Courses
-                  </button>
-                )}
                 {enrollments.length > 0 && (
                   <button className="text-white hover:text-gray-300 transition-colors">
                     {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                   </button>
                 )}
               </div>
+              <button 
+                onClick={() => navigate("/my-courses")}
+                className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
+              >
+                My Learning
+              </button>
             </div>
 
             {loading.enrollments ? (
@@ -337,10 +330,7 @@ export default function DashboardPage() {
                 <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}>
                   {displayEnrollments.map((enrollment) => (
                     <div key={enrollment.enrollmentId} className="border-b border-gray-800 pb-4 last:border-b-0">
-                      <div 
-                        className="cursor-pointer"
-                        onClick={() => toggleCourseExpansion(enrollment.enrollmentId)}
-                      >
+                      <div>
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 flex-1">
                             <p className="text-white font-medium text-sm">
@@ -365,7 +355,10 @@ export default function DashboardPage() {
                         {isExpanded && (
                           <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
                             <span>{enrollment.completedModules} of {enrollment.totalModules} modules</span>
-                            <button className="hover:text-white transition-colors flex items-center gap-1">
+                            <button 
+                              className="hover:text-white transition-colors flex items-center gap-1"
+                              onClick={() => toggleCourseExpansion(enrollment.enrollmentId)}
+                            >
                               {expandedCourse === enrollment.enrollmentId ? "Hide" : "View"} modules
                               {expandedCourse === enrollment.enrollmentId ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                             </button>
@@ -415,7 +408,7 @@ export default function DashboardPage() {
                     }}
                     className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors mt-4"
                   >
-                    View All Courses <ArrowRight className="w-4 h-4" />
+                    View All in My Learning <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
               </>
