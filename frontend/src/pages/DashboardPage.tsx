@@ -294,12 +294,17 @@ export default function DashboardPage() {
                 <Zap className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
                 {enrollments.length > 0 && (
-                  <button className="text-white hover:text-gray-300 transition-colors">
+                  <button 
+                    type="button"
+                    className="text-white hover:text-gray-300 transition-colors"
+                    aria-label={isExpanded ? "Collapse learning section" : "Expand learning section"}
+                  >
                     {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                   </button>
                 )}
               </div>
               <button 
+                type="button"
                 onClick={() => navigate("/my-courses")}
                 className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
               >
@@ -356,8 +361,12 @@ export default function DashboardPage() {
                           <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
                             <span>{enrollment.completedModules} of {enrollment.totalModules} modules</span>
                             <button 
+                              type="button"
                               className="hover:text-white transition-colors flex items-center gap-1"
                               onClick={() => toggleCourseExpansion(enrollment.enrollmentId)}
+                              aria-label={expandedCourse === enrollment.enrollmentId 
+                                ? `Hide modules for ${enrollment.courseName}` 
+                                : `View modules for ${enrollment.courseName}`}
                             >
                               {expandedCourse === enrollment.enrollmentId ? "Hide" : "View"} modules
                               {expandedCourse === enrollment.enrollmentId ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
