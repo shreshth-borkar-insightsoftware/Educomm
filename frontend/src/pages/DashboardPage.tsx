@@ -199,7 +199,7 @@ export default function DashboardPage() {
           {/* Hardware Kits Card */}
           <div 
             onClick={() => navigate("/kits")}
-            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-neutral-600 transition-colors"
+            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-gray-600 transition-colors"
           >
             <Package className="w-8 h-8 text-purple-400 mb-4" />
             <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Hardware Kits</h2>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
           {/* Digital Courses Card */}
           <div 
             onClick={() => navigate("/courses")}
-            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-neutral-600 transition-colors"
+            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-gray-600 transition-colors"
           >
             <Monitor className="w-8 h-8 text-purple-400 mb-4" />
             <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Digital Courses</h2>
@@ -266,7 +266,7 @@ export default function DashboardPage() {
                   <div 
                     key={kit.kitId}
                     onClick={() => navigate(`/kits/${kit.kitId}`)}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-700/40 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <Package className="w-5 h-5 text-gray-400" />
@@ -275,7 +275,7 @@ export default function DashboardPage() {
                         <p className="text-gray-300 text-xs">₹{kit.price}</p>
                       </div>
                     </div>
-                    <span className="text-xs text-white bg-transparent border border-neutral-600 px-2 py-1 rounded">
+                    <span className="text-xs text-gray-300 bg-transparent border border-gray-600 px-2 py-1 rounded">
                       {kitTags[index % kitTags.length]}
                     </span>
                   </div>
@@ -381,7 +381,7 @@ export default function DashboardPage() {
                             .map((module) => (
                               <div 
                                 key={module.courseContentId}
-                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
+                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700/40 transition-colors cursor-pointer"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   navigate(`/courses/${enrollment.courseId}/content?enrollmentId=${enrollment.enrollmentId}&courseContentId=${module.courseContentId}`);
@@ -460,7 +460,7 @@ export default function DashboardPage() {
                 <div 
                   key={order.orderId}
                   onClick={() => navigate("/my-orders")}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-700/40 transition-colors cursor-pointer"
                 >
                   <div className="flex-1">
                     <p className="text-white font-medium text-sm">
