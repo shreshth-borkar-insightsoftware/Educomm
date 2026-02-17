@@ -62,9 +62,9 @@ export default function MyOrdersPage() {
           <>
             <div className="space-y-10">
             {orders.map((order: any) => (
-              <div key={order.orderId} className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+              <div key={order.orderId} className="bg-neutral-800 border border-neutral-700 rounded-xl overflow-hidden">
                 
-                <div className="p-6 border-b border-gray-700 bg-gray-800 flex flex-wrap justify-between items-center gap-4">
+                <div className="p-6 border-b border-neutral-700 bg-neutral-800 flex flex-wrap justify-between items-center gap-4">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-white text-black rounded-xl shadow-lg">
                       <Package size={24} />
@@ -99,11 +99,11 @@ export default function MyOrdersPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3">
-                  <div className="p-6 space-y-6 md:col-span-2 border-b md:border-b-0 md:border-r border-gray-700">
+                  <div className="p-6 space-y-6 md:col-span-2 border-b md:border-b-0 md:border-r border-neutral-700">
                     {order.orderItems.map((item: any) => (
                       <div key={item.orderItemId} className="flex items-center justify-between group">
                         <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-gray-900 rounded-2xl flex items-center justify-center border border-gray-700 font-black text-white group-hover:border-gray-600 transition-colors">
+                          <div className="w-14 h-14 bg-neutral-900 rounded-2xl flex items-center justify-center border border-neutral-700 font-black text-white group-hover:border-neutral-600 transition-colors">
                             {item.quantity}x
                           </div>
                           <div>
@@ -133,7 +133,7 @@ export default function MyOrdersPage() {
                     ))}
                   </div>
 
-                  <div className="p-6 bg-gray-900 space-y-6">
+                  <div className="p-6 bg-neutral-900 space-y-6">
                     <div>
                         <p className="text-[10px] font-black uppercase text-neutral-500 tracking-widest mb-3">Delivery Address</p>
                         <div className="flex gap-3">
@@ -147,7 +147,7 @@ export default function MyOrdersPage() {
                         </div>
                     </div>
 
-                    <div className="pt-4 border-t border-gray-700">
+                    <div className="pt-4 border-t border-neutral-700">
                         <p className="text-[10px] font-black uppercase text-neutral-500 tracking-widest mb-1">Payment Status</p>
                         <p className="text-xs font-bold text-green-400 uppercase tracking-tighter italic">Prepaid via System</p>
                     </div>

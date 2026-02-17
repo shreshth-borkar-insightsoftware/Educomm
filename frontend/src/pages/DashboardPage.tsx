@@ -199,7 +199,7 @@ export default function DashboardPage() {
           {/* Hardware Kits Card */}
           <div 
             onClick={() => navigate("/kits")}
-            className="bg-gray-800 border border-gray-700 rounded-xl p-6 cursor-pointer hover:border-gray-600 transition-colors"
+            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-neutral-600 transition-colors"
           >
             <Package className="w-8 h-8 text-purple-400 mb-4" />
             <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Hardware Kits</h2>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
           {/* Digital Courses Card */}
           <div 
             onClick={() => navigate("/courses")}
-            className="bg-gray-800 border border-gray-700 rounded-xl p-6 cursor-pointer hover:border-gray-600 transition-colors"
+            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-neutral-600 transition-colors"
           >
             <Monitor className="w-8 h-8 text-purple-400 mb-4" />
             <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Digital Courses</h2>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
         {/* Middle Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Featured Kits */}
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-purple-400" />
@@ -275,7 +275,7 @@ export default function DashboardPage() {
                         <p className="text-gray-300 text-xs">₹{kit.price}</p>
                       </div>
                     </div>
-                    <span className="text-xs text-white bg-transparent border border-gray-600 px-2 py-1 rounded">
+                    <span className="text-xs text-white bg-transparent border border-neutral-600 px-2 py-1 rounded">
                       {kitTags[index % kitTags.length]}
                     </span>
                   </div>
@@ -285,7 +285,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Continue Learning */}
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 transition-all duration-300 ease-in-out">
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 transition-all duration-300 ease-in-out">
             <div 
               className="flex items-center justify-between mb-4 cursor-pointer"
               onClick={() => setIsExpanded(!isExpanded)}
@@ -336,7 +336,7 @@ export default function DashboardPage() {
               <>
                 <div className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}>
                   {displayEnrollments.map((enrollment) => (
-                    <div key={enrollment.enrollmentId} className="border-b border-gray-700 pb-4 last:border-b-0">
+                    <div key={enrollment.enrollmentId} className="border-b border-neutral-700 pb-4 last:border-b-0">
                       <div 
                         className="cursor-pointer"
                         onClick={() => toggleCourseExpansion(enrollment.enrollmentId)}
@@ -424,7 +424,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Bottom Section - Recent Orders */}
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+        <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-purple-400" />

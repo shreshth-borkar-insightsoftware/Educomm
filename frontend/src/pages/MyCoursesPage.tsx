@@ -47,7 +47,7 @@ export default function MyCoursesPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map((course) => (
-              <Card key={course.enrollmentId} className="bg-gray-800 border border-gray-700 text-white hover:border-gray-600 transition-colors">
+              <Card key={course.enrollmentId} className="bg-neutral-800 border border-neutral-700 text-white hover:border-neutral-600 transition-colors">
                 <CardHeader>
                   <CardTitle className="uppercase font-bold tracking-tight">{course.courseName}</CardTitle>
                 </CardHeader>
