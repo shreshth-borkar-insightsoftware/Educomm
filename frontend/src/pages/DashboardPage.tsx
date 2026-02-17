@@ -291,25 +291,30 @@ export default function DashboardPage() {
                 className="flex items-center gap-2 cursor-pointer"
                 onClick={() => enrollments.length > 0 && setIsExpanded(!isExpanded)}
                 role="button"
-                tabIndex={0}
+                tabIndex={enrollments.length > 0 ? 0 : -1}
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && enrollments.length > 0) {
                     e.preventDefault();
                     setIsExpanded(!isExpanded);
                   }
                 }}
-                aria-label={isExpanded ? "Collapse Continue Learning section" : "Expand Continue Learning section"}
+                aria-label={
+                  enrollments.length === 0 
+                    ? "No courses to expand" 
+                    : isExpanded 
+                      ? "Collapse Continue Learning section" 
+                      : "Expand Continue Learning section"
+                }
               >
                 <Zap className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
                 {enrollments.length > 0 && (
-                  <button 
-                    type="button"
+                  <span 
                     className="text-white hover:text-gray-300 transition-colors"
-                    aria-label={isExpanded ? "Collapse learning section" : "Expand learning section"}
+                    aria-hidden="true"
                   >
                     {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                  </button>
+                  </span>
                 )}
               </div>
               <button 
@@ -384,7 +389,10 @@ export default function DashboardPage() {
                             <button 
                               type="button"
                               className="hover:text-white transition-colors flex items-center gap-1"
-                              onClick={() => toggleCourseExpansion(enrollment.enrollmentId)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCourseExpansion(enrollment.enrollmentId);
+                              }}
                               aria-label={expandedCourse === enrollment.enrollmentId 
                                 ? `Hide modules for ${enrollment.courseName}` 
                                 : `View modules for ${enrollment.courseName}`}
