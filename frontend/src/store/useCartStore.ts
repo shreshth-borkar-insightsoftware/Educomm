@@ -4,6 +4,8 @@ import api from '@/api/axiosInstance';
 
 const DEFAULT_STOCK_FALLBACK = 999;
 
+const isAuthenticated = () => !!localStorage.getItem('token');
+
 interface CartItem {
   id: number;
   cartItemId: number;
@@ -25,6 +27,7 @@ interface CartState {
   clearCart: () => void;
   getTotal: () => number;
   resetError: () => void;
+  syncCartToBackend: () => Promise<void>;
 }
 
 export const useCartStore = create<CartState>()(
@@ -33,11 +36,16 @@ export const useCartStore = create<CartState>()(
       items: [],
       isLoading: false,
       error: null,
+
       fetchCart: async () => {
+        // Guest mode: cart is already in localStorage via zustand persist
+        if (!isAuthenticated()) {
+          set({ isLoading: false, error: null });
+          return;
+        }
         set({ isLoading: true, error: null });
         try {
           const { data } = await api.get('/Carts/MyCart');         
-          console.log("Raw Cart Data:", data);
           let rawItems: any[] = [];
           if (Array.isArray(data)) {
             rawItems = data;
@@ -49,9 +57,7 @@ export const useCartStore = create<CartState>()(
 
           const formattedItems = rawItems.map((item: any) => ({
             id: item.kitId || item.kit?.id || item.id,
-
             cartItemId: item.cartItemId || item.id, 
-
             name: item.kitName || item.kit?.name || item.name || "Unknown Kit",
             price: Number(item.price || item.kit?.price || 0),
             imageUrl: item.imageUrl || item.kit?.imageUrl || "",
@@ -69,7 +75,7 @@ export const useCartStore = create<CartState>()(
                 errorMessage = String(error.response.data.message);
               }
               if ('status' in error.response && error.response.status === 401) {
-                set({ items: [] });
+                // Keep local items for guest, don't clear
               }
             } else if ('message' in error) {
               errorMessage = String(error.message);
@@ -80,6 +86,27 @@ export const useCartStore = create<CartState>()(
       },
 
       addToCart: async (item) => {
+        if (!isAuthenticated()) {
+          // Guest mode: add locally
+          const existing = get().items.find((i) => i.id === item.id);
+          if (existing) {
+            set({
+              items: get().items.map((i) =>
+                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+              ),
+            });
+          } else {
+            set({
+              items: [...get().items, {
+                ...item,
+                cartItemId: 0,
+                quantity: 1,
+                stock: DEFAULT_STOCK_FALLBACK,
+              }],
+            });
+          }
+          return;
+        }
         try {
           await api.post('/Carts/Add', { kitId: item.id, quantity: 1 });
           await get().fetchCart(); 
@@ -89,24 +116,23 @@ export const useCartStore = create<CartState>()(
       },
 
       removeFromCart: async (kitId) => {
+        if (!isAuthenticated()) {
+          // Guest mode: remove locally
+          set({ items: get().items.filter((i) => i.id !== kitId) });
+          return;
+        }
         try {
           const itemToRemove = get().items.find((i) => i.id === kitId);
-
           if (!itemToRemove) {
              console.error("Item not found in local store");
              return;
           }
-
           const deleteId = itemToRemove.cartItemId;
-          console.log(`Deleting Kit ${kitId} -> CartItemId: ${deleteId}`);
-
           if (!deleteId) {
              console.error("Missing CartItemId, cannot delete.");
              return;
           }
-
           await api.delete(`/Carts/RemoveItem/${deleteId}`);
-          
           await get().fetchCart();
         } catch (error) {
           console.error("Removal failed:", error);
@@ -117,9 +143,17 @@ export const useCartStore = create<CartState>()(
       updateQuantity: async (kitId, delta) => {
         const item = get().items.find((i) => i.id === kitId);
         if (!item) return;
-        
         const newQty = Math.max(1, item.quantity + delta);
 
+        if (!isAuthenticated()) {
+          // Guest mode: update locally
+          set({
+            items: get().items.map((i) =>
+              i.id === kitId ? { ...i, quantity: newQty } : i
+            ),
+          });
+          return;
+        }
         try {
           await api.put('/Carts/UpdateQuantity', { kitId: kitId, quantity: newQty });
           set({
@@ -141,6 +175,24 @@ export const useCartStore = create<CartState>()(
       },
 
       resetError: () => set({ error: null }),
+
+      syncCartToBackend: async () => {
+        const localItems = get().items;
+        if (!isAuthenticated() || localItems.length === 0) return;
+        
+        try {
+          // Push each local item to the backend cart
+          for (const item of localItems) {
+            await api.post('/Carts/Add', { kitId: item.id, quantity: item.quantity });
+          }
+          // Refresh cart from backend (backend may have merged duplicates)
+          await get().fetchCart();
+        } catch (error) {
+          console.error("Cart sync failed:", error);
+          // Still try to fetch server cart even if some adds failed
+          await get().fetchCart();
+        }
+      },
     }),
     { name: 'shopping-cart' }
   )

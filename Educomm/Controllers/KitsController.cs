@@ -22,6 +22,7 @@ namespace Educomm.Controllers
 
         // GET: api/Kits
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<PaginatedResponse<Kit>>> GetKits(
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 12,
@@ -109,6 +110,7 @@ namespace Educomm.Controllers
 
         // GET: api/Kits
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<Kit>> GetKit(int id)
         {
             var kit = await _context.Kits

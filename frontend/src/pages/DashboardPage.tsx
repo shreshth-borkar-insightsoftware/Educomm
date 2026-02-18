@@ -45,6 +45,7 @@ const kitTags = ["Popular", "New", "Best Value"];
 
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const navigate = useNavigate();
 
   const [kits, setKits] = useState<Kit[]>([]);
@@ -59,42 +60,42 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch all data in parallel
-      const [kitsResult, enrollmentsResult, ordersResult] = await Promise.allSettled([
-        api.get("/kits", { params: { page: 1, pageSize: 3 } }),
-        // Fetch reasonable amount of enrollments, sorted by most recent
-        api.get("/enrollments/MyEnrollments", { params: { page: 1, pageSize: 50 } }),
-        api.get("/Orders/MyOrders", { params: { page: 1, pageSize: 3 } }),
-      ]);
+      if (isAuthenticated) {
+        // Authenticated: fetch all data in parallel
+        const [kitsResult, enrollmentsResult, ordersResult] = await Promise.allSettled([
+          api.get("/kits", { params: { page: 1, pageSize: 3 } }),
+          api.get("/enrollments/MyEnrollments", { params: { page: 1, pageSize: 50 } }),
+          api.get("/Orders/MyOrders", { params: { page: 1, pageSize: 3 } }),
+        ]);
 
-      // Handle kits
-      if (kitsResult.status === "fulfilled") {
-        setKits(kitsResult.value.data.items || []);
-      } else {
-        console.error("Failed to fetch kits:", kitsResult.reason);
-      }
-      setLoading((prev) => ({ ...prev, kits: false }));
+        if (kitsResult.status === "fulfilled") {
+          setKits(kitsResult.value.data.items || []);
+        }
+        setLoading((prev) => ({ ...prev, kits: false }));
 
-      // Handle enrollments
-      if (enrollmentsResult.status === "fulfilled") {
-        const allEnrollments = enrollmentsResult.value.data.items || [];
-        setEnrollments(allEnrollments);
-      } else {
-        console.error("Failed to fetch enrollments:", enrollmentsResult.reason);
-      }
-      setLoading((prev) => ({ ...prev, enrollments: false }));
+        if (enrollmentsResult.status === "fulfilled") {
+          setEnrollments(enrollmentsResult.value.data.items || []);
+        }
+        setLoading((prev) => ({ ...prev, enrollments: false }));
 
-      // Handle orders
-      if (ordersResult.status === "fulfilled") {
-        setOrders(ordersResult.value.data.items || []);
+        if (ordersResult.status === "fulfilled") {
+          setOrders(ordersResult.value.data.items || []);
+        }
+        setLoading((prev) => ({ ...prev, orders: false }));
       } else {
-        console.error("Failed to fetch orders:", ordersResult.reason);
+        // Guest: only fetch public kits
+        try {
+          const { data } = await api.get("/kits", { params: { page: 1, pageSize: 3 } });
+          setKits(data.items || []);
+        } catch (err) {
+          console.error("Failed to fetch kits:", err);
+        }
+        setLoading({ kits: false, enrollments: false, orders: false });
       }
-      setLoading((prev) => ({ ...prev, orders: false }));
     };
 
     fetchData();
-  }, []);
+  }, [isAuthenticated]);
 
   // Sort enrollments: in-progress by highest progress, then completed
   const sortedEnrollments = [...enrollments].sort((a, b) => {
@@ -134,7 +135,7 @@ export default function DashboardPage() {
         {/* Header */}
         <header className="mb-8">
           <h1 className="text-4xl font-black tracking-tighter uppercase italic">
-            Welcome back, {user?.firstName}
+            Welcome, {user?.firstName}
           </h1>
           <p className="text-neutral-500 text-xs font-mono tracking-widest uppercase mt-1">Here's what's happening with your learning journey</p>
         </header>
@@ -230,7 +231,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Continue Learning */}
-
+          {isAuthenticated ? (
           <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 transition-all duration-300 ease-in-out">
             <div 
               className="flex items-center justify-between mb-4 cursor-pointer"
@@ -323,9 +324,29 @@ export default function DashboardPage() {
               </>
             )}
           </div>
+          ) : (
+          <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Zap className="w-5 h-5 text-purple-400" />
+              <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
+            </div>
+            <div className="py-8 text-center">
+              <p className="text-neutral-400 text-sm mb-3">
+                Login to track your course progress and continue learning.
+              </p>
+              <button
+                onClick={() => { localStorage.setItem("redirectAfterLogin", "/dashboard"); navigate("/login"); }}
+                className="bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                Login to Get Started
+              </button>
+            </div>
+          </div>
+          )}
         </div>
 
         {/* Bottom Section - Recent Orders */}
+        {isAuthenticated ? (
         <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -388,6 +409,25 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+        ) : (
+        <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="w-5 h-5 text-purple-400" />
+            <h3 className="text-lg font-black uppercase tracking-tight text-white">Recent Orders</h3>
+          </div>
+          <div className="py-8 text-center">
+            <p className="text-neutral-400 text-sm mb-3">
+              Login to view your order history and track deliveries.
+            </p>
+            <button
+              onClick={() => { localStorage.setItem("redirectAfterLogin", "/dashboard"); navigate("/login"); }}
+              className="bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+            >
+              Login to View Orders
+            </button>
+          </div>
+        </div>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+coverage-unit/
+test-results/
+playwright-report/
+e2e-results.*
+*.log
+.nyc_output/

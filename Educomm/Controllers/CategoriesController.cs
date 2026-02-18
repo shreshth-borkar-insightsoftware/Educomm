@@ -22,6 +22,7 @@ namespace Educomm.Controllers
 
         // GET api
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<PaginatedResponse<Category>>> GetCategories([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             // Enforce maximum page size

@@ -21,6 +21,7 @@ namespace Educomm.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<PaginatedResponse<Course>>> GetCourses(
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 12,
@@ -109,6 +110,7 @@ namespace Educomm.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<Course>> GetCourse(int id)
         {
             var course = await _context.Courses

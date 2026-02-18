@@ -1,7 +1,7 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, BookOpen, Package, FolderTree, ShoppingCart, Users, LogOut, ArrowLeft, GraduationCap } from "lucide-react";
+import { LayoutDashboard, BookOpen, Package, FolderTree, ShoppingCart, Users, LogOut, ArrowLeft, GraduationCap, BarChart3 } from "lucide-react";
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -23,6 +23,7 @@ const AdminLayout = () => {
     { name: "Enrollments", path: "/admin/enrollments", icon: GraduationCap },
     { name: "Orders", path: "/admin/orders", icon: ShoppingCart },
     { name: "Users", path: "/admin/users", icon: Users },
+    { name: "Stats", path: "/admin/stats", icon: BarChart3 },
   ];
 
   return (

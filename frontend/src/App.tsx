@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import AdminLayout from "./layout/AdminLayout";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
 import DashboardPage from "./pages/DashboardPage";
 import KitsPage from "./pages/KitsPage";
@@ -22,6 +23,7 @@ import AdminKits from "./pages/admin/AdminKits";
 import AdminEnrollments from "./pages/admin/AdminEnrollments";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminStats from "./pages/admin/AdminStats";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
 import AboutPage from "./pages/AboutPage";
@@ -41,20 +43,22 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/kits" element={<KitsPage />} />
             <Route path="/cart" element={<CartPage />} />
-            <Route path="/my-orders" element={<MyOrdersPage />} />
-            <Route path="/my-courses" element={<MyCoursesPage />} />
             <Route path="/courses" element={<CoursesPage/>} />
             <Route path="/courses/:id" element={<CourseDetailsPage />} />
-            <Route path="/courses/:id/content" element={<CourseContentPage />} />
-            <Route path="/address" element={<AddressPage/>} />
-            <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/kits/:id" element={<KitDetailsPage />} />
+            <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/faq" element={<FAQPage />} />
-            
-            {/* Payment Routes - Protected for logged-in users */}
-            <Route path="/payment/success" element={<PaymentSuccess />} />
-            <Route path="/payment/cancel" element={<PaymentCancel />} />
+
+            {/* Auth-only routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/my-orders" element={<MyOrdersPage />} />
+              <Route path="/my-courses" element={<MyCoursesPage />} />
+              <Route path="/courses/:id/content" element={<CourseContentPage />} />
+              <Route path="/address" element={<AddressPage/>} />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/cancel" element={<PaymentCancel />} />
+            </Route>
           </Route>
 
           {/* Admin Routes */}
@@ -67,6 +71,7 @@ function App() {
               <Route path="/admin/enrollments" element={<AdminEnrollments />} />
               <Route path="/admin/orders" element={<AdminOrders />} />
               <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/stats" element={<AdminStats />} />
             </Route>
           </Route>
 

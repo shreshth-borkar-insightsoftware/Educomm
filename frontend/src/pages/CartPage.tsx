@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCartStore } from "@/store/useCartStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import api from "@/api/axiosInstance";
 import { Button } from "@/components/ui/button";
 import { 
@@ -26,6 +27,7 @@ const formatAddress = (addr: any): string => {
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, getTotal, fetchCart } = useCartStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -55,6 +57,12 @@ export default function CartPage() {
   useEffect(() => {
     fetchCart();
     const fetchAddresses = async () => {
+      if (!isAuthenticated) {
+        // Guest user: skip address fetching, show manual input
+        setShowManualInput(true);
+        setIsLoadingAddresses(false);
+        return;
+      }
       try {
 
         const { data } = await api.get("/Addresses/MyAddresses"); 
@@ -92,6 +100,13 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     if (!items.length) return;
+
+    // Check authentication before checkout
+    if (!isAuthenticated) {
+      localStorage.setItem('redirectAfterLogin', '/cart');
+      navigate('/login');
+      return;
+    }
     
     // Validate address before proceeding
     if (!selectedAddressStr || selectedAddressStr.trim().length === 0) {

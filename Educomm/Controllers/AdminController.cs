@@ -193,5 +193,122 @@ namespace Educomm.Controllers
                     : $"Found {orders.Count} order(s)"
             });
         }
+        /// <summary>
+        /// Analytics & stats for the admin dashboard
+        /// </summary>
+        [HttpGet("stats")]
+        public async Task<ActionResult> GetStats()
+        {
+            // Counts
+            var totalUsers = await _context.Users.CountAsync();
+            var totalCourses = await _context.Courses.CountAsync();
+            var totalKits = await _context.Kits.CountAsync();
+            var totalCategories = await _context.Categories.CountAsync();
+            var totalOrders = await _context.Orders.CountAsync();
+            var totalEnrollments = await _context.Enrollments.CountAsync();
+
+            // Revenue
+            var totalRevenue = await _context.Orders.SumAsync(o => o.TotalAmount);
+
+            // Order status breakdown
+            var ordersByStatus = await _context.Orders
+                .GroupBy(o => o.Status)
+                .Select(g => new { Status = g.Key ?? "Unknown", Count = g.Count() })
+                .ToListAsync();
+
+            // Monthly sales (last 12 months)
+            var twelveMonthsAgo = DateTime.UtcNow.AddMonths(-12);
+            var monthlySales = await _context.Orders
+                .Where(o => o.OrderDate >= twelveMonthsAgo)
+                .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Revenue = g.Sum(o => o.TotalAmount),
+                    OrderCount = g.Count()
+                })
+                .OrderBy(x => x.Year).ThenBy(x => x.Month)
+                .ToListAsync();
+
+            // Sales by category (based on OrderItems -> Kit -> Category)
+            var salesByCategory = await _context.OrderItems
+                .Include(oi => oi.Kit)
+                    .ThenInclude(k => k.Category)
+                .GroupBy(oi => oi.Kit.Category.Name)
+                .Select(g => new
+                {
+                    Category = g.Key ?? "Uncategorized",
+                    TotalQuantity = g.Sum(oi => oi.Quantity),
+                    TotalRevenue = g.Sum(oi => oi.PriceAtPurchase * oi.Quantity)
+                })
+                .OrderByDescending(x => x.TotalRevenue)
+                .ToListAsync();
+
+            // Top 5 selling kits
+            var topKits = await _context.OrderItems
+                .GroupBy(oi => new { oi.KitId, oi.Kit.Name })
+                .Select(g => new
+                {
+                    KitId = g.Key.KitId,
+                    Name = g.Key.Name,
+                    TotalSold = g.Sum(oi => oi.Quantity),
+                    TotalRevenue = g.Sum(oi => oi.PriceAtPurchase * oi.Quantity)
+                })
+                .OrderByDescending(x => x.TotalSold)
+                .Take(5)
+                .ToListAsync();
+
+            // Top 5 enrolled courses
+            var topCourses = await _context.Enrollments
+                .GroupBy(e => new { e.CourseId, e.Course.Name })
+                .Select(g => new
+                {
+                    CourseId = g.Key.CourseId,
+                    Name = g.Key.Name,
+                    TotalEnrollments = g.Count(),
+                    CompletionRate = g.Count(e => e.IsCompleted) * 100.0 / g.Count()
+                })
+                .OrderByDescending(x => x.TotalEnrollments)
+                .Take(5)
+                .ToListAsync();
+
+            // Low stock kits (<=5)
+            var lowStockKits = await _context.Kits
+                .Where(k => k.StockQuantity <= 5 && k.IsActive)
+                .Select(k => new { k.KitId, k.Name, k.StockQuantity, k.Price })
+                .OrderBy(k => k.StockQuantity)
+                .ToListAsync();
+
+            // Recent orders (last 5)
+            var recentOrders = await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Kit)
+                .OrderByDescending(o => o.OrderDate)
+                .Take(5)
+                .Select(o => new
+                {
+                    o.OrderId,
+                    o.OrderDate,
+                    o.TotalAmount,
+                    o.Status,
+                    ItemCount = o.OrderItems.Count
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                counts = new { totalUsers, totalCourses, totalKits, totalCategories, totalOrders, totalEnrollments },
+                totalRevenue,
+                ordersByStatus,
+                monthlySales,
+                salesByCategory,
+                topKits,
+                topCourses,
+                lowStockKits,
+                recentOrders
+            });
+        }
+
     }
 }

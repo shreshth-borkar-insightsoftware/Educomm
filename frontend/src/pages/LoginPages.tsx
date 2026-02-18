@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useAuthStore } from "@/store/useAuthStore"
+import { useCartStore } from "@/store/useCartStore"
 import api from "@/api/axiosInstance"
 
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   
   const setAuth = useAuthStore((state) => state.setAuth)
+  const syncCartToBackend = useCartStore((state) => state.syncCartToBackend)
   const navigate = useNavigate()
 
 const handleLogin = async (e: React.FormEvent) => {
@@ -42,8 +44,16 @@ const handleLogin = async (e: React.FormEvent) => {
         lastName: userData.lastName || userData.LastName || ""    
       }, token); 
 
-      // Redirect based on role
-      if (userRole === "Admin") {
+      // Sync guest cart items to backend
+      await syncCartToBackend();
+
+      // Redirect to saved path or default
+      const redirectPath = localStorage.getItem('redirectAfterLogin');
+      localStorage.removeItem('redirectAfterLogin');
+
+      if (redirectPath && redirectPath !== '/login') {
+        navigate(redirectPath);
+      } else if (userRole === "Admin") {
         navigate("/admin");
       } else {
         navigate("/dashboard");
