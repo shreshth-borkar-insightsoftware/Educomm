@@ -13,6 +13,7 @@ services:
       - Stripe__SecretKey=${STRIPE_SECRET_KEY}
       - Stripe__PublishableKey=${STRIPE_PUBLISHABLE_KEY}
       - Stripe__WebhookSecret=${STRIPE_WEBHOOK_SECRET}
+      - FrontendUrl=http://localhost:3000
     restart: unless-stopped
     networks:
       - educomm-network

@@ -90,8 +90,8 @@ namespace Educomm.Controllers
                     },
                     LineItems = lineItems,
                     Mode = "payment",
-                    SuccessUrl = $"http://localhost:5173/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
-                    CancelUrl = "http://localhost:5173/payment/cancel",
+                    SuccessUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:5173"}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+                    CancelUrl = $"{_configuration["FrontendUrl"] ?? "http://localhost:5173"}/payment/cancel",
                     Metadata = new Dictionary<string, string>
                     {
                         { "userId", userId.ToString() },
