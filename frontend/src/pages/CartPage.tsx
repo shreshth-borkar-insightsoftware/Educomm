@@ -217,7 +217,11 @@ export default function CartPage() {
               <h3 className="text-xs font-black uppercase tracking-widest text-neutral-500">Shipping To</h3>
               
               <button 
-                onClick={() => setShowManualInput(!showManualInput)}
+                onClick={() => {
+                  const goingManual = !showManualInput;
+                  setShowManualInput(goingManual);
+                  if (goingManual) setSelectedAddressStr("");
+                }}
                 className="text-[10px] uppercase text-neutral-400 hover:text-white font-black tracking-widest"
               >
                 {showManualInput ? "Select Saved" : "Enter Manual"}

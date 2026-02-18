@@ -11,12 +11,12 @@ export default function AddressPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [newAddress, setNewAddress] = useState({ 
-    title: "Home",      
+    title: "",      
     street: "", 
     city: "", 
-    state: "Default",
+    state: "",
     zipCode: "", 
-    country: "India",
+    country: "",
     phoneNumber: "" 
   });
 
@@ -44,12 +44,12 @@ export default function AddressPage() {
 
       await api.post("/Addresses", newAddress);
       setNewAddress({ 
-        title: "Home", 
+        title: "", 
         street: "", 
         city: "", 
-        state: "Default", 
+        state: "", 
         zipCode: "", 
-        country: "India", 
+        country: "", 
         phoneNumber: "" 
       });
       setShowForm(false);
