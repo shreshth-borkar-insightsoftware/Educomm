@@ -95,3 +95,38 @@ export async function setupAdminSession(page: Page, navigateTo = '/admin') {
   await page.goto(navigateTo);
   await page.waitForLoadState('networkidle');
 }
+
+/**
+ * Wait for an admin table page to finish loading.
+ * Waits for either table rows OR an empty-state message to appear.
+ */
+export async function waitForTableData(page: Page, timeout = 15000) {
+  await Promise.race([
+    page.locator('table tbody tr').first().waitFor({ state: 'visible', timeout }),
+    page.getByText(/no .* found/i).waitFor({ state: 'visible', timeout }),
+    page.getByText(/loading/i).waitFor({ state: 'hidden', timeout }),
+  ]).catch(() => {
+    // If none matched, page may still be usable — continue
+  });
+}
+
+/**
+ * Wait for stat cards to render with numeric counts.
+ */
+export async function waitForStatCards(page: Page, timeout = 15000) {
+  await page.locator('.text-4xl, .text-3xl').first().waitFor({ state: 'visible', timeout }).catch(() => {});
+}
+
+/**
+ * Wait for a modal to appear (fixed overlay with form content).
+ */
+export async function waitForModal(page: Page, timeout = 5000) {
+  await page.locator('.fixed.inset-0').waitFor({ state: 'visible', timeout });
+}
+
+/**
+ * Wait for a success/error message banner to appear.
+ */
+export async function waitForMessage(page: Page, timeout = 5000) {
+  await page.locator('[class*="border-green-500"], [class*="border-red-500"]').first().waitFor({ state: 'visible', timeout }).catch(() => {});
+}

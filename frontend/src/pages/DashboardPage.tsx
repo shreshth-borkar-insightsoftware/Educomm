@@ -9,11 +9,7 @@ import {
   Clock, 
   ArrowRight,
   ChevronDown,
-  ChevronUp,
-  CheckCircle2,
-  Circle,
-  Video,
-  FileText
+  ChevronUp
 } from "lucide-react";
 import api from "@/api/axiosInstance";
 
@@ -32,25 +28,6 @@ interface EnrollmentDto {
   isCompleted: boolean;
   totalModules: number;
   completedModules: number;
-}
-
-interface CourseProgress {
-  enrollmentId: number;
-  courseId: number;
-  courseName: string;
-  contentDetails: Array<{
-    courseContentId: number;
-    title: string;
-    orderIndex: number;
-    contentType: string;
-    isCompleted: boolean;
-    completedAt: string | null;
-  }>;
-  summary: {
-    totalModules: number;
-    completedModules: number;
-    progressPercentage: number;
-  };
 }
 
 interface Order {
@@ -79,8 +56,6 @@ export default function DashboardPage() {
     orders: true,
   });
   const [isExpanded, setIsExpanded] = useState(false);
-  const [expandedCourse, setExpandedCourse] = useState<number | null>(null);
-  const [courseProgress, setCourseProgress] = useState<Record<number, CourseProgress>>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,38 +96,6 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-  const fetchCourseProgress = async (enrollmentId: number) => {
-    if (courseProgress[enrollmentId]) {
-      return; // Already fetched
-    }
-    try {
-      const { data } = await api.get(`/progress/${enrollmentId}`);
-      setCourseProgress((prev) => ({
-        ...prev,
-        [enrollmentId]: data
-      }));
-    } catch (err) {
-      console.error("Error fetching course progress:", err);
-    }
-  };
-
-  const toggleCourseExpansion = async (enrollmentId: number) => {
-    if (expandedCourse === enrollmentId) {
-      setExpandedCourse(null);
-    } else {
-      setExpandedCourse(enrollmentId);
-      await fetchCourseProgress(enrollmentId);
-    }
-  };
-
-  const getContentTypeIcon = (contentType: string) => {
-    const type = contentType?.toLowerCase() || "";
-    if (type.includes("video")) {
-      return <Video className="w-4 h-4 text-gray-400" />;
-    }
-    return <FileText className="w-4 h-4 text-gray-400" />;
-  };
-
   // Sort enrollments: in-progress by highest progress, then completed
   const sortedEnrollments = [...enrollments].sort((a, b) => {
     if (a.isCompleted && !b.isCompleted) return 1;
@@ -160,7 +103,9 @@ export default function DashboardPage() {
     return b.progressPercentage - a.progressPercentage;
   });
 
-  const displayEnrollments = isExpanded ? sortedEnrollments : sortedEnrollments.filter(e => !e.isCompleted).slice(0, 3);
+  // Show only in-progress courses (up to 3 when collapsed, all when expanded)
+  const inProgressEnrollments = sortedEnrollments.filter(e => !e.isCompleted);
+  const displayEnrollments = isExpanded ? inProgressEnrollments : inProgressEnrollments.slice(0, 3);
 
   const getStatusBadgeClass = (status: string) => {
     const normalized = status?.toLowerCase() || "pending";
@@ -199,7 +144,7 @@ export default function DashboardPage() {
           {/* Hardware Kits Card */}
           <div 
             onClick={() => navigate("/kits")}
-            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-gray-600 transition-colors"
+            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-gray-400 hover:bg-neutral-700/80 transition-colors"
           >
             <Package className="w-8 h-8 text-purple-400 mb-4" />
             <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Hardware Kits</h2>
@@ -214,7 +159,7 @@ export default function DashboardPage() {
           {/* Digital Courses Card */}
           <div 
             onClick={() => navigate("/courses")}
-            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-gray-600 transition-colors"
+            className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 cursor-pointer hover:border-gray-400 hover:bg-neutral-700/80 transition-colors"
           >
             <Monitor className="w-8 h-8 text-purple-400 mb-4" />
             <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Digital Courses</h2>
@@ -266,7 +211,7 @@ export default function DashboardPage() {
                   <div 
                     key={kit.kitId}
                     onClick={() => navigate(`/kits/${kit.kitId}`)}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-700/40 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-700/70 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <Package className="w-5 h-5 text-gray-400" />
@@ -296,33 +241,22 @@ export default function DashboardPage() {
                 <h3 className="text-lg font-black uppercase tracking-tight text-white">Continue Learning</h3>
               </div>
               <div className="flex items-center gap-2">
-                {!isExpanded && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate("/my-courses");
-                    }}
-                    className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
-                  >
-                    All Courses
-                  </button>
-                )}
-                {enrollments.length > 0 && (
-                  <span 
-                    className="text-white transition-colors pointer-events-none"
-                    aria-hidden="true"
-                  >
+                <button 
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/my-courses");
+                  }}
+                  className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
+                >
+                  My Learning
+                </button>
+                {inProgressEnrollments.length > 0 && (
+                  <span className="text-white">
                     {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                   </span>
                 )}
               </div>
-              <button 
-                type="button"
-                onClick={() => navigate("/my-courses")}
-                className="text-white text-sm font-medium hover:text-gray-300 transition-colors"
-              >
-                My Learning
-              </button>
             </div>
 
             {loading.enrollments ? (
@@ -349,25 +283,23 @@ export default function DashboardPage() {
                   id="continue-learning-content"
                   role="region"
                   aria-labelledby="continue-learning-header"
-                  className={`space-y-4 transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-screen overflow-y-auto' : 'max-h-none'}`}
+                  className="space-y-4"
                 >
                   {displayEnrollments.map((enrollment) => (
 
                     <div key={enrollment.enrollmentId} className="border-b border-neutral-700 pb-4 last:border-b-0">
                       <div 
-                        className="cursor-pointer"
-                        onClick={() => toggleCourseExpansion(enrollment.enrollmentId)}
+                        className="cursor-pointer hover:bg-neutral-700/60 rounded-lg p-3 -m-3 mb-0 transition-colors"
+                        onClick={() => {
+                          // Navigate to the course content with enrollment ID
+                          navigate(`/courses/${enrollment.courseId}/content?enrollmentId=${enrollment.enrollmentId}`);
+                        }}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 flex-1">
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/courses/${enrollment.courseId}`)}
-                              className="text-white font-medium text-sm hover:text-gray-300 transition-colors text-left"
-                              aria-label={`View details for ${enrollment.courseName || "Untitled Course"} course`}
-                            >
+                            <span className="text-white font-medium text-sm">
                               {enrollment.courseName || "Untitled Course"}
-                            </button>
+                            </span>
                             {enrollment.isCompleted && (
                               <span className="text-xs bg-green-500/20 border border-green-500/50 text-green-400 px-2 py-0.5 rounded">
                                 Completed
@@ -378,89 +310,16 @@ export default function DashboardPage() {
                             {enrollment.progressPercentage}%
                           </span>
                         </div>
-                        <div className="w-full bg-gray-700 rounded-full h-1.5">
+                        <div className="w-full bg-neutral-700 rounded-full h-1.5">
                           <div 
-                            className="bg-green-500 h-1.5 rounded-full transition-all"
+                            className="bg-white/90 h-1.5 rounded-full transition-all"
                             style={{ width: `${enrollment.progressPercentage}%` }}
                           />
                         </div>
-                        {isExpanded && (
-                          <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
-                            <span>{enrollment.completedModules} of {enrollment.totalModules} modules</span>
-                            <button 
-                              type="button"
-                              className="hover:text-white transition-colors flex items-center gap-1"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleCourseExpansion(enrollment.enrollmentId);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleCourseExpansion(enrollment.enrollmentId);
-                                }
-                              }}
-                              aria-label={expandedCourse === enrollment.enrollmentId 
-                                ? `Hide modules for ${enrollment.courseName}` 
-                                : `View modules for ${enrollment.courseName}`}
-                            >
-                              {expandedCourse === enrollment.enrollmentId ? "Hide" : "View"} modules
-                              {expandedCourse === enrollment.enrollmentId ? (
-                                <ChevronUp className="w-3 h-3" aria-hidden="true" />
-                              ) : (
-                                <ChevronDown className="w-3 h-3" aria-hidden="true" />
-                              )}
-                            </button>
-                          </div>
-                        )}
                       </div>
-
-                      {/* Expanded module list */}
-                      {isExpanded && expandedCourse === enrollment.enrollmentId && courseProgress[enrollment.enrollmentId] && (
-                        <div className="mt-3 space-y-2 ml-4">
-                          {courseProgress[enrollment.enrollmentId].contentDetails
-                            .sort((a, b) => a.orderIndex - b.orderIndex)
-                            .map((module) => (
-                              <div 
-                                key={module.courseContentId}
-                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700/40 transition-colors cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/courses/${enrollment.courseId}/content?enrollmentId=${enrollment.enrollmentId}&courseContentId=${module.courseContentId}`);
-                                }}
-                              >
-                                <div className="flex-shrink-0">
-                                  {module.isCompleted ? (
-                                    <CheckCircle2 className="w-4 h-4 text-green-400" />
-                                  ) : (
-                                    <Circle className="w-4 h-4 text-gray-600" />
-                                  )}
-                                </div>
-                                {getContentTypeIcon(module.contentType)}
-                                <div className="flex-1 min-w-0">
-                                  <p className={`text-sm ${module.isCompleted ? 'text-gray-400' : 'text-white'} truncate`}>
-                                    {module.orderIndex}. {module.title}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
-                {isExpanded && (
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate("/my-courses");
-                    }}
-                    className="text-white text-sm font-medium flex items-center gap-1 hover:text-gray-300 transition-colors mt-4"
-                  >
-                    View All in My Learning <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                  </button>
-                )}
               </>
             )}
           </div>
@@ -503,7 +362,7 @@ export default function DashboardPage() {
                 <div 
                   key={order.orderId}
                   onClick={() => navigate("/my-orders")}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-700/40 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-700/70 transition-colors cursor-pointer"
                 >
                   <div className="flex-1">
                     <p className="text-white font-medium text-sm">

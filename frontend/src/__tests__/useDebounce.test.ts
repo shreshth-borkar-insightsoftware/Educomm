@@ -23,7 +23,7 @@ describe("useDebounce", () => {
     );
 
     rerender({ value: "second", delay: 500 });
-    vi.advanceTimersByTime(300);
+    act(() => { vi.advanceTimersByTime(300); });
     expect(result.current).toBe("first");
   });
 
@@ -34,7 +34,7 @@ describe("useDebounce", () => {
     );
 
     rerender({ value: "second", delay: 500 });
-    vi.advanceTimersByTime(500);
+    act(() => { vi.advanceTimersByTime(500); });
     expect(result.current).toBe("second");
   });
 
@@ -45,11 +45,11 @@ describe("useDebounce", () => {
     );
 
     rerender({ value: "b", delay: 300 });
-    vi.advanceTimersByTime(100);
+    act(() => { vi.advanceTimersByTime(100); });
     rerender({ value: "c", delay: 300 });
-    vi.advanceTimersByTime(100);
+    act(() => { vi.advanceTimersByTime(100); });
     rerender({ value: "d", delay: 300 });
-    vi.advanceTimersByTime(300);
+    act(() => { vi.advanceTimersByTime(300); });
 
     expect(result.current).toBe("d");
   });
@@ -61,10 +61,10 @@ describe("useDebounce", () => {
     );
 
     rerender({ value: "updated" });
-    vi.advanceTimersByTime(399);
+    act(() => { vi.advanceTimersByTime(399); });
     expect(result.current).toBe("initial");
 
-    vi.advanceTimersByTime(1);
+    act(() => { vi.advanceTimersByTime(1); });
     expect(result.current).toBe("updated");
   });
 
@@ -75,7 +75,7 @@ describe("useDebounce", () => {
     );
 
     rerender({ value: 42, delay: 200 });
-    vi.advanceTimersByTime(200);
+    act(() => { vi.advanceTimersByTime(200); });
     expect(result.current).toBe(42);
   });
 
@@ -86,7 +86,7 @@ describe("useDebounce", () => {
     );
 
     rerender({ value: true, delay: 200 });
-    vi.advanceTimersByTime(200);
+    act(() => { vi.advanceTimersByTime(200); });
     expect(result.current).toBe(true);
   });
 });

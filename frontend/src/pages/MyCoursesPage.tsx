@@ -10,6 +10,11 @@ interface Enrollment {
   enrollmentId?: number;
   id?: number;
   courseId?: number;
+  courseName?: string;
+  progressPercentage?: number;
+  isCompleted?: boolean;
+  totalModules?: number;
+  completedModules?: number;
   course?: {
     courseId?: number;
     name?: string;
@@ -25,8 +30,12 @@ export default function MyCoursesPage() {
     rawEnrollments.map((e: Enrollment) => ({
       enrollmentId: e.enrollmentId || e.id,
       courseId: e.course?.courseId || e.courseId,
-      courseName: e.course?.name || "Standard Course",
-      courseDescription: e.course?.description || "No description available."
+      courseName: e.courseName || e.course?.name || "Untitled Course",
+      courseDescription: e.course?.description || "",
+      progressPercentage: e.progressPercentage ?? 0,
+      isCompleted: e.isCompleted ?? false,
+      totalModules: e.totalModules ?? 0,
+      completedModules: e.completedModules ?? 0,
     })),
     [rawEnrollments]
   );
@@ -49,15 +58,41 @@ export default function MyCoursesPage() {
             {courses.map((course) => (
               <Card key={course.enrollmentId} className="bg-neutral-800 border border-neutral-700 text-white hover:border-neutral-600 transition-colors">
                 <CardHeader>
-                  <CardTitle className="uppercase font-bold tracking-tight">{course.courseName}</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="uppercase font-bold tracking-tight">{course.courseName}</CardTitle>
+                    {course.isCompleted && (
+                      <span className="text-xs bg-green-500/20 border border-green-500/50 text-green-400 px-2 py-0.5 rounded shrink-0">
+                        Completed
+                      </span>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-neutral-400 text-sm line-clamp-2">{course.courseDescription}</p>
+                  {course.courseDescription && (
+                    <p className="text-neutral-400 text-sm line-clamp-2">{course.courseDescription}</p>
+                  )}
+                  {/* Progress Bar */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-neutral-400 text-xs font-mono">
+                        {course.completedModules}/{course.totalModules} modules
+                      </span>
+                      <span className="text-neutral-300 text-xs font-medium">
+                        {course.progressPercentage}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-neutral-700 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all ${course.isCompleted ? 'bg-green-500' : 'bg-white/90'}`}
+                        style={{ width: `${course.progressPercentage}%` }}
+                      />
+                    </div>
+                  </div>
                   <Button 
                     className="w-full bg-white text-black hover:bg-neutral-200 font-bold"
                     onClick={() => navigate(`/courses/${course.courseId}/content?enrollmentId=${course.enrollmentId}`)}
                   >
-                    <PlayCircle className="mr-2 h-4 w-4" /> START LESSON
+                    <PlayCircle className="mr-2 h-4 w-4" /> {course.isCompleted ? "REVIEW LESSON" : course.progressPercentage > 0 ? "CONTINUE LESSON" : "START LESSON"}
                   </Button>
                 </CardContent>
               </Card>

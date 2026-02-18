@@ -14,7 +14,10 @@
     "test:e2e:report": "npx playwright show-report",
     "test:e2e:coverage": "rimraf .nyc_output coverage && npx playwright test && npx nyc report",
     "coverage:report": "npx nyc report",
-    "coverage:open": "start coverage/index.html"
+    "coverage:open": "start coverage/index.html",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:unit:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.8",
@@ -41,6 +44,7 @@
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/coverage-v8": "^4.0.18",
     "autoprefixer": "^10.4.23",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",

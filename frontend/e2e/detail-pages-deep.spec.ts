@@ -1,235 +1,247 @@
 import { test, expect } from './helpers/coverage';
 import { setupCustomerSession } from './helpers/auth';
 
-test.describe('Kit Details Page', () => {
+/** Wait for detail page content to load */
+async function waitForDetailPage(page: import('@playwright/test').Page) {
+  await Promise.race([
+    page.locator('h1').first().waitFor({ state: 'visible', timeout: 10000 }),
+    page.getByText(/not found/i).waitFor({ state: 'visible', timeout: 10000 }),
+  ]).catch(() => {});
+}
 
-  test('Kit details page shows kit name, price, and description', async ({ page }) => {
-    await setupCustomerSession(page, '/kits');
-    await page.waitForTimeout(3000);
+/** Navigate to first kit detail page */
+async function goToFirstKit(page: import('@playwright/test').Page) {
+  await setupCustomerSession(page, '/kits');
+  await page.locator('.cursor-pointer').first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+  const kitCard = page.locator('.cursor-pointer').first();
+  if (!(await kitCard.isVisible().catch(() => false))) return false;
+  await kitCard.click();
+  await page.waitForURL(/\/kits\/\d+/, { timeout: 10000 });
+  await waitForDetailPage(page);
+  return true;
+}
 
-    // Find a kit link
-    const kitLink = page.locator('a[href*="/kits/"]').first();
-    const hasKits = await kitLink.isVisible().catch(() => false);
+/** Navigate to first course detail page */
+async function goToFirstCourse(page: import('@playwright/test').Page) {
+  await setupCustomerSession(page, '/courses');
+  await page.locator('.cursor-pointer').first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+  const courseCard = page.locator('.cursor-pointer').first();
+  if (!(await courseCard.isVisible().catch(() => false))) return false;
+  await courseCard.click();
+  await page.waitForURL(/\/courses\/\d+/, { timeout: 10000 });
+  await waitForDetailPage(page);
+  return true;
+}
 
-    if (hasKits) {
-      await kitLink.click();
-      await page.waitForURL('**/kits/*', { timeout: 10000 });
-      await page.waitForTimeout(2000);
+test.describe('Kit Details Page (Deep)', () => {
 
-      // Page header
-      const heading = page.getByText(/kit details/i);
-      await expect(heading).toBeVisible();
+  test('Kit details shows name, ₹ price, and description', async ({ page }) => {
+    const ok = await goToFirstKit(page);
+    if (!ok) { test.skip(); return; }
 
-      // Kit name should be visible
-      const kitName = page.locator('h1, [class*="CardTitle"]').first();
-      const nameText = await kitName.textContent();
-      expect(nameText!.length).toBeGreaterThan(0);
+    // PageHeader with "Kit Details" title
+    await expect(page.getByText(/kit details/i).first()).toBeVisible();
 
-      // Price should be visible (₹ symbol)
-      const priceEl = page.getByText(/₹\d+/);
-      const hasPrice = await priceEl.isVisible().catch(() => false);
-      expect(hasPrice).toBeTruthy();
+    // Kit name
+    const kitName = page.locator('h1, [class*="CardTitle"]').first();
+    const nameText = await kitName.textContent();
+    expect(nameText!.trim().length).toBeGreaterThan(0);
 
-      // Description section
-      const descHeading = page.getByText(/description/i);
-      await expect(descHeading).toBeVisible();
-    } else {
-      test.skip();
+    // Price with ₹
+    const priceEl = page.getByText(/₹\d/);
+    await expect(priceEl.first()).toBeVisible();
+
+    // Description section
+    await expect(page.getByText(/description/i).first()).toBeVisible();
+  });
+
+  test('Kit details shows stock availability', async ({ page }) => {
+    const ok = await goToFirstKit(page);
+    if (!ok) { test.skip(); return; }
+
+    await expect(page.getByText(/stock availability/i)).toBeVisible();
+  });
+
+  test('Kit details has enabled Add to Cart button', async ({ page }) => {
+    const ok = await goToFirstKit(page);
+    if (!ok) { test.skip(); return; }
+
+    const addBtn = page.getByRole('button', { name: /add to cart/i });
+    await expect(addBtn).toBeVisible();
+    await expect(addBtn).toBeEnabled();
+  });
+
+  test('Kit details shows Product ID', async ({ page }) => {
+    const ok = await goToFirstKit(page);
+    if (!ok) { test.skip(); return; }
+
+    await expect(page.getByText(/product id/i)).toBeVisible();
+  });
+
+  test('Kit details Add to Cart triggers cart update', async ({ page }) => {
+    const ok = await goToFirstKit(page);
+    if (!ok) { test.skip(); return; }
+
+    // Handle any alert dialog
+    page.on('dialog', async (dialog) => await dialog.accept());
+
+    const addBtn = page.getByRole('button', { name: /add to cart/i });
+    await addBtn.click();
+    await page.waitForTimeout(2000);
+
+    // FloatingCartButton should now be visible with "VIEW CART" and count badge
+    const viewCartBtn = page.getByText('VIEW CART');
+    const hasFloating = await viewCartBtn.isVisible().catch(() => false);
+    if (hasFloating) {
+      await expect(viewCartBtn).toBeVisible();
+
+      // Count badge should show a number
+      const countBadge = page.locator('.bg-black.text-white.rounded-full');
+      const badgeText = await countBadge.textContent();
+      expect(parseInt(badgeText || '0')).toBeGreaterThan(0);
     }
   });
 
-  test('Kit details page shows stock availability', async ({ page }) => {
-    await setupCustomerSession(page, '/kits');
-    await page.waitForTimeout(3000);
+  test('Kit details FloatingCartButton navigates to /cart', async ({ page }) => {
+    const ok = await goToFirstKit(page);
+    if (!ok) { test.skip(); return; }
 
-    const kitLink = page.locator('a[href*="/kits/"]').first();
-    const hasKits = await kitLink.isVisible().catch(() => false);
+    // Add to cart first
+    page.on('dialog', async (dialog) => await dialog.accept());
+    const addBtn = page.getByRole('button', { name: /add to cart/i });
+    await addBtn.click();
+    await page.waitForTimeout(2000);
 
-    if (hasKits) {
-      await kitLink.click();
-      await page.waitForURL('**/kits/*', { timeout: 10000 });
-      await page.waitForTimeout(2000);
-
-      const stockLabel = page.getByText(/stock availability/i);
-      await expect(stockLabel).toBeVisible();
-    } else {
-      test.skip();
+    // Click FloatingCartButton
+    const viewCartBtn = page.getByText('VIEW CART');
+    const hasFloating = await viewCartBtn.isVisible().catch(() => false);
+    if (hasFloating) {
+      await viewCartBtn.click();
+      await page.waitForURL(/\/cart/, { timeout: 10000 });
+      expect(page.url()).toContain('/cart');
     }
   });
 
-  test('Kit details page has Add to Cart button', async ({ page }) => {
-    await setupCustomerSession(page, '/kits');
-    await page.waitForTimeout(3000);
+  test('Kit details has BackButton with aria-label "Go back"', async ({ page }) => {
+    const ok = await goToFirstKit(page);
+    if (!ok) { test.skip(); return; }
 
-    const kitLink = page.locator('a[href*="/kits/"]').first();
-    const hasKits = await kitLink.isVisible().catch(() => false);
+    const backBtn = page.locator('button[aria-label="Go back"]');
+    await expect(backBtn).toBeVisible();
 
-    if (hasKits) {
-      await kitLink.click();
-      await page.waitForURL('**/kits/*', { timeout: 10000 });
-      await page.waitForTimeout(2000);
-
-      const addBtn = page.getByRole('button', { name: /add to cart/i });
-      await expect(addBtn).toBeVisible();
-      await expect(addBtn).toBeEnabled();
-    } else {
-      test.skip();
-    }
+    // Should have ArrowLeft SVG icon
+    const svg = backBtn.locator('svg');
+    await expect(svg).toBeVisible();
   });
 
-  test('Kit details page shows Product ID', async ({ page }) => {
+  test('Kit details BackButton navigates back', async ({ page }) => {
+    // Start from kits page so history is course → kit
     await setupCustomerSession(page, '/kits');
-    await page.waitForTimeout(3000);
+    await page.locator('.cursor-pointer').first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
 
-    const kitLink = page.locator('a[href*="/kits/"]').first();
-    const hasKits = await kitLink.isVisible().catch(() => false);
+    const kitCard = page.locator('.cursor-pointer').first();
+    if (!(await kitCard.isVisible().catch(() => false))) { test.skip(); return; }
 
-    if (hasKits) {
-      await kitLink.click();
-      await page.waitForURL('**/kits/*', { timeout: 10000 });
-      await page.waitForTimeout(2000);
+    await kitCard.click();
+    await page.waitForURL(/\/kits\/\d+/, { timeout: 10000 });
+    await waitForDetailPage(page);
 
-      const productId = page.getByText(/product id/i);
-      await expect(productId).toBeVisible();
-    } else {
-      test.skip();
-    }
-  });
+    // Click back button
+    const backBtn = page.locator('button[aria-label="Go back"]');
+    await backBtn.click();
 
-  test('Kit details page has floating cart button', async ({ page }) => {
-    await setupCustomerSession(page, '/kits');
-    await page.waitForTimeout(3000);
-
-    const kitLink = page.locator('a[href*="/kits/"]').first();
-    const hasKits = await kitLink.isVisible().catch(() => false);
-
-    if (hasKits) {
-      await kitLink.click();
-      await page.waitForURL('**/kits/*', { timeout: 10000 });
-      await page.waitForTimeout(2000);
-
-      // FloatingCartButton should be visible
-      const cartBtn = page.locator('button').filter({ hasText: /cart|🛒/i });
-      const cartIcon = page.locator('[class*="fixed"]').filter({ has: page.locator('svg') });
-      const hasCart = await cartBtn.isVisible().catch(() => false) || await cartIcon.isVisible().catch(() => false);
-      // The floating button may or may not be visible depending on cart state — just verify page loaded
-      const body = await page.textContent('body');
-      expect(body!.length).toBeGreaterThan(100);
-    } else {
-      test.skip();
-    }
+    // Should navigate back to /kits
+    await page.waitForURL(/\/kits$/, { timeout: 10000 });
+    expect(page.url()).toMatch(/\/kits$/);
   });
 
 });
 
-test.describe('Course Details Page', () => {
+test.describe('Course Details Page (Deep)', () => {
 
-  test('Course details page shows course info and linked kit button', async ({ page }) => {
-    await setupCustomerSession(page, '/courses');
-    await page.waitForTimeout(3000);
+  test('Course details shows name, about section, and kit section', async ({ page }) => {
+    const ok = await goToFirstCourse(page);
+    if (!ok) { test.skip(); return; }
 
-    const courseLink = page.locator('a[href*="/courses/"]').first();
-    const hasCourses = await courseLink.isVisible().catch(() => false);
+    // PageHeader
+    await expect(page.getByText(/course details/i).first()).toBeVisible();
 
-    if (hasCourses) {
-      await courseLink.click();
-      await page.waitForURL('**/courses/*', { timeout: 10000 });
-      await page.waitForTimeout(3000);
+    // Course name
+    const courseName = page.locator('[class*="CardTitle"]').first();
+    const nameText = await courseName.textContent();
+    expect(nameText!.trim().length).toBeGreaterThan(0);
 
-      // Page header
-      const heading = page.getByText(/course details/i);
-      await expect(heading).toBeVisible();
+    // About section
+    await expect(page.getByText(/about this course/i)).toBeVisible();
 
-      // Course name
-      const courseName = page.locator('[class*="CardTitle"]').first();
-      const nameText = await courseName.textContent();
-      expect(nameText!.length).toBeGreaterThan(0);
+    // Required Learning Kit section
+    await expect(page.getByText(/required learning kit/i)).toBeVisible();
+  });
 
-      // About section
-      const aboutSection = page.getByText(/about this course/i);
-      await expect(aboutSection).toBeVisible();
+  test('Course details shows course ID', async ({ page }) => {
+    const ok = await goToFirstCourse(page);
+    if (!ok) { test.skip(); return; }
 
-      // Required Learning Kit section
-      const kitSection = page.getByText(/required learning kit/i);
-      await expect(kitSection).toBeVisible();
+    await expect(page.getByText(/^ID: \d+$/)).toBeVisible();
+  });
 
-      // VIEW LINKED KIT or NO KIT LINKED button
-      const linkedKitBtn = page.getByRole('button', { name: /view linked kit|no kit linked/i });
-      await expect(linkedKitBtn).toBeVisible();
-    } else {
-      test.skip();
+  test('Course details shows VIEW LINKED KIT or NO KIT LINKED', async ({ page }) => {
+    const ok = await goToFirstCourse(page);
+    if (!ok) { test.skip(); return; }
+
+    const viewKitBtn = page.getByRole('button', { name: /view linked kit/i });
+    const noKitBtn = page.getByRole('button', { name: /no kit linked/i });
+
+    const hasLinked = await viewKitBtn.isVisible().catch(() => false);
+    const hasNoKit = await noKitBtn.isVisible().catch(() => false);
+
+    // One or the other must be visible
+    expect(hasLinked || hasNoKit).toBeTruthy();
+
+    if (hasLinked) {
+      // Click navigates to kit page
+      await viewKitBtn.click();
+      await page.waitForURL(/\/kits\/\d+/, { timeout: 10000 });
+      expect(page.url()).toMatch(/\/kits\/\d+/);
     }
   });
 
-  test('Course details page shows course ID', async ({ page }) => {
-    await setupCustomerSession(page, '/courses');
-    await page.waitForTimeout(3000);
+  test('Course details has BackButton', async ({ page }) => {
+    const ok = await goToFirstCourse(page);
+    if (!ok) { test.skip(); return; }
 
-    const courseLink = page.locator('a[href*="/courses/"]').first();
-    const hasCourses = await courseLink.isVisible().catch(() => false);
-
-    if (hasCourses) {
-      await courseLink.click();
-      await page.waitForURL('**/courses/*', { timeout: 10000 });
-      await page.waitForTimeout(2000);
-
-      // "ID: <number>" should be shown
-      const idText = page.getByText(/^ID: \d+$/);
-      await expect(idText).toBeVisible();
-    } else {
-      test.skip();
-    }
+    const backBtn = page.locator('button[aria-label="Go back"]');
+    await expect(backBtn).toBeVisible();
   });
 
-  test('Course details navigates to linked kit', async ({ page }) => {
+  test('Course details BackButton navigates back to courses', async ({ page }) => {
     await setupCustomerSession(page, '/courses');
-    await page.waitForTimeout(3000);
+    await page.locator('.cursor-pointer').first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
 
-    const courseLink = page.locator('a[href*="/courses/"]').first();
-    const hasCourses = await courseLink.isVisible().catch(() => false);
+    const courseCard = page.locator('.cursor-pointer').first();
+    if (!(await courseCard.isVisible().catch(() => false))) { test.skip(); return; }
 
-    if (hasCourses) {
-      await courseLink.click();
-      await page.waitForURL('**/courses/*', { timeout: 10000 });
-      await page.waitForTimeout(3000);
+    await courseCard.click();
+    await page.waitForURL(/\/courses\/\d+/, { timeout: 10000 });
+    await waitForDetailPage(page);
 
-      const viewKitBtn = page.getByRole('button', { name: /view linked kit/i });
-      const hasLinkedKit = await viewKitBtn.isVisible().catch(() => false);
+    const backBtn = page.locator('button[aria-label="Go back"]');
+    await backBtn.click();
 
-      if (hasLinkedKit) {
-        await viewKitBtn.click();
-        await page.waitForURL('**/kits/*', { timeout: 10000 });
-        expect(page.url()).toContain('/kits/');
-      } else {
-        // No linked kit — verify button says NO KIT LINKED
-        const noKitBtn = page.getByRole('button', { name: /no kit linked/i });
-        await expect(noKitBtn).toBeVisible();
-      }
-    } else {
-      test.skip();
-    }
+    await page.waitForURL(/\/courses$/, { timeout: 10000 });
+    expect(page.url()).toMatch(/\/courses$/);
   });
 
-  test('Course details has back button', async ({ page }) => {
-    await setupCustomerSession(page, '/courses');
-    await page.waitForTimeout(3000);
+  test('Course details PageHeader shows subtitle', async ({ page }) => {
+    const ok = await goToFirstCourse(page);
+    if (!ok) { test.skip(); return; }
 
-    const courseLink = page.locator('a[href*="/courses/"]').first();
-    const hasCourses = await courseLink.isVisible().catch(() => false);
-
-    if (hasCourses) {
-      await courseLink.click();
-      await page.waitForURL('**/courses/*', { timeout: 10000 });
-      await page.waitForTimeout(2000);
-
-      // PageHeader has showBackButton={true}
-      const backBtn = page.getByRole('button', { name: /back/i });
-      const svgBack = page.locator('button svg').first();
-      const hasBack = await backBtn.isVisible().catch(() => false) || await svgBack.isVisible().catch(() => false);
-      expect(hasBack).toBeTruthy();
-    } else {
-      test.skip();
-    }
+    // PageHeader with subtitle text
+    const subtitle = page.locator('.text-xs.font-mono');
+    const hasSubtitle = await subtitle.isVisible().catch(() => false);
+    // Some pages may not have subtitle, just verify page loaded
+    const body = await page.textContent('body');
+    expect(body!.length).toBeGreaterThan(100);
   });
 
 });

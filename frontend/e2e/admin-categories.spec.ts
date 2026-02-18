@@ -1,127 +1,255 @@
 import { test, expect } from './helpers/coverage';
-import { setupAdminSession } from './helpers/auth';
+import { setupAdminSession, waitForTableData, waitForModal, waitForMessage } from './helpers/auth';
+import { uniqueName } from './helpers/test-data';
 
 test.describe('Admin Categories Page', () => {
 
-  test('Admin categories page loads with table', async ({ page }) => {
+  test('Admin categories page loads with table headers', async ({ page }) => {
     await setupAdminSession(page, '/admin/categories');
-    await page.waitForTimeout(4000);
+    await waitForTableData(page);
 
-    // Header
-    const heading = page.getByText(/category management/i);
-    await expect(heading).toBeVisible();
+    // Heading
+    await expect(page.getByText(/category management/i)).toBeVisible();
 
-    // Table headers should be visible
+    // Table headers
     await expect(page.getByText('ID').first()).toBeVisible();
     await expect(page.getByText('Name').first()).toBeVisible();
     await expect(page.getByText('Description').first()).toBeVisible();
     await expect(page.getByText('Actions').first()).toBeVisible();
+
+    // Add Category button
+    const addBtn = page.getByRole('button', { name: /add category/i });
+    await expect(addBtn).toBeVisible();
   });
 
-  test('Admin categories page shows category rows', async ({ page }) => {
+  test('Admin categories page shows category rows with data', async ({ page }) => {
     await setupAdminSession(page, '/admin/categories');
-    await page.waitForTimeout(4000);
+    await waitForTableData(page);
 
-    // Should have category rows or "No categories found" 
     const rows = page.locator('tbody tr');
     const count = await rows.count();
     expect(count).toBeGreaterThanOrEqual(1);
 
-    // First row should have an ID
-    if (count > 0) {
-      const firstRow = rows.first();
-      const cells = firstRow.locator('td');
-      const cellCount = await cells.count();
-      expect(cellCount).toBeGreaterThanOrEqual(3);
-    }
+    // First row should have cells: ID (font-mono), Name (font-semibold), Description, Actions
+    const firstRow = rows.first();
+    const idCell = firstRow.locator('td').first();
+    await expect(idCell).toBeVisible();
+    const idText = await idCell.textContent();
+    expect(parseInt(idText || '0')).toBeGreaterThan(0);
+
+    // Name cell
+    const nameCell = firstRow.locator('td').nth(1);
+    const nameText = await nameCell.textContent();
+    expect(nameText!.length).toBeGreaterThan(0);
   });
 
-  test('Admin categories Add Category button opens modal', async ({ page }) => {
+  test('Admin categories Add Category modal opens and closes', async ({ page }) => {
     await setupAdminSession(page, '/admin/categories');
-    await page.waitForTimeout(4000);
+    await waitForTableData(page);
 
-    // Click Add Category button
-    const addBtn = page.getByRole('button', { name: /add category/i });
-    await expect(addBtn).toBeVisible();
-    await addBtn.click();
-    await page.waitForTimeout(500);
-
-    // Modal should appear with form fields
-    const nameInput = page.locator('#name');
-    await expect(nameInput).toBeVisible();
-
-    const descInput = page.locator('#description');
-    await expect(descInput).toBeVisible();
-
-    // Close button should be visible
-    const closeBtn = page.locator('button').filter({ has: page.locator('svg') }).filter({ hasText: '' });
-    const hasClose = await closeBtn.first().isVisible().catch(() => false);
-    expect(hasClose).toBeTruthy();
-  });
-
-  test('Admin categories modal has submit and cancel buttons', async ({ page }) => {
-    await setupAdminSession(page, '/admin/categories');
-    await page.waitForTimeout(4000);
-
+    // Open modal
     const addBtn = page.getByRole('button', { name: /add category/i });
     await addBtn.click();
-    await page.waitForTimeout(500);
+    await waitForModal(page);
 
-    // Submit button
-    const submitBtn = page.getByRole('button', { name: /add category/i }).last();
-    await expect(submitBtn).toBeVisible();
+    // Modal should have form fields
+    await expect(page.locator('#name')).toBeVisible();
+    await expect(page.locator('#description')).toBeVisible();
 
-    // Cancel button
+    // Should have "Add New Category" title
+    await expect(page.getByText(/add new category/i)).toBeVisible();
+
+    // Cancel button should close modal
     const cancelBtn = page.getByRole('button', { name: /cancel/i });
-    const hasCancel = await cancelBtn.isVisible().catch(() => false);
-    // Or close (X) button
-    expect(hasCancel || true).toBeTruthy();
+    await expect(cancelBtn).toBeVisible();
+    await cancelBtn.click();
+
+    // Modal should be gone
+    await expect(page.locator('.fixed.inset-0')).not.toBeVisible({ timeout: 3000 });
   });
 
-  test('Admin categories each row has delete button', async ({ page }) => {
+  test('Admin categories X button closes modal and resets form', async ({ page }) => {
     await setupAdminSession(page, '/admin/categories');
-    await page.waitForTimeout(4000);
+    await waitForTableData(page);
+
+    // Open modal
+    await page.getByRole('button', { name: /add category/i }).click();
+    await waitForModal(page);
+
+    // Fill form fields
+    await page.locator('#name').fill('Test Category');
+    await page.locator('#description').fill('Test Description');
+
+    // Click X close button (the button with X icon inside modal)
+    const closeBtn = page.locator('.fixed.inset-0 button').filter({ has: page.locator('svg') }).first();
+    await closeBtn.click();
+
+    // Modal should close
+    await expect(page.locator('.fixed.inset-0')).not.toBeVisible({ timeout: 3000 });
+
+    // Re-open modal — form should be cleared
+    await page.getByRole('button', { name: /add category/i }).click();
+    await waitForModal(page);
+    const nameValue = await page.locator('#name').inputValue();
+    expect(nameValue).toBe('');
+  });
+
+  test('Admin can create a new category end-to-end', async ({ page }) => {
+    await setupAdminSession(page, '/admin/categories');
+    await waitForTableData(page);
+
+    const catName = uniqueName('E2ECat');
+    const catDesc = 'E2E test category description';
+
+    // Open modal
+    await page.getByRole('button', { name: /add category/i }).click();
+    await waitForModal(page);
+
+    // Fill form
+    await page.locator('#name').fill(catName);
+    await page.locator('#description').fill(catDesc);
+
+    // Submit
+    const submitBtn = page.locator('.fixed.inset-0').getByRole('button', { name: /add category/i });
+    await submitBtn.click();
+
+    // Wait for success message
+    await waitForMessage(page);
+    await expect(page.getByText(/category added successfully/i)).toBeVisible({ timeout: 5000 });
+
+    // Category should appear in the table
+    await expect(page.getByText(catName)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Admin category creation form has required attributes', async ({ page }) => {
+    await setupAdminSession(page, '/admin/categories');
+    await waitForTableData(page);
+
+    // Open modal
+    await page.getByRole('button', { name: /add category/i }).click();
+    await waitForModal(page);
+
+    // Verify required attributes
+    const nameInput = page.locator('#name');
+    const descInput = page.locator('#description');
+    await expect(nameInput).toHaveAttribute('required', '');
+    await expect(descInput).toHaveAttribute('required', '');
+  });
+
+  test('Admin can delete a category with confirmation', async ({ page }) => {
+    await setupAdminSession(page, '/admin/categories');
+    await waitForTableData(page);
 
     const rows = page.locator('tbody tr');
     const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      // Each row should have a delete button (Trash2 icon)
-      const deleteBtn = rows.first().locator('button').filter({ has: page.locator('svg') });
+    // Accept the confirmation dialog
+    page.on('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('confirm');
+      expect(dialog.message()).toContain('Are you sure');
+      await dialog.accept();
+    });
+
+    // Click the delete button on the last row
+    const lastRow = rows.last();
+    const deleteBtn = lastRow.locator('button').filter({ has: page.locator('svg') });
+    await deleteBtn.click();
+
+    // Wait for success message
+    await waitForMessage(page);
+    await expect(page.getByText(/deleted successfully/i)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Admin categories each row has a delete button', async ({ page }) => {
+    await setupAdminSession(page, '/admin/categories');
+    await waitForTableData(page);
+
+    const rows = page.locator('tbody tr');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
+
+    // Each row should have a delete button with trash icon
+    for (let i = 0; i < Math.min(count, 3); i++) {
+      const row = rows.nth(i);
+      const deleteBtn = row.locator('button').filter({ has: page.locator('svg') });
       await expect(deleteBtn).toBeVisible();
     }
   });
 
+  test('Admin categories shows pagination controls', async ({ page }) => {
+    await setupAdminSession(page, '/admin/categories');
+    await waitForTableData(page);
+
+    // Pagination should be visible
+    const pagination = page.getByText(/showing page/i);
+    const hasPagination = await pagination.isVisible().catch(() => false);
+
+    if (hasPagination) {
+      await expect(pagination).toBeVisible();
+      const totalRecords = page.getByText(/total records/i);
+      await expect(totalRecords).toBeVisible();
+    }
+  });
+
+  test('Admin categories success message auto-dismisses', async ({ page }) => {
+    test.setTimeout(30000);
+    await setupAdminSession(page, '/admin/categories');
+    await waitForTableData(page);
+
+    const catName = uniqueName('AutoDismiss');
+
+    // Create a category to trigger success message
+    await page.getByRole('button', { name: /add category/i }).click();
+    await waitForModal(page);
+    await page.locator('#name').fill(catName);
+    await page.locator('#description').fill('Test auto-dismiss');
+    await page.locator('.fixed.inset-0').getByRole('button', { name: /add category/i }).click();
+
+    // Success message should appear
+    const successMsg = page.getByText(/category added successfully/i);
+    await expect(successMsg).toBeVisible({ timeout: 5000 });
+
+    // Message should auto-dismiss after ~3s
+    await expect(successMsg).not.toBeVisible({ timeout: 6000 });
+  });
+
+  test('Admin categories subtitle text is visible', async ({ page }) => {
+    await setupAdminSession(page, '/admin/categories');
+    await waitForTableData(page);
+
+    await expect(page.getByText(/manage course categories/i)).toBeVisible();
+  });
 });
 
 test.describe('Admin Dashboard Page', () => {
 
-  test('Admin dashboard loads with stats cards', async ({ page }) => {
+  test('Admin dashboard loads with stat card labels', async ({ page }) => {
     await setupAdminSession(page, '/admin');
-    await page.waitForTimeout(4000);
+    await page.waitForLoadState('networkidle');
 
-    const heading = page.getByText(/admin dashboard/i);
-    await expect(heading).toBeVisible();
+    await expect(page.getByText(/admin dashboard/i)).toBeVisible({ timeout: 10000 });
 
-    // Should show stat labels
-    await expect(page.getByText(/users/i).first()).toBeVisible();
-    await expect(page.getByText(/courses/i).first()).toBeVisible();
-    await expect(page.getByText(/kits/i).first()).toBeVisible();
-    await expect(page.getByText(/categories/i).first()).toBeVisible();
-    await expect(page.getByText(/orders/i).first()).toBeVisible();
-    await expect(page.getByText(/enrollments/i).first()).toBeVisible();
+    // All 6 stat labels should be visible
+    await expect(page.getByText(/total users/i)).toBeVisible();
+    await expect(page.getByText(/total courses/i)).toBeVisible();
+    await expect(page.getByText(/total kits/i)).toBeVisible();
+    await expect(page.getByText(/total categories/i)).toBeVisible();
+    await expect(page.getByText(/total orders/i)).toBeVisible();
+    await expect(page.getByText(/total enrollments/i)).toBeVisible();
   });
 
-  test('Admin dashboard shows numeric counts', async ({ page }) => {
+  test('Admin dashboard shows numeric counts greater than zero', async ({ page }) => {
     await setupAdminSession(page, '/admin');
-    await page.waitForTimeout(5000);
+    await page.waitForLoadState('networkidle');
 
-    // Each stat card should show a number (the count)
+    // Wait for pulse animations to disappear (loading done)
+    await expect(page.locator('.animate-pulse').first()).not.toBeVisible({ timeout: 15000 }).catch(() => {});
+
     const statNumbers = page.locator('h3.text-4xl');
     const count = await statNumbers.count();
     expect(count).toBeGreaterThanOrEqual(4);
 
-    // At least one should have a number > 0
     let hasNonZero = false;
     for (let i = 0; i < count; i++) {
       const text = await statNumbers.nth(i).textContent();
@@ -133,22 +261,33 @@ test.describe('Admin Dashboard Page', () => {
     expect(hasNonZero).toBeTruthy();
   });
 
-  test('Admin dashboard stat cards are clickable', async ({ page }) => {
+  test('Admin dashboard stat cards navigate to correct pages', async ({ page }) => {
     await setupAdminSession(page, '/admin');
-    await page.waitForTimeout(5000);
+    await page.waitForLoadState('networkidle');
 
-    // Click on the first stat card (should navigate)
-    const statCard = page.locator('[class*="cursor-pointer"]').first();
-    const hasCard = await statCard.isVisible().catch(() => false);
+    await expect(page.locator('[class*="cursor-pointer"]').first()).toBeVisible({ timeout: 10000 });
 
-    if (hasCard) {
-      await statCard.click();
-      await page.waitForTimeout(2000);
+    // Click "Total Users" card → should navigate to /admin/users
+    const usersCard = page.locator('[class*="cursor-pointer"]').filter({ hasText: /total users/i });
+    await usersCard.click();
+    await page.waitForURL('**/admin/users', { timeout: 5000 });
+    expect(page.url()).toContain('/admin/users');
 
-      // Should have navigated away from /admin dashboard
-      const url = page.url();
-      expect(url).toBeTruthy();
-    }
+    // Go back and click courses card
+    await page.goto('/admin');
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('[class*="cursor-pointer"]').first()).toBeVisible({ timeout: 10000 });
+
+    const coursesCard = page.locator('[class*="cursor-pointer"]').filter({ hasText: /total courses/i });
+    await coursesCard.click();
+    await page.waitForURL('**/admin/courses', { timeout: 5000 });
+    expect(page.url()).toContain('/admin/courses');
   });
 
+  test('Admin dashboard shows user greeting', async ({ page }) => {
+    await setupAdminSession(page, '/admin');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.getByText(/overview of platform statistics/i)).toBeVisible({ timeout: 10000 });
+  });
 });

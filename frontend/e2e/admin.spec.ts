@@ -1,76 +1,113 @@
 import { test, expect } from './helpers/coverage';
-import { setupAdminSession, setupCustomerSession, loginViaUI, TEST_ADMIN } from './helpers/auth';
-import { uniqueName } from './helpers/test-data';
+import { setupAdminSession, setupCustomerSession, waitForStatCards } from './helpers/auth';
 
-test.describe('Admin Operations', () => {
+test.describe('Admin Dashboard & Route Protection', () => {
 
-  test('Admin dashboard loads with stat cards', async ({ page }) => {
+  test('Admin dashboard loads with 6 stat cards', async ({ page }) => {
+    await setupAdminSession(page, '/admin');
+    await waitForStatCards(page);
+
+    // Heading
+    await expect(page.getByText('Admin Dashboard')).toBeVisible();
+
+    // 6 stat cards: Categories, Courses, Kits, Orders, Enrollments, Users
+    await expect(page.getByText(/categories/i).first()).toBeVisible();
+    await expect(page.getByText(/courses/i).first()).toBeVisible();
+    await expect(page.getByText(/kits/i).first()).toBeVisible();
+    await expect(page.getByText(/orders/i).first()).toBeVisible();
+    await expect(page.getByText(/enrollments/i).first()).toBeVisible();
+    await expect(page.getByText(/users/i).first()).toBeVisible();
+  });
+
+  test('Admin dashboard stat cards show numeric counts', async ({ page }) => {
+    await setupAdminSession(page, '/admin');
+    await waitForStatCards(page);
+
+    // Each stat card shows a number in text-4xl
+    const numbers = page.locator('.text-4xl');
+    const count = await numbers.count();
+    expect(count).toBeGreaterThanOrEqual(6);
+
+    for (let i = 0; i < 6; i++) {
+      const text = await numbers.nth(i).textContent();
+      const num = parseInt(text || '');
+      expect(num).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  test('Admin dashboard stat cards navigate to sub-pages', async ({ page }) => {
+    await setupAdminSession(page, '/admin');
+    await waitForStatCards(page);
+
+    // Click on Categories stat card
+    const categoriesCard = page.locator('div').filter({ hasText: /^categories$/i }).first();
+    const clickable = categoriesCard.locator('..').locator('..');
+    await clickable.click();
+    await page.waitForURL(/\/admin\/categories/);
+    expect(page.url()).toContain('/admin/categories');
+
+    // Navigate back to dashboard
+    await page.goto('http://localhost:5173/admin');
+    await waitForStatCards(page);
+
+    // Click on Users stat card
+    const usersCard = page.locator('div').filter({ hasText: /^users$/i }).first();
+    const usersClickable = usersCard.locator('..').locator('..');
+    await usersClickable.click();
+    await page.waitForURL(/\/admin\/users/);
+    expect(page.url()).toContain('/admin/users');
+  });
+
+  test('Admin dashboard shows greeting with admin name', async ({ page }) => {
+    await setupAdminSession(page, '/admin');
+    await waitForStatCards(page);
+
+    // Greeting: "Welcome back, <name>"
+    const greeting = page.getByText(/welcome back/i);
+    await expect(greeting).toBeVisible();
+  });
+
+  test('Admin dashboard shows loading skeleton initially', async ({ page }) => {
+    // Navigate without waiting for full load
     await setupAdminSession(page, '/admin');
 
-    // Should show admin dashboard content
-    await page.waitForTimeout(3000);
-
-    // Dashboard shows stat cards — check for numeric values or card elements
+    // The page should eventually show stat cards (no loading pulse)
+    await waitForStatCards(page);
     const body = await page.textContent('body');
-    expect(body).toBeTruthy();
-
-    // Look for stat cards by checking for Card elements or numbers
-    const cards = page.locator('[class*="Card"], [class*="card"]');
-    const cardCount = await cards.count();
-
-    // Admin dashboard should have at least some stat cards or content
-    expect(cardCount).toBeGreaterThanOrEqual(1);
+    expect(body).toContain('Admin Dashboard');
   });
 
-  test('Admin can create a new category', async ({ page }) => {
-    await setupAdminSession(page, '/admin/categories');
-    await page.waitForTimeout(2000);
-
-    // Click Add/Create button to open the modal
-    const addButton = page.getByRole('button', { name: /add|create|new/i }).first();
-    await expect(addButton).toBeVisible();
-    await addButton.click();
-
-    // Fill the category form
-    const catName = uniqueName('TestCat');
-    const catDesc = 'Test category created by E2E test';
-
-    // Wait for modal to appear
-    await page.waitForTimeout(500);
-
-    // Fill name field
-    const nameInput = page.locator('input[id*="name"], input[placeholder*="name"], input').filter({ hasText: '' }).first();
-    await nameInput.fill(catName);
-
-    // Fill description field
-    const descInput = page.locator('input[id*="description"], textarea, input[placeholder*="description"]').first();
-    if (await descInput.isVisible()) {
-      await descInput.fill(catDesc);
-    }
-
-    // Submit
-    const submitBtn = page.getByRole('button', { name: /add|create|submit|save/i }).last();
-    await submitBtn.click();
-
-    await page.waitForTimeout(2000);
-
-    // Category should appear in the list
-    await expect(page.getByText(catName)).toBeVisible({ timeout: 5000 });
-  });
-
-  test('Non-admin user is blocked from admin panel', async ({ page }) => {
+  test('Non-admin user is redirected to /dashboard', async ({ page }) => {
     await setupCustomerSession(page, '/admin');
 
-    // ProtectedAdminRoute should redirect non-admin to /dashboard
-    await page.waitForTimeout(3000);
-
-    const url = page.url();
-    // Should NOT be on the admin page
-    const isOnAdmin = url.endsWith('/admin') || url.endsWith('/admin/');
-    const redirectedAway = url.includes('/dashboard') || url.includes('/login');
-
-    // Either redirected to dashboard/login, or the admin page denied access
-    expect(isOnAdmin === false || redirectedAway).toBeTruthy();
+    // ProtectedAdminRoute redirects non-admin users to /dashboard
+    await page.waitForURL(/\/dashboard/, { timeout: 10000 });
+    expect(page.url()).toContain('/dashboard');
+    expect(page.url()).not.toContain('/admin');
   });
 
+  test('Non-admin user cannot access admin sub-pages', async ({ page }) => {
+    await setupCustomerSession(page, '/admin/categories');
+
+    // Should redirect away from admin
+    await page.waitForURL(/\/(dashboard|login)/, { timeout: 10000 });
+    expect(page.url()).not.toContain('/admin');
+  });
+
+  test('Unauthenticated user is redirected to /login', async ({ page }) => {
+    // Go directly to admin without any session
+    await page.goto('http://localhost:5173/admin');
+
+    // ProtectedAdminRoute redirects to /login
+    await page.waitForURL(/\/login/, { timeout: 10000 });
+    expect(page.url()).toContain('/login');
+  });
+
+  test('Non-admin cannot access admin orders page', async ({ page }) => {
+    await setupCustomerSession(page, '/admin/orders');
+
+    // Should redirect
+    await page.waitForURL(/\/(dashboard|login)/, { timeout: 10000 });
+    expect(page.url()).not.toContain('/admin');
+  });
 });

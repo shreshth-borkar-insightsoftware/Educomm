@@ -1,145 +1,332 @@
 import { test, expect } from './helpers/coverage';
-import { setupAdminSession } from './helpers/auth';
+import { setupAdminSession, waitForTableData, waitForModal, waitForMessage } from './helpers/auth';
 import { uniqueName } from './helpers/test-data';
 
 test.describe('Admin Kit Management', () => {
 
   test('Admin kits page loads with table and Add button', async ({ page }) => {
     await setupAdminSession(page, '/admin/kits');
-    await page.waitForTimeout(3000);
+    await waitForTableData(page);
 
     // Heading
     await expect(page.getByText('Kit Management')).toBeVisible();
+    await expect(page.getByText(/manage product kits and inventory/i)).toBeVisible();
 
     // "Add Kit" button
     const addBtn = page.getByRole('button', { name: /add kit/i });
     await expect(addBtn).toBeVisible();
 
-    // Table or content should render
-    const body = await page.textContent('body');
-    expect(body!.length).toBeGreaterThan(100);
+    // Table headers
+    await expect(page.getByText('ID').first()).toBeVisible();
+    await expect(page.getByText('Name').first()).toBeVisible();
+    await expect(page.getByText('Course').first()).toBeVisible();
+    await expect(page.getByText('Price').first()).toBeVisible();
+    await expect(page.getByText('Stock').first()).toBeVisible();
+    await expect(page.getByText('Status').first()).toBeVisible();
   });
 
-  test('Admin can open Add Kit modal and fill form', async ({ page }) => {
+  test('Admin kits table shows kit data with price and stock', async ({ page }) => {
     await setupAdminSession(page, '/admin/kits');
-    await page.waitForTimeout(3000);
+    await waitForTableData(page);
+
+    const rows = page.locator('tbody tr');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
+
+    const firstRow = rows.first();
+
+    // ID cell
+    const idCell = firstRow.locator('td').first();
+    const idText = await idCell.textContent();
+    expect(parseInt(idText || '0')).toBeGreaterThan(0);
+
+    // Name cell
+    const nameCell = firstRow.locator('td').nth(1);
+    const nameText = await nameCell.textContent();
+    expect(nameText!.length).toBeGreaterThan(0);
+
+    // Price cell (should contain ₹)
+    const priceCell = firstRow.locator('td').nth(3);
+    const priceText = await priceCell.textContent();
+    expect(priceText).toContain('₹');
+
+    // Status badge (Active or Inactive)
+    const statusBadge = firstRow.locator('span.rounded-full');
+    await expect(statusBadge).toBeVisible();
+    const statusText = await statusBadge.textContent();
+    expect(statusText === 'Active' || statusText === 'Inactive').toBeTruthy();
+  });
+
+  test('Admin can open Add Kit modal with all form fields', async ({ page }) => {
+    await setupAdminSession(page, '/admin/kits');
+    await waitForTableData(page);
 
     // Click "Add Kit"
     await page.getByRole('button', { name: /add kit/i }).click();
-    await page.waitForTimeout(500);
+    await waitForModal(page);
 
-    // Fill the kit form
-    const kitName = uniqueName('E2EKit');
-    const nameInput = page.locator('input[type="text"]').first();
+    // Modal title should say "Add New Kit" (not "Edit Kit")
+    await expect(page.getByText(/add new kit/i)).toBeVisible();
+
+    // Name input
+    const nameInput = page.locator('#name');
     await expect(nameInput).toBeVisible();
-    await nameInput.fill(kitName);
 
-    // Fill description
-    const descTextarea = page.locator('textarea').first();
-    if (await descTextarea.isVisible().catch(() => false)) {
-      await descTextarea.fill('E2E test kit description');
-    }
+    // Course dropdown with options
+    const courseSelect = page.locator('#courseId');
+    await expect(courseSelect).toBeVisible();
+    const courseOptions = courseSelect.locator('option');
+    expect(await courseOptions.count()).toBeGreaterThan(1);
 
-    // Fill price
-    const priceInputs = page.locator('input[type="number"]');
-    const priceInput = priceInputs.first();
-    if (await priceInput.isVisible().catch(() => false)) {
-      await priceInput.fill('999');
-    }
+    // Description textarea
+    const descTextarea = page.locator('#description');
+    await expect(descTextarea).toBeVisible();
 
-    // Fill stock
-    const stockInput = priceInputs.nth(1);
-    if (await stockInput.isVisible().catch(() => false)) {
-      await stockInput.fill('10');
-    }
+    // Price input
+    const priceInput = page.locator('#price');
+    await expect(priceInput).toBeVisible();
+
+    // Stock quantity input
+    const stockInput = page.locator('#stockQuantity');
+    await expect(stockInput).toBeVisible();
+
+    // Active checkbox (should be checked by default)
+    const activeCheckbox = page.locator('input[type="checkbox"]');
+    await expect(activeCheckbox).toBeVisible();
+    await expect(activeCheckbox).toBeChecked();
+
+    // Image URL input
+    const imageInput = page.locator('#imageUrl');
+    await expect(imageInput).toBeVisible();
+
+    // Cancel and Submit buttons
+    await expect(page.getByRole('button', { name: /cancel/i })).toBeVisible();
+  });
+
+  test('Admin can create a new kit end-to-end', async ({ page }) => {
+    await setupAdminSession(page, '/admin/kits');
+    await waitForTableData(page);
+
+    const kitName = uniqueName('E2EKit');
+
+    // Open add modal
+    await page.getByRole('button', { name: /add kit/i }).click();
+    await waitForModal(page);
+
+    // Fill form
+    await page.locator('#name').fill(kitName);
+    await page.locator('#courseId').selectOption({ index: 1 });
+    await page.locator('#description').fill('E2E test kit description');
+    await page.locator('#price').fill('999.99');
+    await page.locator('#stockQuantity').fill('10');
+    await page.locator('#imageUrl').fill('https://example.com/kit.jpg');
 
     // Submit
-    const submitBtn = page.getByRole('button', { name: /add kit/i }).last();
+    const submitBtn = page.locator('.fixed.inset-0').getByRole('button', { name: /add kit/i });
     await submitBtn.click();
-    await page.waitForTimeout(3000);
 
-    const body = await page.textContent('body');
-    expect(body).toBeTruthy();
+    // Wait for success message
+    await waitForMessage(page);
+    await expect(page.getByText(/kit added successfully/i)).toBeVisible({ timeout: 5000 });
+
+    // Kit should appear in the table
+    await expect(page.getByText(kitName)).toBeVisible({ timeout: 5000 });
   });
 
-  test('Admin can open Edit Kit modal', async ({ page }) => {
+  test('Admin can open Edit Kit modal with pre-filled data', async ({ page }) => {
     await setupAdminSession(page, '/admin/kits');
-    await page.waitForTimeout(3000);
+    await waitForTableData(page);
 
-    // Find edit buttons (Pencil icons)
-    const editButtons = page.locator('button').filter({ has: page.locator('svg.lucide-pencil, [class*="pencil"]') });
-    const count = await editButtons.count();
+    const rows = page.locator('tbody tr');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      await editButtons.first().click();
-      await page.waitForTimeout(500);
+    // Click the edit button (Pencil icon) on the first row
+    const firstRow = rows.first();
+    const editBtn = firstRow.locator('button').filter({ has: page.locator('svg') }).first();
+    await editBtn.click();
+    await waitForModal(page);
 
-      // Modal should open with pre-filled form
-      const nameInput = page.locator('input[type="text"]').first();
-      const hasInput = await nameInput.isVisible().catch(() => false);
+    // Modal title should say "Edit Kit"
+    await expect(page.getByText(/edit kit/i)).toBeVisible();
 
-      if (hasInput) {
-        const value = await nameInput.inputValue();
-        expect(value.length).toBeGreaterThan(0); // Should be pre-filled
-      }
+    // Name input should be pre-filled
+    const nameInput = page.locator('#name');
+    const nameValue = await nameInput.inputValue();
+    expect(nameValue.length).toBeGreaterThan(0);
 
-      // Cancel or close modal
-      const cancelBtn = page.getByRole('button', { name: /cancel/i });
-      if (await cancelBtn.isVisible().catch(() => false)) {
-        await cancelBtn.click();
-      }
-    }
+    // Price input should be pre-filled
+    const priceInput = page.locator('#price');
+    const priceValue = await priceInput.inputValue();
+    expect(parseFloat(priceValue)).toBeGreaterThan(0);
 
-    const body = await page.textContent('body');
-    expect(body).toBeTruthy();
+    // Stock input should be pre-filled
+    const stockInput = page.locator('#stockQuantity');
+    const stockValue = await stockInput.inputValue();
+    expect(parseInt(stockValue)).toBeGreaterThanOrEqual(0);
+
+    // Course should be selected
+    const courseSelect = page.locator('#courseId');
+    const courseValue = await courseSelect.inputValue();
+    expect(courseValue.length).toBeGreaterThan(0);
+
+    // Submit button should say "Update Kit"
+    const updateBtn = page.locator('.fixed.inset-0').getByRole('button', { name: /update kit/i });
+    await expect(updateBtn).toBeVisible();
   });
 
-  test('Admin can delete a kit', async ({ page }) => {
+  test('Admin can edit a kit and save changes', async ({ page }) => {
     await setupAdminSession(page, '/admin/kits');
-    await page.waitForTimeout(3000);
+    await waitForTableData(page);
 
-    const deleteButtons = page.locator('button').filter({ has: page.locator('svg.lucide-trash-2, [class*="trash"]') });
-    const count = await deleteButtons.count();
+    const rows = page.locator('tbody tr');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
 
-    if (count > 0) {
-      page.on('dialog', async (dialog) => {
-        await dialog.accept();
-      });
+    // Click edit on first row
+    const firstRow = rows.first();
+    const editBtn = firstRow.locator('button').filter({ has: page.locator('svg') }).first();
+    await editBtn.click();
+    await waitForModal(page);
 
-      await deleteButtons.last().click();
-      await page.waitForTimeout(2000);
-    }
+    // Change the price
+    const priceInput = page.locator('#price');
+    await priceInput.clear();
+    await priceInput.fill('1234.56');
 
-    const body = await page.textContent('body');
-    expect(body).toBeTruthy();
+    // Submit the edit
+    const updateBtn = page.locator('.fixed.inset-0').getByRole('button', { name: /update kit/i });
+    await updateBtn.click();
+
+    // Wait for success message
+    await waitForMessage(page);
+    await expect(page.getByText(/kit updated successfully/i)).toBeVisible({ timeout: 5000 });
   });
 
-  test('Admin kits table shows stock color coding and pagination', async ({ page }) => {
+  test('Admin kit modal cancel closes without saving', async ({ page }) => {
     await setupAdminSession(page, '/admin/kits');
-    await page.waitForTimeout(3000);
+    await waitForTableData(page);
 
-    // Check for table data with price and stock info
-    const tableRows = page.locator('table tbody tr');
-    const rowCount = await tableRows.count();
+    // Open add modal
+    await page.getByRole('button', { name: /add kit/i }).click();
+    await waitForModal(page);
 
-    if (rowCount > 0) {
-      // Check that price column shows ₹ symbol
-      const priceCell = page.getByText(/₹/).first();
-      const hasPrice = await priceCell.isVisible().catch(() => false);
-      if (hasPrice) {
-        await expect(priceCell).toBeVisible();
+    // Fill data
+    await page.locator('#name').fill('ShouldNotExist');
+
+    // Cancel
+    await page.getByRole('button', { name: /cancel/i }).click();
+    await expect(page.locator('.fixed.inset-0')).not.toBeVisible({ timeout: 3000 });
+
+    // Kit should NOT appear
+    await expect(page.getByText('ShouldNotExist')).not.toBeVisible();
+  });
+
+  test('Admin can delete a kit with confirmation', async ({ page }) => {
+    await setupAdminSession(page, '/admin/kits');
+    await waitForTableData(page);
+
+    const rows = page.locator('tbody tr');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
+
+    // Accept confirmation dialog
+    page.on('dialog', async (dialog) => {
+      expect(dialog.message()).toContain('Are you sure');
+      await dialog.accept();
+    });
+
+    // Delete the last kit (to avoid deleting seeded data needed by other tests)
+    const lastRow = rows.last();
+    const buttons = lastRow.locator('button').filter({ has: page.locator('svg') });
+    const btnCount = await buttons.count();
+    // Last button should be delete (Trash2)
+    const deleteBtn = buttons.last();
+    await deleteBtn.click();
+
+    // Wait for success
+    await waitForMessage(page);
+    await expect(page.getByText(/deleted successfully/i)).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Admin kits table shows stock color coding', async ({ page }) => {
+    await setupAdminSession(page, '/admin/kits');
+    await waitForTableData(page);
+
+    const rows = page.locator('tbody tr');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
+
+    // Check stock cells for color classes
+    let foundColorCoding = false;
+    for (let i = 0; i < Math.min(count, 5); i++) {
+      const stockCell = rows.nth(i).locator('td').nth(4);
+      const classes = await stockCell.getAttribute('class') || '';
+      // Should have one of: text-red, text-orange, text-green
+      if (classes.includes('text-red') || classes.includes('text-orange') || classes.includes('text-green')) {
+        foundColorCoding = true;
+        break;
       }
     }
+    expect(foundColorCoding).toBeTruthy();
+  });
 
-    // Check pagination
+  test('Admin kits table shows ₹ price formatting', async ({ page }) => {
+    await setupAdminSession(page, '/admin/kits');
+    await waitForTableData(page);
+
+    // Check that prices have ₹ symbol
+    const priceElements = page.getByText(/₹/).first();
+    await expect(priceElements).toBeVisible();
+  });
+
+  test('Admin kits table has edit and delete buttons per row', async ({ page }) => {
+    await setupAdminSession(page, '/admin/kits');
+    await waitForTableData(page);
+
+    const rows = page.locator('tbody tr');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
+
+    // Each row should have 2 action buttons (Edit + Delete)
+    for (let i = 0; i < Math.min(count, 3); i++) {
+      const row = rows.nth(i);
+      const actionButtons = row.locator('td').last().locator('button');
+      const btnCount = await actionButtons.count();
+      expect(btnCount).toBe(2); // Pencil (edit) + Trash2 (delete)
+    }
+  });
+
+  test('Admin kits page shows pagination', async ({ page }) => {
+    await setupAdminSession(page, '/admin/kits');
+    await waitForTableData(page);
+
     const pagination = page.getByText(/showing page/i);
     const hasPagination = await pagination.isVisible().catch(() => false);
+
     if (hasPagination) {
       await expect(pagination).toBeVisible();
     }
-
-    const body = await page.textContent('body');
-    expect(body).toBeTruthy();
   });
 
+  test('Admin kits shows Active and Inactive badges', async ({ page }) => {
+    await setupAdminSession(page, '/admin/kits');
+    await waitForTableData(page);
+
+    const rows = page.locator('tbody tr');
+    const count = await rows.count();
+    expect(count).toBeGreaterThan(0);
+
+    // Check status badges
+    const activeBadges = page.locator('span.rounded-full', { hasText: 'Active' });
+    const inactiveBadges = page.locator('span.rounded-full', { hasText: 'Inactive' });
+    const activeCount = await activeBadges.count();
+    const inactiveCount = await inactiveBadges.count();
+    expect(activeCount + inactiveCount).toBeGreaterThan(0);
+
+    if (activeCount > 0) {
+      const classes = await activeBadges.first().getAttribute('class');
+      expect(classes).toContain('green');
+    }
+  });
 });

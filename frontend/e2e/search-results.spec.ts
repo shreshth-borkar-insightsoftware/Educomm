@@ -1,83 +1,111 @@
 import { test, expect } from './helpers/coverage';
 import { setupCustomerSession } from './helpers/auth';
 
+/** Wait for search results to load */
+async function waitForSearchResults(page: import('@playwright/test').Page) {
+  await Promise.race([
+    page.locator('.cursor-pointer').first().waitFor({ state: 'visible', timeout: 10000 }),
+    page.getByText(/no results found/i).waitFor({ state: 'visible', timeout: 10000 }),
+    page.getByText(/at least 2 characters/i).waitFor({ state: 'visible', timeout: 10000 }),
+  ]).catch(() => {});
+}
+
 test.describe('Search Results Page', () => {
 
-  test('Search results page loads with results for a known query', async ({ page }) => {
+  test('Search results page shows results for a known query', async ({ page }) => {
     await setupCustomerSession(page, '/search?q=course');
-    await page.waitForTimeout(3000);
+    await waitForSearchResults(page);
 
-    // PageHeader should show search info
+    // PageHeader should show "found" text
     await expect(page.getByText(/found/i).first()).toBeVisible();
 
-    // Should show course cards in a grid
-    const courseCards = page.locator('a[href*="/courses/"]');
+    // Should show course cards
+    const courseCards = page.locator('.cursor-pointer');
     const count = await courseCards.count();
     expect(count).toBeGreaterThan(0);
   });
 
-  test('Search results shows tabs for All, Courses, Kits', async ({ page }) => {
+  test('Search results shows All, Courses, Kits tabs', async ({ page }) => {
     await setupCustomerSession(page, '/search?q=kit');
-    await page.waitForTimeout(3000);
+    await waitForSearchResults(page);
 
-    // Tab buttons should be visible
-    await expect(page.getByRole('button', { name: /^all$/i })).toBeVisible();
+    // Tab buttons
+    const allTab = page.getByRole('button', { name: /^all$/i });
     const coursesTab = page.getByRole('button', { name: /courses/i });
     const kitsTab = page.getByRole('button', { name: /kits/i });
+    await expect(allTab).toBeVisible();
     await expect(coursesTab).toBeVisible();
     await expect(kitsTab).toBeVisible();
+  });
 
-    // Click Kits tab
+  test('Clicking Kits tab filters to kit results', async ({ page }) => {
+    await setupCustomerSession(page, '/search?q=kit');
+    await waitForSearchResults(page);
+
+    const kitsTab = page.getByRole('button', { name: /kits/i });
     await kitsTab.click();
-    await page.waitForTimeout(2000);
+    await waitForSearchResults(page);
 
-    // Should show kit results
-    const kitCards = page.locator('a[href*="/kits/"]');
-    const count = await kitCards.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    // URL should include type=kits
+    expect(page.url()).toContain('type=kits');
+  });
+
+  test('Clicking Courses tab filters to course results', async ({ page }) => {
+    await setupCustomerSession(page, '/search?q=course');
+    await waitForSearchResults(page);
+
+    const coursesTab = page.getByRole('button', { name: /courses/i });
+    await coursesTab.click();
+    await waitForSearchResults(page);
+
+    expect(page.url()).toContain('type=courses');
   });
 
   test('Search results shows empty state for gibberish query', async ({ page }) => {
     await setupCustomerSession(page, '/search?q=xyznonexistent12345');
-    await page.waitForTimeout(3000);
+    await waitForSearchResults(page);
 
     // Should show "No results found" message
-    const noResults = page.getByText(/no results found/i);
-    const hasNoResults = await noResults.isVisible().catch(() => false);
-
-    if (hasNoResults) {
-      await expect(noResults).toBeVisible();
-    } else {
-      // Page at least rendered
-      const body = await page.textContent('body');
-      expect(body).toBeTruthy();
-    }
+    await expect(page.getByText(/no results found/i)).toBeVisible();
   });
 
-  test('Search results shows minimum character warning', async ({ page }) => {
+  test('Search results shows minimum character warning for single char', async ({ page }) => {
     await setupCustomerSession(page, '/search?q=a');
-    await page.waitForTimeout(2000);
+    await waitForSearchResults(page);
 
-    // Should prompt to enter at least 2 characters
-    const warning = page.getByText(/at least 2 characters/i);
-    await expect(warning).toBeVisible();
+    await expect(page.getByText(/at least 2 characters/i)).toBeVisible();
   });
 
-  test('Search results Load More button works', async ({ page }) => {
+  test('Search results Load More works if available', async ({ page }) => {
     test.setTimeout(90000);
     await setupCustomerSession(page, '/search?q=course');
-    await page.waitForTimeout(3000);
+    await waitForSearchResults(page);
 
-    // Check if Load More is available (more than 12 results)
     const loadMore = page.getByRole('button', { name: /load more/i }).first();
     const hasLoadMore = await loadMore.isVisible().catch(() => false);
 
     if (hasLoadMore) {
-      const initialCards = await page.locator('a[href*="/courses/"]').count();
+      const initialCards = await page.locator('.cursor-pointer').count();
       await loadMore.click();
       await page.waitForTimeout(3000);
-      const afterCards = await page.locator('a[href*="/courses/"]').count();
+      const afterCards = await page.locator('.cursor-pointer').count();
       expect(afterCards).toBeGreaterThanOrEqual(initialCards);
     }
   });
+
+  test('Clicking a search result navigates to detail page', async ({ page }) => {
+    await setupCustomerSession(page, '/search?q=course');
+    await waitForSearchResults(page);
+
+    const firstResult = page.locator('.cursor-pointer').first();
+    const hasResult = await firstResult.isVisible().catch(() => false);
+
+    if (hasResult) {
+      await firstResult.click();
+      await page.waitForTimeout(2000);
+      const url = page.url();
+      expect(url.includes('/courses/') || url.includes('/kits/')).toBeTruthy();
+    }
+  });
+
 });
